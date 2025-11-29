@@ -1,0 +1,102 @@
+/* --- 100: THIN --- */
+/* Corrisponde a class="font-thin" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Thin.otf") format("opentype");
+    font-weight: 100;
+    font-style: normal;
+}
+
+/* --- 300: LIGHT --- */
+/* Corrisponde a class="font-light" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Light.otf") format("opentype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+/* --- 400: NORMAL / BOOK --- */
+/* Corrisponde a class="font-normal" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Book.otf") format("opentype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+/* --- 500: MEDIUM --- */
+/* Corrisponde a class="font-medium" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Medium.otf") format("opentype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+/* --- 600: SEMIBOLD (DemiBold) --- */
+/* Corrisponde a class="font-semibold" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_DemiBold.otf") format("opentype");
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* --- 700: BOLD (Mapping su DemiBold) --- */
+/* Corrisponde a class="font-bold" 
+       Nota: Uso DemiBold anche qui perché non hai un file "Bold" puro */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_DemiBold.otf") format("opentype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+/* --- 800 & 900: EXTRABOLD / BLACK (Heavy) --- */
+/* Corrisponde a class="font-extrabold" e "font-black" */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Heavy.otf") format("opentype");
+    font-weight: 800; /* Copre anche 900 */
+    font-style: normal;
+}
+/* Regola extra per il 900 per sicurezza */
+@font-face {
+    font-family: "LondonUnderground";
+    src: url("fonts/P22_Underground_Heavy.otf") format("opentype");
+    font-weight: 900;
+    font-style: normal;
+}
+
+/* Applicazione Globale */
+body {
+    font-family: "LondonUnderground", sans-serif;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+canvas {
+    display: block;
+}
+
+.mapbox-improve-map {
+    display: none;
+}
+
+/* Stile Custom per i Popup di Mapbox */
+.mapboxgl-popup-content {
+    font-family: 'LondonUnderground', sans-serif; /* Forza il font */
+    border-radius: 0px; /* Squadrato come i cartelli metro */
+    border: 2px solid #111; /* Bordo scuro */
+    box-shadow: 4px 4px 0px rgba(0,0,0,0.2); /* Ombra netta */
+    padding: 10px 15px;
+}
+
+.mapboxgl-popup-tip {
+    border-top-color: #111 !important; /* Punta del popup scura */
+}
