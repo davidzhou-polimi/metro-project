@@ -1,442 +1,367 @@
 /*
- * Drill-down Map Visualization
- * Gestione della mappa interattiva: Mondo -> Continente -> Paese -> Dettagli (Città/Sezioni).
+ * Metro Systems Visualization
+ * Visualizzazione integrata p5.js + Mapbox GL JS.
+ * Gestisce la navigazione (Mondo -> Continente -> Paese) e visualizza i sistemi metropolitani.
  */
 
-let cities;
-let lines;
-let sections;
-let transportModes;
-let countriesData; 
+// --- Variabili globali ---
+const MAPBOX_TOKEN = "pk.eyJ1IjoiZGF2aWR6aG91cG9saW1pIiwiYSI6ImNtaWRyOHlwaDAxZGYyanM1MXcyczdnOGQifQ.zowAVbBakEIILncSsxCqiA";
+
+let canvas;
+let mapboxMap;
+
+// Dataset
 let continents;
+let countries;
+let lines;
+let systems;
+let cities;
+let metroCities = [];
 
-// Variabili globali per la mappa e lo stato
-let volcanoMap;
-let globalWorldBounds;
-let toggleCheckbox;
-const mapboxAccessToken = "pk.eyJ1IjoiZGF2aWR6aG91cG9saW1pIiwiYSI6ImNtaWRyOHlwaDAxZGYyanM1MXcyczdnOGQifQ.zowAVbBakEIILncSsxCqiA";
+// Stato dell'applicazione
+let hoveredContinentId = null;
+let hoveredCountryId = null;
+let viewState = "world"; // Stati possibili: 'world', 'continent', 'country'
+let selectedContinent = null;
+let selectedCountry = null;
 
-let citiesGeoJSON;
-let sectionsGeoJSON;
-
-// Stato della visualizzazione corrente
-let currentView = 'world'; // 'world', 'continent', o 'country'
-let currentContinent = null;
-let currentCountry = null;
-
-const continentColors = {
-    "Africa": "#FF6347",
-    "Asia": "#4682B4",
-    "Europe": "#32CD32",
-    "North America": "#FFD700",
-    "South America": "#BA55D3",
-    "Oceania": "#FFA07A",
-    "Australia": "#FFA07A",
-    "Seven seas (open ocean)": "#FFFFFF",
-    "default": "#808080"
-};
+// --- Funzioni p5.js ---
 
 function preload() {
-    // Caricamento dei dataset JSON e GeoJSON
-    cities = loadJSON("data/cities.json");
-    lines = loadJSON("data/lines.json");
-    sections = loadJSON("data/sections.json");
-    transportModes = loadJSON("data/transport_modes.json");
     continents = loadJSON("data/continents.geojson");
-    countriesData = loadJSON("data/countries.geojson");
-}
-
-/**
- * Converte i dati delle "sections" (formato WKT) in un oggetto GeoJSON valido.
- * Include la gestione delle proprietà per i popup.
- */
-function processSections() {
-    let features = [];
-    let geometryIndex = sections.fields.indexOf('geometry');
-    let idIndex = sections.fields.indexOf('id');
-
-    if (geometryIndex === -1) {
-        console.error("Colonna 'geometry' non trovata nei dati delle sezioni.");
-        return;
-    }
-
-    for (let riga of sections.values) {
-        let geometryString = riga[geometryIndex];
-        let id = (idIndex !== -1) ? riga[idIndex] : 'N/A';
-
-        if (geometryString) {
-            try {
-                // Parsing della stringa WKT in geometria GeoJSON
-                let geojsonGeometry = wellknown.parse(geometryString);
-                
-                let feature = {
-                    type: 'Feature',
-                    geometry: geojsonGeometry,
-                    properties: {
-                        id: id,
-                        dataType: 'Section'
-                    }
-                };
-                features.push(feature);
-
-            } catch (e) {
-                console.error("Errore nel parsing WKT (Sezioni): ", geometryString, e);
-            }
-        }
-    }
-
-    return {
-        type: 'FeatureCollection',
-        features: features
-    };
-}
-
-/**
- * Converte i dati delle "cities" (formato WKT) in un oggetto GeoJSON valido.
- */
-function processCities() {
-    let features = [];
-    let geometryIndex = cities.fields.indexOf('coords'); 
-    let idIndex = cities.fields.indexOf('id');
-
-    if (geometryIndex === -1) {
-        console.error("Colonna 'coords' non trovata nei dati delle città.");
-        return;
-    }
-
-    for (let riga of cities.values) {
-        let geometryString = riga[geometryIndex];
-        let id = (idIndex !== -1) ? riga[idIndex] : 'N/A';
-
-        if (geometryString) {
-            try {
-                let geojsonGeometry = wellknown.parse(geometryString);
-                
-                let feature = {
-                    type: 'Feature',
-                    geometry: geojsonGeometry,
-                    properties: {
-                        id: id,
-                        dataType: 'City'
-                    }
-                };
-                // Aggiunta della feature alla collezione
-                features.push(feature);
-
-            } catch (e) {
-                console.error("Errore nel parsing WKT (Città): ", geometryString, e);
-            }
-        }
-    }
-    
-    return {
-        type: 'FeatureCollection',
-        features: features
-    };
-}
-
-/**
- * Gestisce la visibilità dei layer (Città vs Sezioni)
- * in base allo stato della checkbox, attivo solo nella vista 'country'.
- */
-function updateMap() {
-    if (currentView !== 'country') return;
-
-    if (toggleCheckbox.checked()) {
-        volcanoMap.setLayoutProperty('cities-layer', 'visibility', 'none');
-        volcanoMap.setLayoutProperty('sections-layer', 'visibility', 'visible');
-    } else {
-        volcanoMap.setLayoutProperty('cities-layer', 'visibility', 'visible');
-        volcanoMap.setLayoutProperty('sections-layer', 'visibility', 'none');
-    }
-}
-
-/**
- * Configura le interazioni del mouse (cursore e popup) per un layer specifico.
- */
-function setupPopups(layerId, idPrefix) {
-    volcanoMap.on('mouseenter', layerId, () => {
-        volcanoMap.getCanvas().style.cursor = 'pointer';
-    });
-    
-    volcanoMap.on('mouseleave', layerId, () => {
-        volcanoMap.getCanvas().style.cursor = '';
-    });
-
-    volcanoMap.on('click', layerId, (e) => {
-        if (e.features.length > 0) {
-            let feature = e.features[0];
-            let id = feature.properties.id;
-            
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(`${idPrefix} ID: ${id}`)
-                .addTo(volcanoMap);
-        }
-    });
-}
-
-/**
- * Calcola i confini geografici (Bounding Box) di un continente.
- * Gestisce sia Polygon che MultiPolygon iterando su tutte le coordinate.
- */
-function getContinentBounds(geometry) {
-    const bounds = new mapboxgl.LngLatBounds();
-
-    function extendBounds(coordinates) {
-        coordinates.forEach(point => bounds.extend(point));
-    }
-
-    if (geometry.type === 'Polygon') {
-        extendBounds(geometry.coordinates[0]);
-    } else if (geometry.type === 'MultiPolygon') {
-        geometry.coordinates.forEach(polygon => {
-            extendBounds(polygon[0]);
-        });
-    }
-    return bounds;
-}
-
-/**
- * Calcola i confini geografici di un paese.
- * Nota: Per i MultiPolygon, considera solo il poligono con il maggior numero di punti
- * per evitare di includere territori remoti o isole distanti nel calcolo dello zoom.
- */
-function getCountryBounds(geometry) {
-    const bounds = new mapboxgl.LngLatBounds();
-
-    if (geometry.type === 'Polygon') {
-        geometry.coordinates[0].forEach(point => {
-            bounds.extend(point);
-        });
-    } else if (geometry.type === 'MultiPolygon') {
-        let largestPolygon = null;
-        let maxPoints = 0;
-
-        geometry.coordinates.forEach(polygon => {
-            const pointCount = polygon[0].length;
-            if (pointCount > maxPoints) {
-                maxPoints = pointCount;
-                largestPolygon = polygon;
-            }
-        });
-
-        if (largestPolygon) {
-            largestPolygon[0].forEach(point => {
-                bounds.extend(point);
-            });
-        }
-    }
-    return bounds;
+    countries = loadJSON("data/countries.geojson");
+    lines = loadJSON("data/lines.json");
+    systems = loadJSON("data/systems.json");
+    cities = loadJSON("data/cities.json");
 }
 
 function setup() {
-    noCanvas();
+    // Inizializzazione canvas p5.js
+    canvas = createCanvas(windowWidth, windowHeight);
+    canvas.parent("p5-container");
+
+    // Collegamento interfaccia
+    select("#resetButton").mousePressed(resetMap);
+
+    // Inizializzazione Mapbox
+    mapboxgl.accessToken = MAPBOX_TOKEN;
+    mapboxMap = new mapboxgl.Map({
+        container: "map-container",
+        style: "mapbox://styles/mapbox/light-v10",
+        center: [0, 0],
+        zoom: 1.5,
+        pitch: 0,
+    });
+
+    // Elaborazione dati e avvio mappa
+    processMetroData();
+    mapboxMap.on("load", onMapReady);
+}
+
+/**
+ * Configurazione iniziale della mappa e dei layer una volta caricata.
+ */
+function onMapReady() {
+    console.log("Mappa caricata. Configurazione layer...");
+
+    // Disabilitazione interazioni utente standard (zoom, pan, ecc.)
+    // per controllare la navigazione via codice.
+    mapboxMap.dragPan.disable();
+    mapboxMap.scrollZoom.disable();
+    mapboxMap.boxZoom.disable();
+    mapboxMap.dragRotate.disable();
+    mapboxMap.keyboard.disable();
+    mapboxMap.doubleClickZoom.disable();
+    mapboxMap.touchZoomRotate.disable();
+
+    // --- Configurazione Layer Continenti ---
+    mapboxMap.addSource("continents-source", {
+        type: "geojson",
+        data: continents,
+        generateId: true,
+    });
+
+    mapboxMap.addLayer({
+        id: "continents-layer",
+        type: "fill",
+        source: "continents-source",
+        paint: {
+            "fill-color": [
+                "case",
+                ["boolean", ["feature-state", "hover"], false],
+                "#f08080", // Colore hover
+                "#c0c0c0", // Colore default
+            ],
+            "fill-opacity": 0.7,
+            "fill-outline-color": "#000000",
+        },
+    });
+
+    // --- Interazioni Continenti ---
     
-    // Inizializzazione mappa Mapbox
-    mapboxgl.accessToken = mapboxAccessToken;
-    globalWorldBounds = [[-170, -63], [170, 85]];
+    // Click: Zoom sul continente e caricamento paesi
+    mapboxMap.on("click", "continents-layer", (e) => {
+        if (viewState !== "world") return;
 
-    volcanoMap = new mapboxgl.Map({
-        container: 'map',
-        style: 'mapbox://styles/mapbox/light-v11',
-        projection: "mercator", // Mercator ottimizza il comportamento di fitBounds
-        customAttribution: 'Progetto di Mappatura Drill-Down',
-        renderWorldCopies: false,
-        center: [0, 30.5],
-        zoom: 1.15,
-        // Disabilitazione interazioni utente per controllo programmatico
-        dragPan: false, dragRotate: false, scrollZoom: false,
-        boxZoom: false, doubleClickZoom: false,
-        touchZoomRotate: false, keyboard: false
+        const feature = e.features[0];
+        selectedContinent = feature.properties.CONTINENT;
+        viewState = "continent";
+        
+        const bounds = getBounds(feature.geometry.coordinates);
+        mapboxMap.fitBounds(bounds, { padding: 40 });
+
+        mapboxMap.setLayoutProperty("continents-layer", "visibility", "none");
+        showCountries(selectedContinent);
     });
 
-    volcanoMap.on('load', () => {
-
-        // Impostazione vista iniziale
-        volcanoMap.fitBounds(globalWorldBounds, {
-            padding: 20,
-            duration: 0
-        });
-
-        // Elaborazione dati GeoJSON
-        citiesGeoJSON = processCities();
-        sectionsGeoJSON = processSections();
-
-        // --- Aggiunta Sorgenti Dati ---
+    // Hover effect
+    mapboxMap.on("mousemove", "continents-layer", (e) => {
+        if (viewState !== "world") return;
         
-        volcanoMap.addSource('continents-source', {
-            type: 'geojson',
-            data: continents
-        });
+        if (e.features.length > 0) {
+            if (hoveredContinentId !== null) {
+                mapboxMap.setFeatureState(
+                    { source: "continents-source", id: hoveredContinentId },
+                    { hover: false }
+                );
+            }
+            hoveredContinentId = e.features[0].id;
+            mapboxMap.setFeatureState(
+                { source: "continents-source", id: hoveredContinentId },
+                { hover: true }
+            );
+        }
+    });
 
-        volcanoMap.addSource('countries-source', {
-            type: 'geojson',
-            data: countriesData
-        });
-        
-        volcanoMap.addSource('cities-source', {
-            type: 'geojson',
-            data: citiesGeoJSON
-        });
+    mapboxMap.on("mouseleave", "continents-layer", () => {
+        if (hoveredContinentId !== null) {
+            mapboxMap.setFeatureState(
+                { source: "continents-source", id: hoveredContinentId },
+                { hover: false }
+            );
+        }
+        hoveredContinentId = null;
+    });
 
-        volcanoMap.addSource('sections-source', {
-            type: 'geojson',
-            data: sectionsGeoJSON
-        });
+    // Sincronizzazione: ridisegna p5.js quando la mappa Mapbox si muove
+    mapboxMap.on("move", () => {
+        redraw();
+    });
+}
 
-        // --- Configurazione Layer ---
-        
-        // 1. Layer Continenti (Vista Mondo - Inizialmente visibile)
-        volcanoMap.addLayer({
-            id: 'continents-layer',
-            type: 'fill',
-            source: 'continents-source',
+/**
+ * Gestisce la visualizzazione dei paesi specifici per il continente selezionato.
+ * Carica la sorgente dati se non presente e applica i filtri.
+ */
+function showCountries(continentName) {
+    // Aggiunta sorgente dati paesi (solo se non esiste)
+    if (!mapboxMap.getSource("countries-source")) {
+        mapboxMap.addSource("countries-source", {
+            type: "geojson",
+            data: countries,
+            generateId: true,
+        });
+    }
+
+    // Configurazione layer paesi (solo se non esiste)
+    if (!mapboxMap.getLayer("countries-layer")) {
+        mapboxMap.addLayer({
+            id: "countries-layer",
+            type: "fill",
+            source: "countries-source",
             paint: {
-                'fill-color': [
-                    'match',
-                    ['get', 'CONTINENT'],
-                    'Africa', continentColors.Africa,
-                    'Asia', continentColors.Asia,
-                    'Europe', continentColors.Europe,
-                    'North America', continentColors["North America"],
-                    'South America', continentColors["South America"],
-                    'Oceania', continentColors.Oceania,
-                    "Australia", continentColors.Australia,
-                    continentColors.default
+                "fill-color": [
+                    "case",
+                    ["boolean", ["feature-state", "hover"], false],
+                    "#7CFC00", // Verde hover
+                    "#90ee90", // Verde default
                 ],
-                'fill-opacity': 0.7,
-                'fill-outline-color': '#FFFFFF'
+                "fill-opacity": 0.8,
+                "fill-outline-color": "#000000",
             },
-            layout: { 'visibility': 'visible' }
         });
 
-        // 2. Layer Paesi (Vista Continente - Inizialmente nascosti)
-        volcanoMap.addLayer({
-            id: 'countries-fill-layer',
-            type: 'fill',
-            source: 'countries-source',
-            paint: { 'fill-color': '#E0E0E0', 'fill-opacity': 0.8 },
-            layout: { 'visibility': 'none' },
-            filter: null
-        });
+        // --- Interazioni Paesi ---
         
-        volcanoMap.addLayer({
-            id: 'countries-outline-layer',
-            type: 'line',
-            source: 'countries-source',
-            paint: { 'line-color': '#000000', 'line-width': 1 },
-            layout: { 'visibility': 'none' },
-            filter: null
-        });
-
-        // 3. Layer Dettagli (Vista Paese - Inizialmente nascosti)
-        volcanoMap.addLayer({
-            id: 'cities-layer',
-            type: 'circle',
-            source: 'cities-source',
-            paint: { 'circle-radius': 5, 'circle-color': '#007cbf' },
-            layout: { 'visibility': 'none' }
-        });
-        
-        volcanoMap.addLayer({
-            id: 'sections-layer',
-            type: 'line',
-            source: 'sections-source',
-            paint: { 'line-color': '#ff0000', 'line-width': 3 },
-            layout: { 'visibility': 'none' }
-        });
-
-        // --- Gestione Eventi e Interazioni ---
-
-        // Transizione: Mondo -> Continente
-        volcanoMap.on('click', 'continents-layer', (e) => {
-            if (currentView !== 'world' || !e.features.length) return;
+        // Click: Zoom sul paese e attivazione marker città
+        mapboxMap.on("click", "countries-layer", (e) => {
+            if (viewState !== "continent") return;
 
             const feature = e.features[0];
-            const continentName = feature.properties.CONTINENT; 
-            if (!continentName) return;
-
-            currentView = 'continent';
-            currentContinent = continentName;
-
-            const bounds = getContinentBounds(feature.geometry);
+            selectedCountry = feature.properties.name;
+            viewState = "country";
             
-            // Scambio visibilità layer e applicazione filtri prima dell'animazione
-            volcanoMap.setLayoutProperty('continents-layer', 'visibility', 'none');
-            
-            const filter = ['==', 'continent', continentName]; 
-            volcanoMap.setFilter('countries-fill-layer', filter);
-            volcanoMap.setFilter('countries-outline-layer', filter);
-            
-            volcanoMap.setLayoutProperty('countries-fill-layer', 'visibility', 'visible');
-            volcanoMap.setLayoutProperty('countries-outline-layer', 'visibility', 'visible');
+            const bounds = getBounds(feature.geometry.coordinates);
+            mapboxMap.fitBounds(bounds, { padding: 40 });
 
-            volcanoMap.fitBounds(bounds, { padding: 20, duration: 0 });
+            // Nascondi i paesi per mostrare i dettagli (marker p5)
+            mapboxMap.setLayoutProperty("countries-layer", "visibility", "none");
+
+            // Forza aggiornamento canvas p5
+            redraw();
         });
 
-        // Transizione: Continente -> Paese
-        volcanoMap.on('click', 'countries-fill-layer', (e) => {
-            if (currentView !== 'continent' || !e.features.length) return;
-
-            const feature = e.features[0];
-            const countryName = feature.properties.name; 
-
-            currentView = 'country';
-            currentCountry = countryName;
-
-            const bounds = getCountryBounds(feature.geometry);
-            
-            // Attivazione layer di dettaglio
-            updateMap(); 
-
-            volcanoMap.fitBounds(bounds, { padding: 40, duration: 0 });
+        // Hover effect paesi
+        mapboxMap.on("mousemove", "countries-layer", (e) => {
+            if (viewState !== "continent") return;
+            if (e.features.length > 0) {
+                if (hoveredCountryId !== null) {
+                    mapboxMap.setFeatureState(
+                        { source: "countries-source", id: hoveredCountryId },
+                        { hover: false }
+                    );
+                }
+                hoveredCountryId = e.features[0].id;
+                mapboxMap.setFeatureState(
+                    { source: "countries-source", id: hoveredCountryId },
+                    { hover: true }
+                );
+            }
         });
 
-        // Gestione cursore mouse
-        const setCursor = (layer, view) => {
-            volcanoMap.on('mouseenter', layer, () => {
-                if (currentView === view) volcanoMap.getCanvas().style.cursor = 'pointer';
-            });
-            volcanoMap.on('mouseleave', layer, () => {
-                volcanoMap.getCanvas().style.cursor = '';
-            });
-        };
-
-        setCursor('continents-layer', 'world');
-        setCursor('countries-fill-layer', 'continent');
-        
-        // --- Controlli UI ---
-
-        toggleCheckbox = select('#view-toggle');
-        toggleCheckbox.changed(updateMap);
-
-        const resetButton = select('#reset-zoom-btn');
-        resetButton.mousePressed(() => {
-            if (currentView === 'world') return;
-
-            // Reset dello stato
-            currentView = 'world';
-            currentContinent = null;
-            currentCountry = null;
-            
-            // Ripristino visibilità layer iniziali
-            volcanoMap.setLayoutProperty('continents-layer', 'visibility', 'visible');
-            volcanoMap.setLayoutProperty('countries-fill-layer', 'visibility', 'none');
-            volcanoMap.setLayoutProperty('countries-outline-layer', 'visibility', 'none');
-            volcanoMap.setLayoutProperty('cities-layer', 'visibility', 'none');
-            volcanoMap.setLayoutProperty('sections-layer', 'visibility', 'none');
-            
-            // Rimozione filtri
-            volcanoMap.setFilter('countries-fill-layer', null);
-            volcanoMap.setFilter('countries-outline-layer', null);
-
-            volcanoMap.fitBounds(globalWorldBounds, {
-                padding: 20, 
-                duration: 0 
-            });
+        mapboxMap.on("mouseleave", "countries-layer", () => {
+            if (hoveredCountryId !== null) {
+                mapboxMap.setFeatureState(
+                    { source: "countries-source", id: hoveredCountryId },
+                    { hover: false }
+                );
+            }
+            hoveredCountryId = null;
         });
+    }
 
-        select('#map').removeClass('invisible');
+    // Applicazione filtro per mostrare solo i paesi del continente selezionato
+    mapboxMap.setFilter("countries-layer", ["==", "continent", continentName]);
+    mapboxMap.setLayoutProperty("countries-layer", "visibility", "visible");
+}
+
+/**
+ * Loop di rendering di p5.js.
+ * Disegna i marker delle città sopra la mappa Mapbox.
+ */
+function draw() {
+    clear(); // Pulisce il canvas p5 per il nuovo frame
+
+    // Disegna solo se siamo nella vista di dettaglio di un paese
+    if (viewState === "country" && selectedCountry) {
+        for (let city of metroCities) {
+            // Verifica corrispondenza paese
+            if (city.country === selectedCountry) {
+                // Proiezione coordinate geografiche -> pixel schermo
+                let pix = mapboxMap.project([city.lon, city.lat]);
+
+                fill(255, 0, 0);
+                noStroke();
+                circle(pix.x, pix.y, 8);
+            }
+        }
+    }
+}
+
+/**
+ * Reimposta la visualizzazione allo stato iniziale (Mondo).
+ */
+function resetMap() {
+    // Reset stato
+    viewState = "world";
+    selectedContinent = null;
+    selectedCountry = null;
+
+    // Animazione camera
+    mapboxMap.flyTo({
+        center: [0, 0],
+        zoom: 1.5,
+        pitch: 0,
     });
+
+    // Gestione visibilità layer
+    mapboxMap.setLayoutProperty("continents-layer", "visibility", "visible");
+
+    if (mapboxMap.getLayer("countries-layer")) {
+        mapboxMap.setLayoutProperty("countries-layer", "visibility", "none");
+    }
+
+    redraw(); // Pulisce i marker p5
+}
+
+/**
+ * Calcola il Bounding Box (confini geografici) per Poligoni e MultiPoligoni.
+ * Necessario per la funzione fitBounds di Mapbox.
+ */
+function getBounds(coords) {
+    let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
+
+    function processCoords(poly) {
+        for (const part of poly) {
+            for (const p of part) {
+                if (p[0] < minLng) minLng = p[0];
+                if (p[0] > maxLng) maxLng = p[0];
+                if (p[1] < minLat) minLat = p[1];
+                if (p[1] > maxLat) maxLat = p[1];
+            }
+        }
+    }
+
+    if (coords[0][0][0] && typeof coords[0][0][0][0] !== "undefined") {
+        // MultiPolygon
+        for (const poly of coords) {
+            processCoords(poly);
+        }
+    } else {
+        // Polygon
+        processCoords(coords);
+    }
+
+    return [[minLng, minLat], [maxLng, maxLat]];
+}
+
+/**
+ * Filtra i dati grezzi per identificare le città dotate di metropolitana.
+ * Catena logica: Lines (Mode 4/5) -> Systems -> Cities.
+ */
+function processMetroData() {
+    console.log("Elaborazione dati metropolitane...");
+
+    const metroSystemIds = new Set();
+    // Filtro linee: mode 4 (Metro) o 5 (Light Rail/Metro)
+    for (const line of lines.values) {
+        const transportMode = line[6];
+        if (transportMode === 4 || transportMode === 5) {
+            const systemId = line[5];
+            metroSystemIds.add(systemId);
+        }
+    }
+
+    const metroCityIds = new Set();
+    // Associazione Sistema -> Città
+    for (const system of systems.values) {
+        const systemId = system[0];
+        if (metroSystemIds.has(systemId)) {
+            const cityId = system[1];
+            metroCityIds.add(cityId);
+        }
+    }
+
+    // Creazione array finale città con coordinate
+    for (const city of cities.values) {
+        const cityId = city[0];
+        if (metroCityIds.has(cityId)) {
+            const pointString = city[2];
+            // Parsing stringa WKT "POINT(lon lat)"
+            const coords = pointString
+                .substring(6, pointString.length - 1)
+                .split(" ");
+            const lon = parseFloat(coords[0]);
+            const lat = parseFloat(coords[1]);
+
+            metroCities.push({
+                id: cityId,
+                name: city[1],
+                country: city[5],
+                lat: lat,
+                lon: lon,
+            });
+        }
+    }
+    console.log(`Città filtrate con metro: ${metroCities.length}`);
 }
