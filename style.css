@@ -100,3 +100,8 @@ canvas {
 .mapboxgl-popup-tip {
     border-top-color: #111 !important; /* Punta del popup scura */
 }
+
+/* Nasconde il testo di caricamento di default di p5.js */
+#p5_loading {
+    display: none !important;
+}
