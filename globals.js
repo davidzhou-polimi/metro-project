@@ -2,6 +2,12 @@
 let rawData = {};
 let db = {};
 
+let layout = {
+    main: null,   // Conterrà il div centrale (il "buco" da riempire)
+    header: null, // Conterrà la navbar
+    footer: null
+};
+
 // Variabili interfaccia
 let mappa;
 let mappaContainer;

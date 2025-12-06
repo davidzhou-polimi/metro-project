@@ -17,7 +17,7 @@ function inizializzaMappa(city) {
 
     calcolaRangeAnni(city.id);
 
-    let container = select("#app-container");
+    let container = getContentContainer();
     container.html("");
 
     creaNavbar(container, city);
@@ -145,7 +145,7 @@ function creaNavbar(container, city) {
     
     let btnBack = createButton("Torna indietro");
     btnBack.parent(navBar).class("bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 font-medium transition-colors text-sm");
-    btnBack.mousePressed(creaListaCitta);
+    btnBack.mousePressed(changeState('HOME'));
 
     let titleContainer = createDiv().parent(navBar).class("text-right flex flex-col items-end");
 
