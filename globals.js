@@ -11,7 +11,6 @@ let layout = {
 // Variabili interfaccia
 let mappa;
 let mappaContainer;
-let vistaAttuale = "lista";
 let boundsCittaCorrente = null;
 
 // STATO DELL'APP

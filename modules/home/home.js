@@ -25,7 +25,7 @@ function setupHome() {
             
             // LOGICA NUOVA: Chiama changeState
             card.mousePressed(() => {
-                changeState('DETAIL', city.id);
+                changeState('MAP', city.id);
             });
 
             createElement("h3", city.name).parent(card)

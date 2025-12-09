@@ -19,7 +19,7 @@ function initializeLayout() {
 
     // 3. CREAZIONE MAIN CONTENT (Il "Buco")
     layout.main = createDiv().parent(app).id("main-content");
-    layout.main.class("flex-grow w-full relative max-w-7xl mx-auto p-4 md:p-8");
+    layout.main.class("flex-grow w-full relative max-w-7xl min-h-screen mx-auto p-4 md:p-8");
 
     // 4. CREAZIONE FOOTER
     layout.footer = createDiv().parent(app).id("app-footer");

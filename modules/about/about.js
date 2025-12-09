@@ -10,6 +10,6 @@ function drawAbout() {
     text("Pagina About (In Costruzione)", 100, 100);
 }
 
-function closeAbout() {
+function removeAbout() {
     if(aboutContainer) aboutContainer.hide();
 }

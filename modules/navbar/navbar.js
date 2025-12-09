@@ -9,7 +9,7 @@ function setupNavbar() {
     content.class("max-w-7xl mx-auto px-4 h-16 flex items-center justify-between");
     
     // Logo / Home Link
-    let logo = createA("#", "Metro World").parent(content);
+    let logo = createButton("Metro World").parent(content);
     logo.class("text-xl font-black tracking-tighter text-indigo-600 hover:text-indigo-500 no-underline");
     logo.mousePressed((e) => {
         e.preventDefault(); // Evita il ricaricamento pagina
@@ -19,7 +19,7 @@ function setupNavbar() {
     // Menu destra
     let menu = createDiv().parent(content).class("flex gap-4 text-sm font-bold text-slate-500");
     
-    let btnAbout = createA("#", "About").parent(menu);
+    let btnAbout = createButton("About").parent(menu);
     btnAbout.class("hover:text-indigo-600 transition-colors");
     btnAbout.mousePressed((e) => {
         e.preventDefault();

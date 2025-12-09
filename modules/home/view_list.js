@@ -1,17 +1,7 @@
 function creaListaCitta() {
-    vistaAttuale = "lista";
     appState.activeCityId = null;
     stopAnimation();
     document.title = "Metro World"; // Ripristina il titolo originale della pagina
-
-    if (window.history.pushState) {
-        let newurl =
-            window.location.protocol +
-            "//" +
-            window.location.host +
-            window.location.pathname;
-        window.history.pushState({ path: newurl }, "", newurl);
-    }
 
     if (mappa) {
         mappa.remove();

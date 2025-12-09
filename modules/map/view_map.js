@@ -8,12 +8,11 @@ function inizializzaMappa(city) {
         mappa.remove();
         mappa = null;
     }
-    vistaAttuale = "mappa";
     appState.activeCityId = city.id;
     appState.isolatedLineId = null;
     stopAnimation();
     document.title = `${city.name} - Metro World`;
-    aggiornaURL(city.id);
+    //sincronizzaURL();
 
     calcolaRangeAnni(city.id);
 
@@ -35,18 +34,6 @@ function inizializzaMappa(city) {
 }
 
 // --- MODULO 1: UTILITY & CALCOLI ---
-function aggiornaURL(cityId) {
-    if (window.history.pushState) {
-        let newurl =
-            window.location.protocol +
-            "//" +
-            window.location.host +
-            window.location.pathname +
-            `?city_id=${cityId}`;
-        window.history.pushState({ path: newurl }, "", newurl);
-    }
-}
-
 function calcolaRangeAnni(cityId) {
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
     let firstEventYear = 2025;
@@ -145,7 +132,7 @@ function creaNavbar(container, city) {
     
     let btnBack = createButton("Torna indietro");
     btnBack.parent(navBar).class("bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 font-medium transition-colors text-sm");
-    btnBack.mousePressed(changeState('HOME'));
+    btnBack.mousePressed(() => changeState('HOME'));
 
     let titleContainer = createDiv().parent(navBar).class("text-right flex flex-col items-end");
 

@@ -1,14 +1,14 @@
-// modules/detail/detail.js
+// modules/map/map.js
 
-function setupDetail() {
-    // Non serve nulla qui, l'inizializzazione avviene in enterDetail
+function setupMap() {
+    // Non serve nulla qui, l'inizializzazione avviene in enterMap
 }
 
-function drawDetail() {
+function drawMap() {
     // Vuoto, Mapbox gestisce il rendering
 }
 
-function enterDetail(cityId) {
+function enterMap(cityId) {
     let container = getContentContainer();
     console.log("Sto per pulire questo elemento:", container.elt);
     console.log("Contenuto HTML attuale:", container.html());
@@ -25,7 +25,7 @@ function enterDetail(cityId) {
     }
 }
 
-function removeDetail() {
+function removeMap() {
     // Chiama le funzioni di pulizia di view_map (se esistono) o distrugge mapbox
     if (typeof mappa !== "undefined" && mappa) {
         mappa.remove();

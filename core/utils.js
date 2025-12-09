@@ -1,3 +1,5 @@
+// core/utils.js
+
 function unpackData(dataObj) {
     if (!dataObj || !dataObj.values) return [];
     let unpacked = [];
@@ -12,6 +14,33 @@ function unpackData(dataObj) {
         unpacked.push(obj);
     }
     return unpacked;
+}
+
+// Funzione di utilità per processare i dati (Unpack)
+// La chiamiamo solo quando serve per evitare di bloccare il browser all'avvio se non serve
+function processaDati() {
+    console.log("Elaborazione dati in corso...");
+    // unpackData deve essere disponibile globalmente (es. in helpers.js o utils.js)
+    if(typeof unpackData === 'undefined') {
+        console.error("ERRORE: unpackData non trovato! Controlla helpers.js");
+        return;
+    }
+
+    db = {
+        cities: unpackData(rawData.cities),
+        systems: unpackData(rawData.systems),
+        lines: unpackData(rawData.lines),
+        stations: unpackData(rawData.stations),
+        station_lines: unpackData(rawData.station_lines),
+        sections: unpackData(rawData.sections),
+        section_lines: unpackData(rawData.section_lines),
+    };
+    
+    // Se hai un filtro dati
+    if (typeof filterData === "function") {
+        db = filterData(db);
+    }
+    console.log("Dati elaborati e pronti in 'db'");
 }
 
 function parseGeometry(wktString) {
