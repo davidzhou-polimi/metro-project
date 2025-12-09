@@ -19,7 +19,7 @@ function initializeLayout() {
 
     // 3. CREAZIONE MAIN CONTENT (Il "Buco")
     layout.main = createDiv().parent(app).id("main-content");
-    layout.main.class("flex-grow w-full relative"); 
+    layout.main.class("flex-grow w-full relative max-w-7xl mx-auto p-4 md:p-8");
 
     // 4. CREAZIONE FOOTER
     layout.footer = createDiv().parent(app).id("app-footer");
@@ -37,22 +37,4 @@ function getContentContainer() {
         initializeLayout();
     }
     return layout.main;
-}
-
-function setLayoutMode(mode) {
-    // Usa la funzione sicura che rigenera il layout se manca
-    let main = getContentContainer(); 
-    let header = layout.header;
-
-    if (!main || !header) return; // Protezione finale
-
-    if (mode === 'FULLSCREEN') {
-        // Modalità Mappa: Tutto schermo
-        main.class("flex-grow w-full h-[calc(100vh-60px)] relative");
-        if(header) header.removeClass("shadow-sm");
-    } else {
-        // Modalità Standard: Margini e contenuto centrato
-        main.class("flex-grow w-full max-w-7xl mx-auto p-4 md:p-8 relative");
-        if(header) header.addClass("shadow-sm");
-    }
 }

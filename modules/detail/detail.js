@@ -9,9 +9,6 @@ function drawDetail() {
 }
 
 function enterDetail(cityId) {
-    // 1. Layout a schermo intero per la mappa
-    setLayoutMode('STANDARD');
-    
     let container = getContentContainer();
     console.log("Sto per pulire questo elemento:", container.elt);
     console.log("Contenuto HTML attuale:", container.html());

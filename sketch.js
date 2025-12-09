@@ -125,11 +125,6 @@ function changeState(newState, param = null) {
     else if (newState === 'SPLASH') {
         if (typeof setupSplash === "function") setupSplash();
     }
-    
-    // Gestione Layout
-    if (typeof setLayoutMode === "function") {
-        setLayoutMode(newState === 'DETAIL' ? 'FULLSCREEN' : 'STANDARD');
-    }
 }
 
 // Funzione di utilità per processare i dati (Unpack)

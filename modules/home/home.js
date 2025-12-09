@@ -1,17 +1,13 @@
 // modules/home/home.js
 
 function setupHome() {
-    // 1. Imposta il tipo di layout (STANDARD con margini)
-    setLayoutMode('STANDARD'); 
-
     // 2. Ottieni il contenitore "sicuro"
     let container = getContentContainer();
     container.html("");
-    container.style("border", "5px solid red");
-    document.title = "Metro World - Select City";
+    document.title = "Metro World";
 
     // Layout principale
-    let wrapper = createDiv().parent(container).class("container mx-auto px-4 py-12");
+    let wrapper = createDiv().parent(container);
     
     createElement("h1", "Seleziona una città").parent(wrapper)
         .class("text-4xl font-black text-slate-800 mb-8 text-center tracking-tight");
