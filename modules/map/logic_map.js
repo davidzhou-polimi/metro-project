@@ -1,26 +1,20 @@
 function disegnaElementiMappa(cityId, cityName) {
+    // ... (tutta la parte iniziale di calcolo features e bounds rimane invariata) ...
     let featuresLinee = [];
     let featuresStazioni = [];
     let bounds = new mapboxgl.LngLatBounds();
     let hasData = false;
 
     let endOfTime = appState.maxYear || 2025;
-
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
     let lineCoordinatesMap = new Map();
-
-    // Array per tracciare tutti i singoli segmenti fisici
     let allPhysicalSections = [];
-
     let totalSectionsFound = 0;
 
-    // --- 1. CICLO LINEE ---
+    // 1. CICLO LINEE (Invariato)
     for (let line of cityLines) {
         let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
-
-        if (!lineCoordinatesMap.has(line.id)) {
-            lineCoordinatesMap.set(line.id, []);
-        }
+        if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
         let currentLinePoints = lineCoordinatesMap.get(line.id);
 
         for (let rel of rels) {
@@ -28,40 +22,24 @@ function disegnaElementiMappa(cityId, cityName) {
             if (section && section.geometry) {
                 totalSectionsFound++;
                 let coords = parseGeometry(section.geometry);
-
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
-
-                // Fix dati sporchi
+                
                 if (buildstart && buildstart < 1800) buildstart = null;
                 if (opening && opening < 1800) opening = null;
-
-                // Logica "In Costruzione" vs "Snapshot"
                 if (!opening) {
-                    if (buildstart) {
-                        opening = 9999;
-                    } else {
-                        opening = endOfTime;
-                    }
+                    if (buildstart) opening = 9999;
+                    else opening = endOfTime;
                 }
-
                 if (!buildstart) {
                     if (opening !== endOfTime) buildstart = opening;
                     else buildstart = endOfTime;
                 }
 
                 if (coords) {
-                    allPhysicalSections.push({
-                        lineId: line.id,
-                        coords: coords,
-                        opening: opening,
-                    });
-
-                    for (let pt of coords) {
-                        currentLinePoints.push(pt);
-                    }
-
+                    allPhysicalSections.push({ lineId: line.id, coords: coords, opening: opening });
+                    for (let pt of coords) currentLinePoints.push(pt);
                     featuresLinee.push({
                         type: "Feature",
                         properties: {
@@ -75,7 +53,6 @@ function disegnaElementiMappa(cityId, cityName) {
                         },
                         geometry: { type: "LineString", coordinates: coords },
                     });
-
                     coords.forEach((c) => bounds.extend(c));
                     hasData = true;
                 }
@@ -83,19 +60,16 @@ function disegnaElementiMappa(cityId, cityName) {
         }
     }
 
+    // 2. CICLO STAZIONI (Invariato)
     let cityStations = db.stations.filter((s) => s.city_id === cityId);
     let disableProximityCheck = totalSectionsFound === 0;
     const MAX_DISTANCE_THRESHOLD = 0.02;
 
-    // --- 2. CICLO STAZIONI ---
     for (let station of cityStations) {
         let coords = parseGeometry(station.geometry);
         if (!coords) continue;
-
         let shouldShow = false;
-        let stationLines = db.station_lines.filter(
-            (sl) => sl.station_id === station.id
-        );
+        let stationLines = db.station_lines.filter((sl) => sl.station_id === station.id);
 
         if (disableProximityCheck) {
             shouldShow = true;
@@ -103,10 +77,7 @@ function disegnaElementiMappa(cityId, cityName) {
             shouldShow = stationLines.some((sl) => {
                 let linePoints = lineCoordinatesMap.get(sl.line_id);
                 if (!linePoints || linePoints.length === 0) return false;
-                return (
-                    getDistanceFromLine(coords, linePoints) <
-                    MAX_DISTANCE_THRESHOLD
-                );
+                return getDistanceFromLine(coords, linePoints) < MAX_DISTANCE_THRESHOLD;
             });
         }
 
@@ -119,30 +90,17 @@ function disegnaElementiMappa(cityId, cityName) {
 
         if (!opening) {
             let servingLineIds = stationLines.map((sl) => sl.line_id);
-            let candidateSections = allPhysicalSections.filter((sect) =>
-                servingLineIds.includes(sect.lineId)
-            );
-
+            let candidateSections = allPhysicalSections.filter((sect) => servingLineIds.includes(sect.lineId));
             let validDates = [];
-
             for (let section of candidateSections) {
                 let dist = getDistanceFromLine(coords, section.coords);
-                if (dist < MAX_DISTANCE_THRESHOLD) {
-                    validDates.push(section.opening);
-                }
+                if (dist < MAX_DISTANCE_THRESHOLD) validDates.push(section.opening);
             }
-
-            if (validDates.length > 0) {
-                opening = Math.min(...validDates);
-            } else {
-                opening = endOfTime;
-            }
+            if (validDates.length > 0) opening = Math.min(...validDates);
+            else opening = endOfTime;
         }
 
-        if (opening === endOfTime && buildstart) {
-            opening = 9999;
-        }
-
+        if (opening === endOfTime && buildstart) opening = 9999;
         if (!buildstart) {
             if (opening !== endOfTime) buildstart = opening;
             else buildstart = endOfTime;
@@ -165,25 +123,14 @@ function disegnaElementiMappa(cityId, cityName) {
         }
     }
 
-    // --- 3. RENDERING ---
+    // 3. RENDERING
     if (mappa.getSource("metro-lines")) mappa.removeSource("metro-lines");
     if (mappa.getSource("metro-stations")) mappa.removeSource("metro-stations");
 
-    mappa.addSource("metro-lines", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: featuresLinee },
-    });
-    mappa.addSource("metro-stations", {
-        type: "geojson",
-        data: { type: "FeatureCollection", features: featuresStazioni },
-    });
+    mappa.addSource("metro-lines", { type: "geojson", data: { type: "FeatureCollection", features: featuresLinee } });
+    mappa.addSource("metro-stations", { type: "geojson", data: { type: "FeatureCollection", features: featuresStazioni } });
 
-    [
-        "lines-construction",
-        "lines-operational",
-        "lines-layer-hitbox",
-        "stations-layer",
-    ].forEach((id) => {
+    ["lines-construction", "lines-operational", "lines-layer-hitbox", "stations-layer"].forEach((id) => {
         if (mappa.getLayer(id)) mappa.removeLayer(id);
     });
 
@@ -193,32 +140,15 @@ function disegnaElementiMappa(cityId, cityName) {
         id: "lines-construction",
         type: "line",
         source: "metro-lines",
-        layout: {
-            "line-join": "round",
-            "line-cap": "round",
-            visibility: initialVisibility,
-        },
-        paint: {
-            "line-color": "#d1d5db",
-            "line-width": 3,
-            "line-dasharray": [2, 2],
-            "line-opacity": 0.8,
-        },
+        layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
+        paint: { "line-color": "#6e7b8d", "line-width": 3, "line-dasharray": [2, 2], "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-operational",
         type: "line",
         source: "metro-lines",
-        layout: {
-            "line-join": "round",
-            "line-cap": "round",
-            visibility: initialVisibility,
-        },
-        paint: {
-            "line-color": ["get", "color"],
-            "line-width": 4,
-            "line-opacity": 0.8,
-        },
+        layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
+        paint: { "line-color": ["get", "color"], "line-width": 4, "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-layer-hitbox",
@@ -232,12 +162,7 @@ function disegnaElementiMappa(cityId, cityName) {
         type: "circle",
         source: "metro-stations",
         layout: { visibility: initialVisibility },
-        paint: {
-            "circle-radius": 4,
-            "circle-color": "#ffffff",
-            "circle-stroke-width": 1.5,
-            "circle-stroke-color": "#334155",
-        },
+        paint: { "circle-radius": 4, "circle-color": "#ffffff", "circle-stroke-width": 1.5, "circle-stroke-color": "#334155" },
     });
 
     aggiornaFiltriCombinati();
@@ -245,9 +170,9 @@ function disegnaElementiMappa(cityId, cityName) {
     if (hasData) {
         boundsCittaCorrente = bounds;
         toggleMapInteractions(false);
-        // Padding iniziale 50px
         mappa.fitBounds(bounds, { padding: 50 });
 
+        // --- PUNTO CHIAVE DELLA MODIFICA ---
         mappa.once("moveend", () => {
             // Rivelazione Layer
             mappa.setLayoutProperty("lines-construction", "visibility", "visible");
@@ -255,12 +180,17 @@ function disegnaElementiMappa(cityId, cityName) {
             mappa.setLayoutProperty("lines-layer-hitbox", "visibility", "visible");
             mappa.setLayoutProperty("stations-layer", "visibility", "visible");
 
-            // Applichiamo il blocco con il buffer in PIXEL (bilanciato)
+            // Blocco vista
             bloccaVistaConBuffer();
-
             toggleMapInteractions(true);
 
             if (appState.hasValidHistory) {
+                // MODIFICA QUI: Sblocchiamo subito la UI!
+                // L'utente può ora mettere in pausa o muovere lo slider MENTRE l'animazione corre.
+                if (typeof sbloccaControlliTimeline === "function") {
+                    sbloccaControlliTimeline();
+                }
+
                 appState.hasCompletedFirstCycle = false;
                 togglePlayback(true);
             }

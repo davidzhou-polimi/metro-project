@@ -434,10 +434,10 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
                 
                 updateSidebarStats(); 
 
-                if (appState.hasValidHistory) {
+                /*if (appState.hasValidHistory) {
                     appState.hasCompletedFirstCycle = false;
                     togglePlayback(true);
-                }
+                }*/
             }, 600);
         });
     });
