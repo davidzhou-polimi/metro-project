@@ -15,7 +15,7 @@ function initializeLayout() {
 
     // 2. CREAZIONE HEADER (Navbar) - Salviamo il riferimento globale
     layout.header = createDiv().parent(app).id("app-header");
-    layout.header.class("sticky top-0 z-50 w-full bg-white/90 backdrop-blur-sm border-b border-slate-200 shadow-sm transition-all duration-300")
+    layout.header.class("sticky top-0 z-50 w-full bg-white/90 backdrop-blur-sm border-b border-neutral-200 shadow-sm transition-all duration-300")
 
     // 3. CREAZIONE MAIN CONTENT (Il "Buco")
     layout.main = createDiv().parent(app).id("main-content");
@@ -23,7 +23,7 @@ function initializeLayout() {
 
     // 4. CREAZIONE FOOTER
     layout.footer = createDiv().parent(app).id("app-footer");
-    layout.footer.class("py-6 text-center text-slate-400 text-xs border-t border-slate-200 mt-auto");
+    layout.footer.class("py-6 text-center text-neutral-400 text-xs border-t border-neutral-200 mt-auto");
     layout.footer.html("&copy; 2025 World Metro");
     
     console.log("LAYOUT: Struttura creata e salvata in globale.");
