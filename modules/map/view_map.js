@@ -427,12 +427,7 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
                 disegnaElementiMappa(city.id, city.name);
                 aggiungiInterazioniMappa();
                 
-                updateSidebarStats(); 
-
-                /*if (appState.hasValidHistory) {
-                    appState.hasCompletedFirstCycle = false;
-                    togglePlayback(true);
-                }*/
+                updateSidebarStats();
             }, 600);
         });
     });
