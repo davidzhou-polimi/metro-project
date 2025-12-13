@@ -1,4 +1,4 @@
-// core/data_loader.js
+// core/data_filter.js
 
 /**
  * Transit Data Filtering Script
@@ -969,6 +969,24 @@ function filterData(data) {
             filtered[key] = [...data[key]];
         }
     });
+
+    // --- PATCH: UNIFY UNITED KINGDOM ---
+    // Normalizza le nazioni costitutive (England, Scotland, D, Northern Ireland)
+    // sotto un unico nome "United Kingdom" nella tabella cities.
+    if (filtered.cities) {
+        const ukNations = new Set(["England", "Scotland", "Wales", "Northern Ireland"]);
+        
+        filtered.cities = filtered.cities.map(city => {
+            // Controlliamo se il paese è una delle nazioni UK
+            if (city.country && ukNations.has(city.country)) {
+                // Ritorniamo una copia dell'oggetto con il paese modificato
+                // per evitare di mutare i dati originali per riferimento
+                return { ...city, country: "United Kingdom" };
+            }
+            return city;
+        });
+    }
+    // -----------------------------------
 
     const groups = FILTER_CONFIG;
 
