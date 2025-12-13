@@ -34,7 +34,7 @@ function creaListaCitta() {
     let searchInput = createInput("").parent(searchWrapper);
     searchInput.attribute("placeholder", "Es. Milan, London, Tokyo...");
     searchInput.class(
-        "w-full p-3 rounded border border-slate-300 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+        "w-full p-3 rounded border border-slate-300 focus:outline-none focus:border-neutral-500 focus:ring-1 focus:ring-neutral-500 transition-all"
     );
 
     let countLabel = createSpan(`(${db.cities.length} reti disponibili)`)
@@ -69,12 +69,12 @@ function creaListaCitta() {
         for (let city of filteredCities) {
             let card = createDiv().parent(listContainer);
             card.class(
-                "bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-300 cursor-pointer transition-all duration-200 group"
+                "bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-md hover:border-neutral-300 cursor-pointer transition-all duration-200 group"
             );
             createElement("h3", city.name)
                 .parent(card)
                 .class(
-                    "text-lg font-bold text-slate-800 group-hover:text-indigo-600"
+                    "text-lg font-bold text-slate-800 group-hover:text-neutral-600"
                 );
             createElement("p", city.country)
                 .parent(card)

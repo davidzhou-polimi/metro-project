@@ -20,11 +20,11 @@ function setupSplash() {
     cnv.style('z-index', '0'); // Sfondo
     
     // 3. Creazione Pulsante HTML (al posto dello spinner)
-    splashButton = createButton("ENTER METRO WORLD");
+    splashButton = createButton("ENTER World Metro");
     splashButton.parent(container);
     
     // Stile del pulsante (Tailwind + posizionamento assoluto al centro)
-    splashButton.class("absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all z-10 tracking-widest text-sm");
+    splashButton.class("absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-neutral-600 hover:bg-neutral-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-all z-10 tracking-widest text-sm");
     
     // Azione del pulsante
     splashButton.mousePressed(() => {

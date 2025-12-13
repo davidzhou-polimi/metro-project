@@ -11,15 +11,13 @@ function inizializzaMappa(city) {
     appState.activeCityId = city.id;
     appState.isolatedLineId = null;
     stopAnimation();
-    document.title = `${city.name} - Metro World`;
+    document.title = `${city.name} - World Metro`;
     //sincronizzaURL();
 
     calcolaRangeAnni(city.id);
 
     let container = getContentContainer();
     container.html("");
-
-    creaNavbar(container, city);
 
     let contentWrapper = createDiv()
         .parent(container)
@@ -127,28 +125,6 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 
 // --- MODULO 2: UI BUILDING BLOCKS ---
 
-function creaNavbar(container, city) {
-    let navBar = createDiv().parent(container).class("flex items-center justify-between mb-4 pb-2 border-b border-slate-100");
-    
-    let btnBack = createButton("Torna indietro");
-    btnBack.parent(navBar).class("bg-white border border-slate-300 text-slate-700 px-4 py-2 rounded-md hover:bg-slate-50 font-medium transition-colors text-sm");
-    btnBack.mousePressed(() => changeState('HOME'));
-
-    let titleContainer = createDiv().parent(navBar).class("text-right flex flex-col items-end");
-
-    createElement("div", city.country).parent(titleContainer).class("text-xs text-slate-400 font-bold uppercase tracking-widest mb-0.5");
-    createElement("h2", city.name).parent(titleContainer).class("text-3xl font-extrabold text-slate-800 tracking-tight leading-none");
-
-    let kmTotali = calcolaLunghezzaRete(city.id);
-    let statsDiv = createDiv().parent(titleContainer).class("flex items-center gap-2 mt-1");
-    
-    createSpan("RETE TOTALE").parent(statsDiv).class("text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded");
-    
-    // MODIFICA: Aggiunto ID per aggiornamento dinamico
-    let kmSpan = createSpan(`${kmTotali} km`).parent(statsDiv).class("text-sm font-bold text-indigo-600 tabular-nums");
-    kmSpan.id("header-total-km");
-}
-
 function creaContenitoreMappa(parentWrapper) {
     let wrapper = createDiv().parent(parentWrapper);
     wrapper.class(
@@ -163,7 +139,7 @@ function creaContenitoreMappa(parentWrapper) {
 
     let spinner = createDiv().parent(loaderDiv);
     spinner.class(
-        "w-12 h-12 border-8 border-slate-200 border-t-indigo-600 rounded-full animate-spin mb-4"
+        "w-12 h-12 border-8 border-slate-200 border-t-neutral-600 rounded-full animate-spin mb-4"
     );
 
     createSpan("Loading map...")
@@ -190,11 +166,25 @@ function creaSidebar(parentWrapper, city) {
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "p-4 border-b border-slate-100 bg-slate-50 rounded-t-xl flex justify-between items-center"
+            "p-4 border-b border-slate-100 bg-slate-50 rounded-t-xl flex justify-between items-end"
         );
-    createSpan("Sistemi & Linee")
+    let titleContainer = createDiv().parent(sbHeader).class("flex flex-col items");
+
+    createElement("div", city.country).parent(titleContainer).class("text-xs text-slate-400 font-bold uppercase tracking-widest mb-0.5");
+    createElement("h2", city.name).parent(titleContainer).class("text-3xl font-extrabold text-slate-800 tracking-tight leading-none");
+
+    let kmTotali = calcolaLunghezzaRete(city.id);
+    let statsDiv = createDiv().parent(titleContainer).class("flex items-center gap-2 mt-1");
+    
+    createSpan("RETE TOTALE").parent(statsDiv).class("text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded");
+    
+    // MODIFICA: Aggiunto ID per aggiornamento dinamico
+    let kmSpan = createSpan(`${kmTotali} km`).parent(statsDiv).class("text-sm font-bold text-neutral-600 tabular-nums");
+    kmSpan.id("header-total-km");
+
+    /*createSpan("Sistemi & Linee")
         .parent(sbHeader)
-        .class("font-bold text-slate-700");
+        .class("font-bold text-slate-700");*/
     let btnReset = createButton("Mostra tutto").parent(sbHeader);
     btnReset.class(
         "text-xs bg-white border border-slate-300 px-2 py-1 rounded hover:bg-slate-100 text-slate-600 cursor-pointer"
@@ -334,7 +324,7 @@ function creaTimeline(container) {
         );
     let yearDisplay = createElement("h3", appState.minYear)
         .parent(tlInfo)
-        .class("text-3xl font-black text-indigo-600 tabular-nums");
+        .class("text-3xl font-black text-neutral-600 tabular-nums");
 
     let sliderContainer = createDiv()
         .parent(timelineWrapper)
@@ -384,7 +374,7 @@ function sbloccaControlliTimeline() {
     if (btnPlay) {
         btnPlay.removeAttribute("disabled");
         btnPlay.class(
-            "w-16 h-10 flex-shrink-0 bg-indigo-600 text-white rounded-md flex items-center justify-center font-bold text-xs hover:bg-indigo-700 transition-colors cursor-pointer tracking-wider"
+            "w-16 h-10 flex-shrink-0 bg-neutral-600 text-white rounded-md flex items-center justify-center font-bold text-xs hover:bg-neutral-700 transition-colors cursor-pointer tracking-wider"
         );
     }
 
@@ -417,6 +407,11 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
         "top-right"
     );
     mappa.addControl(new mapboxgl.ScaleControl());
+    // disable map rotation using right click + drag
+    mappa.dragRotate.disable();
+
+    // disable map rotation using touch rotation gesture
+    mappa.touchZoomRotate.disableRotation();
 
     mappa.on("load", () => {
         mappa.resize();
@@ -450,12 +445,6 @@ function isolaLineaSullaMappa(lineId) {
         appState.isolatedLineId = lineId;
         aggiornaFiltriCombinati();
     }
-}
-
-function resetFiltriMappa() {
-    appState.isolatedLineId = null;
-    if (appState.isPlaying) togglePlayback(false);
-    aggiornaFiltriCombinati();
 }
 
 // MODIFICA: Logica completamente dinamica per numeri, visibilità e stazioni
@@ -568,7 +557,7 @@ function updateSidebarStats() {
                     htmlParts.push(`<span class="text-[10px] font-bold text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-200">OPERATIVI: ${kmOp.toFixed(1)}km</span>`);
                 }
                 if (sections.length === 0 && stationRels.length === 0) {
-                    htmlParts.push(`<span class="text-[10px] font-bold text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">DATI MANCANTI</span>`);
+                    htmlParts.push(`<span class="text-[10px] font-bold text-neutral-400 bg-neutral-100 px-1.5 py-0.5 rounded border borderneutral-200">DATI MANCANTI</span>`);
                 }
                 statsContainer.html(htmlParts.join(""));
 
@@ -579,12 +568,12 @@ function updateSidebarStats() {
                     if (visibleStationCount > 0) {
                         let sortedStations = ordinaStazioniNaturalmente(activeStations);
                         let btnShowLine = createDiv("Isola linea").parent(stationsDiv);
-                        btnShowLine.class("text-xs font-bold text-indigo-600 cursor-pointer py-1 mb-1 hover:underline");
+                        btnShowLine.class("text-xs font-bold text-neutral-600 cursor-pointer py-1 mb-1 hover:underline");
                         btnShowLine.mousePressed(() => isolaLineaSullaMappa(line.id));
 
                         for (let station of sortedStations) {
                             let stElem = createDiv(station.name).parent(stationsDiv);
-                            stElem.class("text-xs text-slate-600 hover:text-indigo-600 cursor-pointer py-1 truncate");
+                            stElem.class("text-xs text-slate-600 hover:text-neutral-600 cursor-pointer py-1 truncate");
                             stElem.mousePressed(() => zoomSuStazione(station));
                         }
                     } else {

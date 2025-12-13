@@ -107,35 +107,3 @@ function getDistanceFromLine(point, linePoints) {
     }
     return Math.sqrt(minDistSq);
 }
-
-function injectCustomCSS() {
-    let css = `
-    .metro-slider {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 12px;
-        border-radius: 6px;
-        background: #e2e8f0; 
-        outline: none;
-        border: 2px solid #cbd5e1;
-    }
-    .metro-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 4px solid #4f46e5; 
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        transition: transform 0.1s;
-    }
-    .metro-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        border-color: #4338ca;
-    }
-    `;
-    let style = createElement("style", css);
-    style.parent(select("head"));
-}

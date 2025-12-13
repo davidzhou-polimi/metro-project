@@ -347,7 +347,7 @@ function aggiungiInterazioniMappa() {
             new mapboxgl.Popup()
                 .setLngLat(e.lngLat)
                 .setHTML(
-                    `<div class="font-bold text-sm text-indigo-600">${topFeature.properties.name}</div>`
+                    `<div class="font-bold text-sm text-neutral-600">${topFeature.properties.name}</div>`
                 )
                 .addTo(mappa);
         }
