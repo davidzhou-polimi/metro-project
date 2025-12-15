@@ -24,6 +24,8 @@ function changeState(newState, param = null) {
     params.set("page", newState.toLowerCase());
 
     // --- 3. AVVIO NUOVA PAGINA ---
+    window.scrollTo(0, 0);
+
     if (newState === 'MAP') {
         if (!db.cities || db.cities.length === 0) processaDati();
         if (typeof enterMap === "function") enterMap(param);

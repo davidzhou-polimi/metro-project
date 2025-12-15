@@ -1,5 +1,6 @@
 function disegnaElementiMappa(cityId, cityName) {
-    // ... (tutta la parte iniziale di calcolo features e bounds rimane invariata) ...
+    console.log(`--- DEBUG MAPPA: ${cityName} ---`);
+    
     let featuresLinee = [];
     let featuresStazioni = [];
     let bounds = new mapboxgl.LngLatBounds();
@@ -11,7 +12,7 @@ function disegnaElementiMappa(cityId, cityName) {
     let allPhysicalSections = [];
     let totalSectionsFound = 0;
 
-    // 1. CICLO LINEE (Invariato)
+    // 1. CICLO LINEE
     for (let line of cityLines) {
         let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
         if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
@@ -19,9 +20,27 @@ function disegnaElementiMappa(cityId, cityName) {
 
         for (let rel of rels) {
             let section = db.sections.find((s) => s.id === rel.section_id);
+            
             if (section && section.geometry) {
-                totalSectionsFound++;
                 let coords = parseGeometry(section.geometry);
+                
+                // --- FIX CRITICO: VALIDAZIONE COORDINATE ---
+                // Se parseGeometry fallisce o restituisce roba strana, saltiamo per evitare crash
+                if (!coords || !Array.isArray(coords) || coords.length === 0) {
+                    console.warn(`Geometria invalida per sezione ${section.id}`, section.geometry);
+                    continue;
+                }
+                
+                // Controllo extra: ogni punto deve essere [num, num]
+                let isValidGeo = coords.every(pt => Array.isArray(pt) && pt.length >= 2 && !isNaN(pt[0]) && !isNaN(pt[1]));
+                if (!isValidGeo) {
+                    console.warn(`Coordinate corrotte per sezione ${section.id}`);
+                    continue;
+                }
+                // -------------------------------------------
+
+                totalSectionsFound++;
+                
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
@@ -37,37 +56,39 @@ function disegnaElementiMappa(cityId, cityName) {
                     else buildstart = endOfTime;
                 }
 
-                if (coords) {
-                    allPhysicalSections.push({ lineId: line.id, coords: coords, opening: opening });
-                    for (let pt of coords) currentLinePoints.push(pt);
-                    featuresLinee.push({
-                        type: "Feature",
-                        properties: {
-                            color: fixColor(line.color),
-                            lineId: line.id,
-                            name: line.name,
-                            buildstart: buildstart,
-                            opening: opening,
-                            closure: closure,
-                            length: section.length || 0,
-                        },
-                        geometry: { type: "LineString", coordinates: coords },
-                    });
-                    coords.forEach((c) => bounds.extend(c));
-                    hasData = true;
-                }
+                allPhysicalSections.push({ lineId: line.id, coords: coords, opening: opening });
+                for (let pt of coords) currentLinePoints.push(pt);
+                
+                featuresLinee.push({
+                    type: "Feature",
+                    properties: {
+                        color: fixColor(line.color),
+                        lineId: line.id,
+                        name: line.name,
+                        buildstart: buildstart,
+                        opening: opening,
+                        closure: closure,
+                        length: section.length || 0,
+                    },
+                    geometry: { type: "LineString", coordinates: coords },
+                });
+                
+                coords.forEach((c) => bounds.extend(c));
+                hasData = true;
             }
         }
     }
 
-    // 2. CICLO STAZIONI (Invariato)
+    // 2. CICLO STAZIONI
     let cityStations = db.stations.filter((s) => s.city_id === cityId);
     let disableProximityCheck = totalSectionsFound === 0;
     const MAX_DISTANCE_THRESHOLD = 0.02;
 
     for (let station of cityStations) {
         let coords = parseGeometry(station.geometry);
-        if (!coords) continue;
+        // Validazione coordinate stazione
+        if (!coords || isNaN(coords[0]) || isNaN(coords[1])) continue;
+
         let shouldShow = false;
         let stationLines = db.station_lines.filter((sl) => sl.station_id === station.id);
 
@@ -170,31 +191,41 @@ function disegnaElementiMappa(cityId, cityName) {
     if (hasData) {
         boundsCittaCorrente = bounds;
         toggleMapInteractions(false);
-        mappa.fitBounds(bounds, { padding: 50 });
+        
+        // --- FIX CRITICO: Check se i bounds sono validi prima di zoomare ---
+        if (!bounds.isEmpty()) {
+            mappa.fitBounds(bounds, { padding: 50 });
 
-        // --- PUNTO CHIAVE DELLA MODIFICA ---
-        mappa.once("moveend", () => {
-            // Rivelazione Layer
-            mappa.setLayoutProperty("lines-construction", "visibility", "visible");
-            mappa.setLayoutProperty("lines-operational", "visibility", "visible");
-            mappa.setLayoutProperty("lines-layer-hitbox", "visibility", "visible");
-            mappa.setLayoutProperty("stations-layer", "visibility", "visible");
+            mappa.once("moveend", () => {
+                // Rivelazione Layer
+                mappa.setLayoutProperty("lines-construction", "visibility", "visible");
+                mappa.setLayoutProperty("lines-operational", "visibility", "visible");
+                mappa.setLayoutProperty("lines-layer-hitbox", "visibility", "visible");
+                mappa.setLayoutProperty("stations-layer", "visibility", "visible");
 
-            // Blocco vista
-            bloccaVistaConBuffer();
-            toggleMapInteractions(true);
+                // Blocco vista
+                bloccaVistaConBuffer();
+                toggleMapInteractions(true);
 
-            if (appState.hasValidHistory) {
-                // MODIFICA QUI: Sblocchiamo subito la UI!
-                // L'utente può ora mettere in pausa o muovere lo slider MENTRE l'animazione corre.
-                if (typeof sbloccaControlliTimeline === "function") {
-                    sbloccaControlliTimeline();
+                if (appState.hasValidHistory) {
+                    if (typeof sbloccaControlliTimeline === "function") sbloccaControlliTimeline();
+                    if (typeof sbloccaControlliSidebar === "function") sbloccaControlliSidebar();
+
+                    appState.hasCompletedFirstCycle = false;
+                    togglePlayback(true);
                 }
-
-                appState.hasCompletedFirstCycle = false;
-                togglePlayback(true);
-            }
-        });
+            });
+        } else {
+            console.error("Bounds vuoti. Nessuna coordinata valida trovata per questa città.");
+            // Fallback: sblocca tutto per evitare che l'app si congeli
+            toggleMapInteractions(true);
+            let loader = select("#map-loader");
+            if (loader) loader.remove();
+        }
+    } else {
+        console.warn("Nessun dato da mostrare.");
+        let loader = select("#map-loader");
+        if (loader) loader.remove();
     }
 }
 

@@ -37,8 +37,24 @@ function preload() {
     rawData.station_lines = loadJSON("assets/data/station_lines.json");
     rawData.sections = loadJSON("assets/data/sections.json");
     rawData.section_lines = loadJSON("assets/data/section_lines.json");
-    // Se hai altri file, caricali qui
+    
+    // Icone
+    // resetIcon = loadStrings('assets/images/reset.svg');
+    // playIcon = loadStrings('assets/images/play.svg');
+    // pauseIcon = loadStrings('assets/images/pause.svg');
+    // backIcon = loadStrings('assets/images/back.svg');
+    // homeIcon = loadStrings('assets/images/home.svg');
+    // aboutIcon = loadStrings('assets/images/about.svg');
 }
+
+// function setup() {
+    // resetIcon = resetIcon.join(' ');
+    // playIcon = playIcon.join(' ');
+    // pauseIcon = pauseIcon.join(' ');
+    // backIcon = backIcon.join(' ');
+    // homeIcon = homeIcon.join(' ');
+    // aboutIcon = aboutIcon.join(' ');
+// }
 
 function draw() {
     // 1. Logica di Routing usando la nuova variabile 'pageState'
@@ -61,9 +77,11 @@ function draw() {
              break;
     }
 
-    // 2. Elementi Sovrapposti (Sempre visibili tranne forse in splash)
-    if (pageState !== 'SPLASH' && typeof drawNavbar === 'function') {
-        drawNavbar();
+    // Logica visibilità pulsante Back
+    if (pageState === "MAP") {
+        btnBack.removeClass('invisible');
+    } else {
+        btnBack.addClass('invisible');
     }
 }
 

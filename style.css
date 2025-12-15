@@ -90,15 +90,18 @@ canvas {
 
 /* Stile custom per i popup di Mapbox */
 .mapboxgl-popup-content {
-    font-family: 'LondonUnderground', sans-serif; /* Forza il font */
-    border-radius: 0px; /* Squadrato come i cartelli metro */
-    border: 2px solid #0E181F; /* Bordo scuro */
-    box-shadow: 4px 4px 0px rgba(0,0,0,0.2); /* Ombra netta */
+    font-family: "LondonUnderground", sans-serif; /* Forza il font */
+    border-radius: 0.75rem;
+    border: 4px solid #171717; /* Bordo scuro */
     padding: 10px 15px;
 }
 
 .mapboxgl-popup-tip {
-    border-top-color: #0E181F !important; /* Punta del popup scura */
+    border-top-color: #171717 !important; /* Punta del popup scura */
+}
+
+.mapboxgl-popup-close-button {
+    display: none;
 }
 
 /* Nasconde il testo di caricamento di default di p5.js */
@@ -108,27 +111,27 @@ canvas {
 
 /* Timeline custom style */
 .metro-slider {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 12px;
-        border-radius: 6px;
-        background: #e2e8f0; 
-        outline: none;
-        border: 2px solid #cbd5e1;
-    }
-    .metro-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 4px solid #0E181F; 
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        transition: transform 0.1s;
-    }
-    .metro-slider::-webkit-slider-thumb:hover {
-        transform: scale(1.1);
-        border-color: #0E181F;
-    }
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    border-radius: 8px;
+    background: #A1A1A1;
+    outline: none;
+}
+.metro-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 4px solid #171717;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s;
+}
+.metro-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    border-color: #171717;
+    cursor: ew-resize;
+}

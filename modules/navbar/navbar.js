@@ -6,32 +6,32 @@ function setupNavbar() {
     headerContainer.html(""); // Pulizia preventiva
     
     let content = createDiv().parent(headerContainer);
-    content.class("mx-auto px-4 md:px-8 h-16 flex items-center justify-between");
+    content.class("mx-auto px-4 md:px-8 h-20 flex items-center justify-between relative");
     
-    let btnBack = createButton("Torna indietro");
-    btnBack.parent(content).class("bg-white border border-neutral-300 text-neutral-700 px-4 py-2 rounded-md hover:bg-neutral-50 font-medium transition-colors text-sm");
+    btnBack = createButton(backIcon);
+    btnBack.parent(content).class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnBack.mousePressed(() => changeState('HOME'));
 
     // Logo / Home Link
-    let logo = createButton("World Metro").parent(content);
-    logo.class("text-xl font-black tracking-tighter text-neutral-700 hover:text-neutral-500 no-underline");
+    let logo = createButton("WORLD METRO").parent(content);
+    logo.class("absolute left-1/2 -translate-x-1/2 text-4xl font-black tracking-tight text-neutral-900 no-underline cursor-default"); // hover:text-neutral-600
     logo.mousePressed((e) => {
         e.preventDefault(); // Evita il ricaricamento pagina
-        changeState('HOME');
+        //changeState('HOME');
     });
 
     // Menu destra
-    let menu = createDiv().parent(content).class("flex-1 flex justify-end gap-4 text-sm font-bold text-neutral-500");
+    let menu = createDiv().parent(content).class("flex justify-end gap-4 text-sm font-bold text-neutral-500");
     
-    let btnHome = createButton("Home").parent(menu);
-    btnHome.class("hover:text-neutral-600 transition-colors");
+    let btnHome = createButton(homeIcon).parent(menu);
+    btnHome.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnHome.mousePressed((e) => {
         e.preventDefault();
         changeState('HOME');
     });
 
-    let btnAbout = createButton("About").parent(menu);
-    btnAbout.class("hover:text-neutral-600 transition-colors");
+    let btnAbout = createButton(aboutIcon).parent(menu);
+    btnAbout.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnAbout.mousePressed((e) => {
         e.preventDefault();
         changeState('ABOUT');

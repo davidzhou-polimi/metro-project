@@ -8,10 +8,10 @@ function togglePlayback(forceState) {
         
         appState.isPlaying = true;
         let btn = select("#btn-play");
-        if (btn) btn.html("PAUSA");
+        if (btn) btn.html(pauseIcon);
 
         if (appState.currentYear >= appState.maxYear) {
-            appState.currentYear = appState.minYear;
+            appState.currentYear = appState.minYear - 1;
         }
 
         appState.animationInterval = setInterval(() => {
@@ -26,6 +26,9 @@ function togglePlayback(forceState) {
                     if (typeof sbloccaControlliTimeline === 'function') {
                         sbloccaControlliTimeline();
                     }
+                    if (typeof sbloccaControlliSidebar === "function") {
+                        sbloccaControlliSidebar();
+                    }
                 }
                 togglePlayback(false);
             }
@@ -34,7 +37,7 @@ function togglePlayback(forceState) {
         // Pausa
         appState.isPlaying = false;
         let btn = select("#btn-play");
-        if (btn) btn.html("PLAY");
+        if (btn) btn.html(playIcon);
         // Chiude l'intervallo
         if (appState.animationInterval) clearInterval(appState.animationInterval);
     }
@@ -44,7 +47,7 @@ function stopAnimation() {
     if (appState.animationInterval) clearInterval(appState.animationInterval);
     appState.isPlaying = false;
     let btn = select("#btn-play");
-    if (btn) btn.html("PLAY");
+    if (btn) btn.html(playIcon);
 }
 
 function updateUIForAnimation() {
