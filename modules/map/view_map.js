@@ -189,7 +189,7 @@ function creaSidebar(parentWrapper, city) {
     btnReset.id("btn-reset");
     btnReset.attribute("disabled", "true");
     btnReset.class(
-        "rounded-full bg-neutral-900 text-neutral-500 cursor-not-allowed p-2"
+        "rounded-full bg-neutral-700 text-neutral-500 cursor-not-allowed p-2"
     );
     btnReset.mousePressed(() => resetFiltriMappa());
 
@@ -400,7 +400,7 @@ function sbloccaControlliSidebar() {
     if (btnReset) {
         btnReset.removeAttribute("disabled");
         btnReset.class(
-            "rounded-full bg-neutral-200 hover:bg-white text-neutral-800 hover:text-neutral-900 hover:rotate-180 transition duration-700 ease-out cursor-pointer p-2"
+            "rounded-full bg-white text-neutral-800 hover:text-neutral-900 hover:rotate-180 transition duration-700 ease-out cursor-pointer p-2"
         );
     }
 }
