@@ -74,23 +74,27 @@ function calcolaRangeAnni(cityId) {
 // MODIFICA: Aggiunto parametro 'year' opzionale per calcolo dinamico
 function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
     let targetSectionIds = new Set();
-    
+
     // Fallback data finale per coerenza con la logica mappa
     let endOfTime = appState.maxYear || 2025;
 
     if (systemLineIds) {
-        let rels = db.section_lines.filter(sl => systemLineIds.includes(sl.line_id));
-        rels.forEach(r => targetSectionIds.add(r.section_id));
+        let rels = db.section_lines.filter((sl) =>
+            systemLineIds.includes(sl.line_id)
+        );
+        rels.forEach((r) => targetSectionIds.add(r.section_id));
     } else {
-        let cityLines = db.lines.filter(l => l.city_id === cityId);
-        let lineIds = cityLines.map(l => l.id);
-        let rels = db.section_lines.filter(sl => lineIds.includes(sl.line_id));
-        rels.forEach(r => targetSectionIds.add(r.section_id));
+        let cityLines = db.lines.filter((l) => l.city_id === cityId);
+        let lineIds = cityLines.map((l) => l.id);
+        let rels = db.section_lines.filter((sl) =>
+            lineIds.includes(sl.line_id)
+        );
+        rels.forEach((r) => targetSectionIds.add(r.section_id));
     }
 
     let totalMeters = 0;
-    targetSectionIds.forEach(id => {
-        let section = db.sections.find(s => s.id === id);
+    targetSectionIds.forEach((id) => {
+        let section = db.sections.find((s) => s.id === id);
         if (section && section.length) {
             let meters = parseFloat(section.length);
 
@@ -109,10 +113,10 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
                 }
 
                 let closure = parseYear(section.closure) || 9999;
-                
+
                 // Contiamo la sezione se esiste nell'anno corrente (In Costruzione O Operativa)
                 let isActive = b <= year && closure > year;
-                
+
                 if (!isActive) meters = 0;
             }
 
@@ -144,7 +148,9 @@ function creaContenitoreMappa(parentWrapper) {
 
     createSpan("Loading map...")
         .parent(loaderDiv)
-        .class("text-neutral-500 text-sm font-semibold tracking-wide uppercase");
+        .class(
+            "text-neutral-500 text-sm font-semibold tracking-wide uppercase"
+        );
 
     let mapDivNativo = document.createElement("div");
     mapDivNativo.id = "map";
@@ -170,16 +176,32 @@ function creaSidebar(parentWrapper, city) {
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
 
-    createElement("div", city.country).parent(titleContainer).class("text-xs text-neutral-400 font-bold uppercase tracking-widest mb-0.5");
-    createElement("h2", city.name).parent(titleContainer).class("text-2xl font-bold text-neutral-50 tracking-tight leading-none");
+    createElement("div", city.country)
+        .parent(titleContainer)
+        .class(
+            "text-xs text-neutral-400 font-bold uppercase tracking-widest mb-0.5"
+        );
+    createElement("h2", city.name)
+        .parent(titleContainer)
+        .class(
+            "text-2xl font-bold text-neutral-50 tracking-tight leading-none"
+        );
 
     let kmTotali = calcolaLunghezzaRete(city.id);
-    let statsDiv = createDiv().parent(titleContainer).class("flex items-center gap-2 mt-2");
-    
-    createSpan("NETWORK LENGTH").parent(statsDiv).class("text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded");
-    
+    let statsDiv = createDiv()
+        .parent(titleContainer)
+        .class("flex items-center gap-2 mt-2");
+
+    createSpan("NETWORK LENGTH")
+        .parent(statsDiv)
+        .class(
+            "text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded"
+        );
+
     // MODIFICA: Aggiunto ID per aggiornamento dinamico
-    let kmSpan = createSpan(`${kmTotali} km`).parent(statsDiv).class("text-sm font-bold text-neutral-300 tabular-nums");
+    let kmSpan = createSpan(`${kmTotali} km`)
+        .parent(statsDiv)
+        .class("text-sm font-bold text-neutral-300 tabular-nums");
     kmSpan.id("header-total-km");
 
     /*createSpan("Sistemi & Linee")
@@ -231,31 +253,47 @@ function creaSidebar(parentWrapper, city) {
 }
 
 function costruisciSistemaUI(system, container) {
-    let sysDetail = createElement("details").parent(container).class("group mb-2");
+    let sysDetail = createElement("details")
+        .parent(container)
+        .class("group mb-2");
     sysDetail.attribute("open", "true");
-    
+
     // MODIFICA: Aggiunto attributo data per selezione sicura
     sysDetail.attribute("data-system-name", system.name);
 
     let sysSummary = createElement("summary").parent(sysDetail);
-    sysSummary.class("group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2");
-    
-    let leftSide = createDiv().parent(sysSummary).class("flex items-center gap-1");
+    sysSummary.class(
+        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"
+    );
+
+    let leftSide = createDiv()
+        .parent(sysSummary)
+        .class("flex items-center gap-1");
     createSpan(chevronIcon)
-        .class("group-hover/dropdown:rotate-90 group-open:rotate-90 group-open:group-hover/dropdown:-rotate-90 transition duration-300 ease-out")
-        .parent(leftSide)
+        .class(
+            "group-hover/dropdown:rotate-90 group-open:rotate-90 group-open:group-hover/dropdown:-rotate-90 transition duration-300 ease-out"
+        )
+        .parent(leftSide);
     createSpan(system.name).parent(leftSide);
 
-    let rightSide = createDiv().parent(sysSummary).class("flex items-center gap-2");
+    let rightSide = createDiv()
+        .parent(sysSummary)
+        .class("flex items-center gap-2");
 
-    let systemLineIds = system.lines.map(l => l.id);
+    let systemLineIds = system.lines.map((l) => l.id);
     let kmSistema = calcolaLunghezzaRete(null, systemLineIds);
 
-    createSpan(`${kmSistema} km`).parent(rightSide).class("text-xs font-medium text-neutral-600 bg-white border border-neutral-300 px-2 py-1.5 rounded");
-    
+    createSpan(`${kmSistema} km`)
+        .parent(rightSide)
+        .class(
+            "text-xs font-medium text-neutral-600 bg-white border border-neutral-300 px-2 py-1.5 rounded"
+        );
+
     let lineCount = system.lines.length;
     let labelLinee = lineCount === 1 ? "line" : "lines";
-    createSpan(`${lineCount} ${labelLinee}`).parent(rightSide).class("text-xs font-normal text-neutral-400");
+    createSpan(`${lineCount} ${labelLinee}`)
+        .parent(rightSide)
+        .class("text-xs font-normal text-neutral-400");
 
     let linesDiv = createDiv().parent(sysDetail).class("flex flex-col gap-2");
 
@@ -268,16 +306,18 @@ function costruisciLineaUI(line, container) {
     let lineDetail = createElement("details")
         .parent(container)
         .class("group/line");
-    
+
     // MODIFICA: Aggiunto ID univoco per nascondere/mostrare
     lineDetail.id("line-wrapper-" + line.id);
 
     let hexColor = fixColor(line.color);
     let useBlack = isColorLight(hexColor);
-    
+
     let lineSummary = createElement("summary").parent(lineDetail);
     lineSummary
-        .class("cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300")
+        .class(
+            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300"
+        )
         .style("background-color", hexColor)
         .style("color", useBlack ? "#000000" : "#ffffff");
 
@@ -303,24 +343,20 @@ function costruisciLineaUI(line, container) {
 }
 
 function popolaStazioniUI(cityId) {
-    updateSidebarStats(); 
+    updateSidebarStats();
 }
 
 function creaTimeline(container) {
-    let timelineWrapper = createDiv()
-        .parent(container)
-        .class(
-            //"mt-8 bg-white p-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
-            "mt-8 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
-        );
+    let timelineWrapper = createDiv().parent(container).class(
+        //"mt-8 bg-white p-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
+        "mt-8 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
+    );
 
     if (!appState.hasValidHistory) {
         timelineWrapper.class(
             "min-h-20 mt-4 p-4 flex items-center justify-center text-neutral-400 text-xs font-medium tracking-wide uppercase italic"
         );
-        timelineWrapper.html(
-            "Construction data not available for this city."
-        );
+        timelineWrapper.html("Construction data not available for this city.");
         return;
     }
 
@@ -376,6 +412,7 @@ function creaTimeline(container) {
         yearDisplay.html(val);
         aggiornaFiltriCombinati();
         if (appState.isPlaying) togglePlayback(false);
+        updateTimelineBackground(slider); // Ascolta l'evento input (mentre trascini)
     });
 }
 
@@ -405,6 +442,18 @@ function sbloccaControlliSidebar() {
     }
 }
 
+function updateTimelineBackground(el) {
+    const min = parseFloat(el.elt.min);
+    const max = parseFloat(el.elt.max);
+    const val = el.value();
+
+    // Calcola la percentuale (valore - min) / (max - min) * 100
+    const value = ((val - min) / (max - min)) * 100;
+
+    // Colore sinistro: #171717 (Nero)
+    // Colore destro: #A1A1A1 (Grigio)
+    el.style("background", `linear-gradient(to right, #171717 ${value}%, #A1A1A1 ${value}%)`);
+}
 
 // --- MODULO 3: MAPBOX LOGIC & ANIMATION ---
 
@@ -447,7 +496,7 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
 
                 disegnaElementiMappa(city.id, city.name);
                 aggiungiInterazioniMappa();
-                
+
                 updateSidebarStats();
             }, 600);
         });
@@ -466,14 +515,18 @@ function isolaLineaSullaMappa(lineId) {
 // MODIFICA: Logica completamente dinamica per numeri, visibilità e stazioni
 function updateSidebarStats() {
     if (!appState.activeCityId) return;
-    
+
     let year = appState.currentYear;
     let endOfTime = appState.maxYear || 2025;
-    
+
     // 1. HEADER DINAMICO
     let headerKm = select("#header-total-km");
     if (headerKm) {
-        let totalCityKm = calcolaLunghezzaRete(appState.activeCityId, null, year);
+        let totalCityKm = calcolaLunghezzaRete(
+            appState.activeCityId,
+            null,
+            year
+        );
         headerKm.html(`${totalCityKm} km`);
     }
 
@@ -481,10 +534,12 @@ function updateSidebarStats() {
 
     for (let system of datiCitta) {
         // Selezione sicura tramite attributo dati (NO p5 select per evitare errori)
-        let allSystems = document.querySelectorAll(`details[data-system-name="${system.name}"]`);
-        if(allSystems.length === 0) continue;
+        let allSystems = document.querySelectorAll(
+            `details[data-system-name="${system.name}"]`
+        );
+        if (allSystems.length === 0) continue;
         let sysDetailNative = allSystems[0];
-        
+
         let activeLinesCount = 0;
         let systemLineIds = [];
 
@@ -523,19 +578,19 @@ function updateSidebarStats() {
 
                 if (isOp) kmOp += len;
                 if (isCons) kmCons += len;
-                
+
                 // Se esiste (cantiere o operativa), è attiva
                 if (isOp || isCons) isLineActiveInYear = true;
             }
 
             // VISIBILITÀ LINEA
             if (isLineActiveInYear) {
-                lineWrapper.style('display', 'block');
+                lineWrapper.style("display", "block");
                 activeLinesCount++;
                 systemLineIds.push(line.id);
             } else {
-                lineWrapper.style('display', 'none');
-                continue; 
+                lineWrapper.style("display", "none");
+                continue;
             }
 
             // AGGIORNAMENTO BADGE STATISTICHE LINEA
@@ -543,12 +598,16 @@ function updateSidebarStats() {
             if (statsContainer) {
                 let htmlParts = [];
                 // Qui dovremmo calcolare le stazioni VISIBILI per il badge (semplificato: se linea attiva, controlla stazioni)
-                
+
                 // Ricostruiamo lista stazioni per contare quelle attive
-                let stationRels = db.station_lines.filter((sl) => sl.line_id === line.id);
+                let stationRels = db.station_lines.filter(
+                    (sl) => sl.line_id === line.id
+                );
                 let activeStations = [];
                 for (let rel of stationRels) {
-                    let station = db.stations.find((s) => s.id === rel.station_id);
+                    let station = db.stations.find(
+                        (s) => s.id === rel.station_id
+                    );
                     if (station) {
                         let b = parseYear(station.buildstart);
                         let o = parseYear(station.opening);
@@ -556,25 +615,41 @@ function updateSidebarStats() {
                         if (b && b < 1800) b = null;
                         if (o && o < 1800) o = null;
                         if (!o) o = endOfTime;
-                        if (!b) { if (o === endOfTime) b = endOfTime; else b = o; }
+                        if (!b) {
+                            if (o === endOfTime) b = endOfTime;
+                            else b = o;
+                        }
                         if (b <= year && c > year) activeStations.push(station);
                     }
                 }
-                
+
                 let visibleStationCount = activeStations.length;
-                let commonBadgeClasses = "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1"
+                let commonBadgeClasses =
+                    "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1";
                 //if (visibleStationCount > 0) {
-                    let label = visibleStationCount === 1 ? "station" : "stations";
-                    htmlParts.push(`<span class="${commonBadgeClasses}">${visibleStationCount} ${label}</span>`);
+                let label = visibleStationCount === 1 ? "station" : "stations";
+                htmlParts.push(
+                    `<span class="${commonBadgeClasses}">${visibleStationCount} ${label}</span>`
+                );
                 //}
                 //if (kmOp > 0) {
-                    htmlParts.push(`<span class="${commonBadgeClasses}">${operativeIcon}${kmOp.toFixed(1)} km</span>`);
+                htmlParts.push(
+                    `<span class="${commonBadgeClasses}">${operativeIcon}${kmOp.toFixed(
+                        1
+                    )} km</span>`
+                );
                 //}
                 //if (kmCons > 0) {
-                    htmlParts.push(`<span class="${commonBadgeClasses}">${constructionIcon}${kmCons.toFixed(1)} km</span>`);
+                htmlParts.push(
+                    `<span class="${commonBadgeClasses}">${constructionIcon}${kmCons.toFixed(
+                        1
+                    )} km</span>`
+                );
                 //}
                 if (sections.length === 0 && stationRels.length === 0) {
-                    htmlParts.push(`<span class="${commonBadgeClasses}">MISSING DATA</span>`);
+                    htmlParts.push(
+                        `<span class="${commonBadgeClasses}">MISSING DATA</span>`
+                    );
                 }
                 statsContainer.html(htmlParts.join(""));
 
@@ -583,18 +658,30 @@ function updateSidebarStats() {
                 if (stationsDiv) {
                     stationsDiv.html(""); // Pulisci
                     if (visibleStationCount > 0) {
-                        let sortedStations = ordinaStazioniNaturalmente(activeStations);
-                        let btnShowLine = createDiv("Isola linea").parent(stationsDiv);
-                        btnShowLine.class("text-xs font-bold text-neutral-600 cursor-pointer py-1 mb-1 hover:underline");
-                        btnShowLine.mousePressed(() => isolaLineaSullaMappa(line.id));
+                        let sortedStations =
+                            ordinaStazioniNaturalmente(activeStations);
+                        let btnShowLine =
+                            createDiv("Isola linea").parent(stationsDiv);
+                        btnShowLine.class(
+                            "text-xs font-bold text-neutral-600 cursor-pointer py-1 mb-1 hover:underline"
+                        );
+                        btnShowLine.mousePressed(() =>
+                            isolaLineaSullaMappa(line.id)
+                        );
 
                         for (let station of sortedStations) {
-                            let stElem = createDiv(station.name).parent(stationsDiv);
-                            stElem.class("text-xs text-neutral-600 hover:text-neutral-600 cursor-pointer py-1 truncate");
+                            let stElem = createDiv(station.name).parent(
+                                stationsDiv
+                            );
+                            stElem.class(
+                                "text-xs text-neutral-600 hover:text-neutral-600 cursor-pointer py-1 truncate"
+                            );
                             stElem.mousePressed(() => zoomSuStazione(station));
                         }
                     } else {
-                        createDiv("No stations found").parent(stationsDiv).class("text-xs text-neutral-400 italic py-1");
+                        createDiv("No stations found")
+                            .parent(stationsDiv)
+                            .class("text-xs text-neutral-400 italic py-1");
                     }
                 }
             }
@@ -602,10 +689,16 @@ function updateSidebarStats() {
 
         // VISIBILITÀ SISTEMA
         if (activeLinesCount > 0) {
-            sysDetailNative.style.display = 'block';
-            let rightSide = sysDetailNative.querySelector("summary > div:last-child");
-            if(rightSide) {
-                let kmSistema = calcolaLunghezzaRete(appState.activeCityId, systemLineIds, year);
+            sysDetailNative.style.display = "block";
+            let rightSide = sysDetailNative.querySelector(
+                "summary > div:last-child"
+            );
+            if (rightSide) {
+                let kmSistema = calcolaLunghezzaRete(
+                    appState.activeCityId,
+                    systemLineIds,
+                    year
+                );
                 let labelLinee = activeLinesCount === 1 ? "line" : "lines";
                 rightSide.innerHTML = `
                     <span class="text-[10px] leading-none font-medium text-neutral-600 bg-neutral-100 px-2 py-1.5 rounded">${kmSistema} km</span>
@@ -613,7 +706,7 @@ function updateSidebarStats() {
                 `;
             }
         } else {
-            sysDetailNative.style.display = 'none';
+            sysDetailNative.style.display = "none";
         }
     }
 }

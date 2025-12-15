@@ -56,7 +56,10 @@ function updateUIForAnimation() {
     let displayYear = Math.max(appState.currentYear, appState.minYear);
     
     // Aggiorna slider solo se esiste
-    if (slider) slider.value(displayYear);
+    if (slider) {
+        slider.value(displayYear);
+        updateTimelineBackground(slider); // Ascolta l'evento input (mentre trascini)
+    }
 
     // Aggiorna i testi h3 (l'anno visualizzato)
     let h3s = document.getElementsByTagName("h3");

@@ -135,3 +135,13 @@ canvas {
     border-color: #171717;
     cursor: ew-resize;
 }
+.metro-slider::-moz-range-progress {
+    background-color: #171717;
+    height: 8px;
+    border-radius: 8px;
+}
+.metro-slider::-moz-range-track {
+    background-color: #A1A1A1;
+    height: 8px;
+    border-radius: 8px;
+}
