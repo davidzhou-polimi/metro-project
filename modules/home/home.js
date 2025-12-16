@@ -29,14 +29,13 @@ function setupHome() {
     container.html("");
     document.title = "Home - World Metro";
     
-    // Reset filtri
+    // Reset Variabili
     homeState.filters.year = 2025;
     homeState.filters.continent = null;
     homeState.filters.search = "";
     homeState.hoveredNode = null;
 
     if (homeState.processedData.length === 0) {
-        console.warn("Home Data was not preloaded. Loading now...");
         initHomeData();
     }
 
@@ -44,25 +43,43 @@ function setupHome() {
 
     let canvasContainer = select('#home-canvas-container');
     
-    // --- FIX CANVAS TAGLIATO ---
-    // Creiamo il canvas inizialmente con dimensioni provvisorie
-    // per assicurarci che sia nel DOM.
-    homeState.canvas = createCanvas(100, 500);
-    homeState.canvas.parent(canvasContainer);
-    homeState.canvas.hide();    // Si nasconde per evitare glitch visivi
+    // --- IL FIX: RICICLAGGIO INTELLIGENTE ---
+    
+    // Cerca se esiste già un canvas creato da p5 (di solito ha id 'defaultCanvas0')
+    let existingCanvas = select('canvas');
+    
+    if (existingCanvas) {
+        // SE ESISTE: Lo adottiamo!
+        homeState.canvas = existingCanvas;
+        // Lo stacchiamo da dove era prima e lo mettiamo nel nostro container
+        homeState.canvas.parent(canvasContainer);
+    } else {
+        // SE NON ESISTE (prima volta): Lo creiamo
+        homeState.canvas = createCanvas(100, 100); // Dimensione dummy, resize dopo
+        homeState.canvas.parent(canvasContainer);
+    }
+
+    // CSS: Assicurati che sia visibile e occupi spazio
+    homeState.canvas.style('display', 'block');
+    homeState.canvas.style('width', '100%');
+    homeState.canvas.style('height', '100%');
+    // Rimuovi eventuali stili inline che lo nascondevano
+    homeState.canvas.style('visibility', 'visible');
     
     textFont(fonts.heavy);
 
-    // TRUCCO: Forziamo il resize dopo 50ms.
-    // Questo dà tempo al browser di calcolare flexbox e scrollbar.
+    // Timeout per il resize e il riavvio
     setTimeout(() => {
-        onHomeResize();
-        homeState.canvas.show();
+        onHomeResize(); 
+        aggiornaTreemap(); 
+        
+        // Fondamentale: riattiva il loop se era stato fermato altrove
+        loop(); 
+        
+        drawHome(); 
     }, 50);
 
-    aggiornaTreemap();
     updateHomeTimelineBackground(select("#home-timeline-slider"));
-    
     window.addEventListener('resize', onHomeResize);
 }
 
@@ -72,12 +89,18 @@ function drawHome() {
 
 function removeHome() {
     stopHomeAnimation(); 
-
     window.removeEventListener('resize', onHomeResize);
     
+    // --- NON DISTRUGGERE IL CANVAS ---
+    // Rimuoviamo solo il riferimento nello stato locale, 
+    // ma lasciamo l'elemento DOM vivo finché non viene "adottato" dalla prossima pagina
+    // o finché setupHome non lo riprende.
+    
+    // Se proprio vuoi essere pulito, puoi nasconderlo, 
+    // ma setupHome lo renderà visibile con .style('display', 'block')
     if (homeState.canvas) {
-        homeState.canvas.remove(); 
-        homeState.canvas = null;
+        // homeState.canvas.hide(); // Opzionale
+        homeState.canvas = null; 
     }
     
     hideHomeTooltip();
@@ -89,6 +112,8 @@ function removeHome() {
 
     let container = getContentContainer();
     if (container) {
+        // Questo rimuove il div padre, il canvas diventerà orfano momentaneamente,
+        // ma setupHome lo ritroverà con select('canvas').
         container.html("");
     }
 }
@@ -118,14 +143,23 @@ function setHomeFilter(type, value) {
 function onHomeResize() {
     let container = select('#home-canvas-container');
     if (container && homeState.canvas) {
-        // Usa getBoundingClientRect per la larghezza reale (inclusi decimali)
+        
+        // Ottieni le dimensioni reali
         let rect = container.elt.getBoundingClientRect();
         let w = rect.width;
+        
+        // Se per qualche motivo w è 0 (es. cambio pagina veloce),
+        // proviamo a prendere la larghezza della finestra come fallback temporaneo
+        // per evitare che il canvas sparisca.
+        if (w < 10) {
+            w = container.elt.clientWidth || (windowWidth - 40); 
+        }
+
         // Altezza calcolata: 60% viewport ma minimo 500px
         let h = Math.max(windowHeight * 0.60, 500);
         
-        // Se la larghezza è quasi 0 (bug rendering), non ridimensionare ancora
-        if (w > 10) {
+        // Eseguiamo il resize solo se abbiamo valori sensati
+        if (w > 10 && h > 10) {
             resizeCanvas(w, h);
             aggiornaTreemap();
         }

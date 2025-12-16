@@ -45,7 +45,7 @@ function setupAbout() {
     aboutContainer = createDiv().parent(parent).class("w-full max-w-[900px] mx-auto py-10 px-5 relative");
 
     // --- 1. INTRO BOXES ---
-    let introWrapper = createDiv().parent(aboutContainer).class("flex flex-col md:flex-row justify-center gap-10 relative bg-white max-w-[1200px] mx-auto pb-10");
+    let introWrapper = createDiv().parent(aboutContainer).class("flex flex-col md:flex-row justify-center z-10 gap-10 relative max-w-[1200px] mx-auto pb-10");
 
     createTopInfoBox(introWrapper, "WHERE HAVE WE GOTTEN THE DATA?", 
         "The data used to display information comes from the Citylines project, collecting information on urban transportation networks in cities around the world.<br><br>The creator is Bruno Salerno, engineer graduated in Transport and Geoinformation Technology at KTH Stockholm, currently a Senior Software Engineer for Citymapper.");
@@ -58,11 +58,11 @@ function setupAbout() {
     let metroWrapper = createDiv().parent(aboutContainer).class("relative w-full -mt-[60px]");
 
     // SVG Linea Metro (Background)
-    let svgContent = `<svg class="absolute top-0 left-0 w-full h-[3300px] z-0 pointer-events-none" viewBox="0 0 900 3300" preserveAspectRatio="xMidYMin slice"><path d="M3000 90H140q-80 0-80 80v80q0 80 80 80h270q40 0 40 50v2000q0 100 100 100h2450" stroke="#000" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="450" cy="90" r="9" stroke="#000" stroke-width="4" fill="#fff"/></svg>`;
+    let svgContent = `<svg class="absolute top-0 left-0 w-full h-[3300px] z-0 pointer-events-none overflow-visible" viewBox="0 0 900 3300" preserveAspectRatio="none"><path d="M820-500V50q0 40-40 40H140q-80 0-80 80v80q0 80 80 80h270q40 0 40 50v2000q0 100 100 100h230q40 0 40 40v980" stroke="#000" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="450" cy="90" r="9" stroke="#000" stroke-width="4" fill="#fff"/></svg>`;
     metroWrapper.html(svgContent);
 
     // Sezione "WHO ARE WE?" 
-    let whoAreWe = createDiv().parent(metroWrapper).class("absolute top-[110px] left-[7%] w-[420px] text-center z-10 -translate-x-1/2 translate-x-[160px]");
+    let whoAreWe = createDiv().parent(metroWrapper).class("absolute top-[130px] left-[7%] w-[420px] text-center z-10 -translate-x-1/2 translate-x-[160px]");
     createElement('h3', "WHO ARE WE?").parent(whoAreWe).class("m-0 mb-2.5 font-bold text-2xl");
     createP("We are a group of students of the Politecnico di Milano, from the course of “Laboratorio di Computer Grafica”, C2 section, studying Design della Comunicazione.").parent(whoAreWe).class("m-0 text-base leading-relaxed");
 
