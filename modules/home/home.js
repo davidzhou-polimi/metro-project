@@ -12,7 +12,8 @@ let homeState = {
     canvas: null,
     uiElements: {},
     animationInterval: null,
-    isPlaying: false
+    isPlaying: false,
+    resizeObserver: null
 };
 
 function initHomeData() {
@@ -42,62 +43,76 @@ function setupHome() {
     createHomeLayout(container);
 
     let canvasContainer = select('#home-canvas-container');
-    // Necessario affinché il sipario assoluto si posizioni rispetto a questo container
-    canvasContainer.style('position', 'relative'); 
+    // Il contenitore definisce l'area visibile
+    canvasContainer.style('position', 'relative');
+    canvasContainer.style('width', '100%');
+    canvasContainer.style('height', '60vh'); 
+    canvasContainer.style('min-height', '500px'); 
 
-    // --- FIX SIPARIO: COPERTURA TEMPORANEA ---
-    // Creiamo un div bianco che copre tutto. 
-    // Nasconde il glitch del resize ("sfumature radiali") ma lascia il canvas attivo sotto.
-    let curtain = createDiv('');
-    curtain.parent(canvasContainer);
-    curtain.style('position', 'absolute');
-    curtain.style('inset', '0'); // Copre tutto (top, left, right, bottom)
-    curtain.style('background-color', 'white'); 
-    curtain.style('z-index', '50'); // Sta sopra il canvas
-
-    // --- IL TUO CODICE DI RICICLAGGIO (INVARIATO) ---
+    // --- GESTIONE CANVAS ---
     let existingCanvas = select('canvas');
-    
     if (existingCanvas) {
         homeState.canvas = existingCanvas;
         homeState.canvas.parent(canvasContainer);
-        
-        // AGGIUNTA IMPORTANTE: Pulisce subito i vecchi pixel della mappa
-        // prima ancora che il browser provi a ridimensionarli/stirarli.
-        clear(); 
-        background(255); 
-        
     } else {
         homeState.canvas = createCanvas(100, 100); 
         homeState.canvas.parent(canvasContainer);
     }
 
-    // CSS: Assicurati che sia visibile e occupi spazio
+    // --- FIX RISOLUZIONE (NITIDEZZA) ---
+    // Riabilitiamo la densità pixel del dispositivo (es. Retina = 2)
+    // Ora che abbiamo il CSS bloccato, questo non romperà più il layout.
+    pixelDensity(window.devicePixelRatio);
+
+    // --- CONFIGURAZIONE VISIVA ---
+    // Canvas sganciato dal layout, si limita a coprire il contenitore
     homeState.canvas.style('display', 'block');
+    homeState.canvas.style('position', 'absolute');
+    homeState.canvas.style('top', '0');
+    homeState.canvas.style('left', '0');
+    
+    // Forziamo il canvas a stare DENTRO il contenitore visivamente
+    // Indipendentemente da quanti pixel fisici ha (HD/Retina)
     homeState.canvas.style('width', '100%');
     homeState.canvas.style('height', '100%');
-    homeState.canvas.style('visibility', 'visible');
     
+    homeState.canvas.style('z-index', '1');
+    homeState.canvas.style('opacity', '1');
+    homeState.canvas.style('visibility', 'visible');
+
     textFont(fonts.heavy);
 
-    // Timeout per il resize e il riavvio
-    setTimeout(() => {
-        // Le tue operazioni standard
-        onHomeResize(); 
-        aggiornaTreemap(); 
-        
-        loop(); 
-        drawHome(); 
-        
-        // --- FIX SIPARIO: RIMOZIONE ---
-        // Ora che il drawHome ha disegnato il frame pulito sotto il sipario,
-        // possiamo rimuovere il sipario.
-        curtain.remove();
-        
-    }, 50); // 50ms sono impercettibili ma sufficienti a nascondere il glitch
+    // --- OBSERVER ---
+    if (homeState.resizeObserver) homeState.resizeObserver.disconnect();
+
+    homeState.resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            
+            if (width < 10 || height < 10) return;
+
+            // 1. RIDIMENSIONA IL BUFFER P5
+            // Passiamo width/height logici. p5 userà pixelDensity per creare
+            // un buffer più grande se necessario (es. 2000x1000), ma manterrà
+            // le coordinate logiche (1000x500).
+            resizeCanvas(Math.floor(width), Math.floor(height));
+            
+            // 2. RIPRISTINA LO STILE CSS (IMPORTANTE)
+            // A volte resizeCanvas prova a toccare lo style width/height.
+            // Noi lo forziamo a restare al 100% del contenitore.
+            homeState.canvas.style('width', '100%');
+            homeState.canvas.style('height', '100%');
+
+            background(255); 
+            aggiornaTreemap();
+            loop(); 
+            drawHome();
+        }
+    });
+
+    homeState.resizeObserver.observe(canvasContainer.elt);
 
     updateHomeTimelineBackground(select("#home-timeline-slider"));
-    window.addEventListener('resize', onHomeResize);
 }
 
 function drawHome() {
@@ -106,22 +121,22 @@ function drawHome() {
 
 function removeHome() {
     stopHomeAnimation(); 
-    window.removeEventListener('resize', onHomeResize);
+
+    // --- SPEGNI L'OBSERVER ---
+    if (homeState.resizeObserver) {
+        homeState.resizeObserver.disconnect();
+        homeState.resizeObserver = null;
+    }
     
-    // --- NON DISTRUGGERE IL CANVAS ---
-    // Rimuoviamo solo il riferimento nello stato locale, 
-    // ma lasciamo l'elemento DOM vivo finché non viene "adottato" dalla prossima pagina
-    // o finché setupHome non lo riprende.
+    // Non serve più rimuovere l'event listener manuale
+    // window.removeEventListener('resize', onHomeResize);
     
-    // Se proprio vuoi essere pulito, puoi nasconderlo, 
-    // ma setupHome lo renderà visibile con .style('display', 'block')
+    // Non distruggere il canvas, lascialo per il riciclo
     if (homeState.canvas) {
-        // homeState.canvas.hide(); // Opzionale
         homeState.canvas = null; 
     }
     
     hideHomeTooltip();
-    
     homeState.uiElements = {};
     homeState.hoveredNode = null;
     homeState.animationInterval = null;
@@ -129,8 +144,6 @@ function removeHome() {
 
     let container = getContentContainer();
     if (container) {
-        // Questo rimuove il div padre, il canvas diventerà orfano momentaneamente,
-        // ma setupHome lo ritroverà con select('canvas').
         container.html("");
     }
 }
