@@ -366,6 +366,8 @@ function aggiungiInterazioniMappa() {
         if (!features.length) return;
         let topFeature = features[0];
 
+        chiudiPopupCorrente();
+
         // --- A. CLICK SU STAZIONE ---
         if (topFeature.layer.id === "stations-layer") {
             let props = topFeature.properties;
@@ -376,7 +378,7 @@ function aggiungiInterazioniMappa() {
             let coordinates = topFeature.geometry.coordinates.slice();
             let htmlContent = getStationPopupHTML(stationData);
 
-            new mapboxgl.Popup({ offset: 10, maxWidth: '300px', anchor: 'bottom' })
+            currentPopup = new mapboxgl.Popup({ offset: 10, maxWidth: '300px', anchor: 'bottom' })
                 .setLngLat(coordinates)
                 .setHTML(htmlContent)
                 .addTo(mappa);
@@ -401,13 +403,13 @@ function aggiungiInterazioniMappa() {
             `;
 
             // Creiamo il popup
-            let popup = new mapboxgl.Popup({ offset: 0, closeButton: false, anchor: 'bottom' })
+            currentPopup = new mapboxgl.Popup({ offset: 0, closeButton: false, anchor: 'bottom' })
                 .setLngLat(e.lngLat)
                 .setHTML(htmlContent)
                 .addTo(mappa);
 
             // Sapendo che è 'bottom', coloriamo solo border-top-color.
-            let popupElem = popup.getElement();
+            let popupElem = currentPopup.getElement();
             let tip = popupElem.querySelector(".mapboxgl-popup-tip");
             if (tip) {
                 tip.style.setProperty('border-top-color', lineColor, 'important');
@@ -429,7 +431,9 @@ function zoomSuStazione(station) {
     let coords = parseGeometry(station.geometry);
     if (!coords) return;
 
-    // Rimuoviamo temporaneamente i limiti per il volo
+    // Chiudiamo eventuali popup aperti PRIMA di muoverci
+    chiudiPopupCorrente();
+
     mappa.setMaxBounds(null);
     mappa.setMinZoom(null);
 
@@ -438,9 +442,15 @@ function zoomSuStazione(station) {
 
     mappa.once("moveend", () => {
         toggleMapInteractions(true);
-
+        
         let htmlContent = getStationPopupHTML(station);
-        new mapboxgl.Popup({ offset: 10, maxWidth: '300px', anchor: 'bottom' })
+
+        // Salviamo il riferimento in currentPopup
+        currentPopup = new mapboxgl.Popup({ 
+            offset: 10, 
+            maxWidth: '300px',
+            anchor: 'bottom'
+        })
             .setLngLat(coords)
             .setHTML(htmlContent)
             .addTo(mappa);
@@ -567,6 +577,13 @@ function getStationPopupHTML(station) {
             </div>
         </div>
     `;
+}
+
+function chiudiPopupCorrente() {
+    if (currentPopup) {
+        currentPopup.remove();
+        currentPopup = null;
+    }
 }
 
 // Formatta date (es. "2000 - 2005" o "Since 2000")

@@ -1,6 +1,7 @@
 // --- FUNZIONE PRINCIPALE (ORCHESTRATOR) ---
 
 let lineCoordinatesMap;
+let currentPopup = null; 
 
 function inizializzaMappa(city) {
     // 1. Pulizia e Setup Stato
@@ -21,7 +22,7 @@ function inizializzaMappa(city) {
 
     let contentWrapper = createDiv()
         .parent(container)
-        .class("flex flex-col lg:flex-row h-[77vh] gap-8");
+        .class("flex flex-col lg:flex-row h-[76vh] gap-8");
 
     let mapWrapper = creaContenitoreMappa(contentWrapper);
     let sidebar = creaSidebar(contentWrapper, city);
@@ -349,7 +350,7 @@ function popolaStazioniUI(cityId) {
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
         //"mt-8 bg-white p-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
-        "mt-8 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
+        "mt-12 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
     );
 
     if (!appState.hasValidHistory) {
