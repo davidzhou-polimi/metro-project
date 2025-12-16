@@ -60,6 +60,17 @@ function draw() {
              break;
     }
 
+    // Se layout.header e layout.footer esistono, gestiamo la loro visibilità
+    if (layout.header && layout.footer) {
+        if (pageState === 'SPLASH') {
+            layout.header.addClass('hidden');
+            layout.footer.addClass('hidden');
+        } else {
+            layout.header.removeClass('hidden');
+            layout.footer.removeClass('hidden');
+        }
+    }
+
     // Logica visibilità pulsante Back
     if (pageState === "MAP") {
         btnBack.removeClass('invisible');
@@ -70,10 +81,11 @@ function draw() {
 
 function windowResized() {
     if (pageState === 'SPLASH') {
-        let container = getContentContainer();
-        if (container) {
-            // Ridimensiona il canvas in base alla nuova larghezza/altezza del padre
-            resizeCanvas(container.elt.clientWidth, container.elt.clientHeight);
+        // Chiama la funzione specifica dentro splash.js
+        if (typeof resizeSplash === 'function') {
+            resizeSplash();
         }
+    } else {
+        // Logica standard per altre pagine se necessario
     }
 }

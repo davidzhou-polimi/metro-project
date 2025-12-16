@@ -6,7 +6,7 @@ function setupNavbar() {
     headerContainer.html(""); // Pulizia preventiva
     
     let content = createDiv().parent(headerContainer);
-    content.class("mx-auto px-4 md:px-8 h-20 flex items-center justify-between relative");
+    content.class("mx-auto px-8 md:px-12 h-[4.5rem] flex items-center justify-between relative");
     
     btnBack = createButton(backIcon);
     btnBack.parent(content).class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
@@ -14,7 +14,7 @@ function setupNavbar() {
 
     // Logo / Home Link
     let logo = createButton("WORLD METRO").parent(content);
-    logo.class("absolute left-1/2 -translate-x-1/2 text-4xl font-black tracking-tight text-neutral-900 no-underline cursor-default"); // hover:text-neutral-600
+    logo.class("mt-1 absolute left-1/2 -translate-x-1/2 text-4xl font-black tracking-tight text-neutral-900 no-underline cursor-default"); // hover:text-neutral-600
     logo.mousePressed((e) => {
         e.preventDefault(); // Evita il ricaricamento pagina
         //changeState('HOME');
