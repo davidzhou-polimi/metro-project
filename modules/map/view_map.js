@@ -390,7 +390,7 @@ function creaTimeline(container) {
         .class("flex-grow relative");
 
     let slider = createElement("input").parent(sliderWrapper);
-    slider.id("timeline-slider");
+    slider.id("map-timeline-slider");
     slider.attribute("type", "range");
     slider.attribute("min", appState.minYear);
     slider.attribute("max", appState.maxYear);
@@ -426,7 +426,7 @@ function sbloccaControlliTimeline() {
         );
     }
 
-    let slider = select("#timeline-slider");
+    let slider = select("#map-timeline-slider");
     if (slider) {
         slider.removeAttribute("disabled");
         slider.class("w-full metro-slider cursor-pointer");

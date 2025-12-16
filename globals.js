@@ -13,6 +13,7 @@ let mappa;
 let mappaContainer;
 let boundsCittaCorrente = null;
 let btnBack;
+let fonts = {};
 
 // STATO DELL'APP
 let appState = {

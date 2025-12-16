@@ -1,19 +1,39 @@
 // core/utils.js
 
 function unpackData(dataObj) {
-    if (!dataObj || !dataObj.values) return [];
-    let unpacked = [];
-    let fields = dataObj.fields;
-    let values = dataObj.values;
-    for (let i = 0; i < values.length; i++) {
-        let row = values[i];
-        let obj = {};
-        for (let j = 0; j < fields.length; j++) {
-            obj[fields[j]] = row[j];
-        }
-        unpacked.push(obj);
+    // 1. Sicurezza base
+    if (!dataObj) return [];
+
+    // 2. CASO PERFETTO: È già un array
+    if (Array.isArray(dataObj)) {
+        return dataObj;
     }
-    return unpacked;
+
+    // 3. CASO CITIES/LINES (Formato compresso fields/values)
+    if (dataObj.fields && dataObj.values) {
+        let unpacked = [];
+        let fields = dataObj.fields;
+        let values = dataObj.values;
+        for (let i = 0; i < values.length; i++) {
+            let row = values[i];
+            let obj = {};
+            for (let j = 0; j < fields.length; j++) {
+                obj[fields[j]] = row[j];
+            }
+            unpacked.push(obj);
+        }
+        return unpacked;
+    }
+
+    // 4. CASO COUNTRIES "STRANO" (Oggetto con chiavi numeriche {0:.., 1:..})
+    // Se non è un array, ma ha la chiave '0', è un "finto array".
+    if (dataObj[0] !== undefined) {
+        console.log("--- FIX: Converto Oggetto {0:..} in Array [...] ---");
+        return Object.values(dataObj);
+    }
+
+    // 5. Fallback
+    return [];
 }
 
 // Funzione di utilità per processare i dati (Unpack)
@@ -34,6 +54,7 @@ function processaDati() {
         station_lines: unpackData(rawData.station_lines),
         sections: unpackData(rawData.sections),
         section_lines: unpackData(rawData.section_lines),
+        countries: unpackData(rawData.countries)
     };
     
     // Se hai un filtro dati

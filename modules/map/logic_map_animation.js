@@ -51,7 +51,7 @@ function stopAnimation() {
 }
 
 function updateUIForAnimation() {
-    let slider = select("#timeline-slider");
+    let slider = select("#map-timeline-slider");
     // Usiamo minYear come fallback se currentYear non è settato
     let displayYear = Math.max(appState.currentYear, appState.minYear);
     

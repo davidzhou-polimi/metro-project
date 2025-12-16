@@ -17,6 +17,11 @@ function setup() {
     // La navbar ora si aggancia automaticamente a #app-header
     if (typeof setupNavbar === 'function') setupNavbar();
 
+    // 3. --- INTEGRAZIONE HOME ---
+    // Appena i dati sono pronti (db popolato), lanciamo il calcolo della Home.
+    // Questo avverrà mentre l'utente guarda lo Splash Screen iniziale.
+    if (typeof initHomeData === 'function') initHomeData();
+
     window.addEventListener('popstate', () => {
         gestisciRouting();
     });
@@ -37,6 +42,15 @@ function preload() {
     rawData.station_lines = loadJSON("assets/data/station_lines.json");
     rawData.sections = loadJSON("assets/data/sections.json");
     rawData.section_lines = loadJSON("assets/data/section_lines.json");
+    rawData.countries = loadJSON("assets/data/countries.json");
+
+    // Caricamento font
+    fonts.thin = loadFont('assets/fonts/P22_Underground_Thin.otf');
+    fonts.light = loadFont('assets/fonts/P22_Underground_Light.otf');
+    fonts.book = loadFont('assets/fonts/P22_Underground_Book.otf');
+    fonts.medium = loadFont('assets/fonts/P22_Underground_Medium.otf');
+    fonts.demibold = loadFont('assets/fonts/P22_Underground_DemiBold.otf');
+    fonts.heavy = loadFont('assets/fonts/P22_Underground_Heavy.otf');
 }
 
 function draw() {

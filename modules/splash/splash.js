@@ -180,7 +180,6 @@ function createSplashUI(container) {
     splashUIContainer = createDiv();
     splashUIContainer.parent(container);
     
-    // Posizionamento in basso (2/3 circa)
     splashUIContainer.class("absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-end pb-40 md:pb-44 h-full w-full");
 
     // 1. TITOLO
@@ -200,15 +199,17 @@ function createSplashUI(container) {
     exploreBtn.parent(splashUIContainer);
     exploreBtn.id("explore-btn");
     exploreBtn.style('opacity', '0');
-    exploreBtn.style('visibility', 'hidden'); // Nascondiamo per evitare flash
+    exploreBtn.style('visibility', 'hidden'); 
     
-    exploreBtn.class("group pointer-events-auto transition-all duration-500 ease-out flex flex-col items-center cursor-pointer mt-4 hover:-translate-y-2");
+    // --- FIX FLASH: RIMOSSO 'transition-all' e 'duration-500' DA QUI ---
+    // Le aggiungeremo dinamicamente nel drawSplash solo quando serve.
+    exploreBtn.class("group pointer-events-auto ease-out flex flex-col items-center cursor-pointer mt-4 hover:-translate-y-2");
     
     let btnContent = `
         <div class="bg-[#0f1014] text-white font-underground font-bold tracking-widest uppercase px-6 py-3 rounded-xl shadow-xl border-neutral-900 group-hover:bg-white border-4 group-hover:text-neutral-900 group-hover:border-neutral-900 group-hover:border-4 transition-all duration-300 flex items-center justify-center text-sm md:text-base whitespace-nowrap leading-none">
             <span class="pt-[2px]">EXPLORE</span>
             <svg class="h-4 w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 self-center" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
         </div>
         <div class="w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[14px] border-t-[#0f1014] mt-[-1px] z-30 transition-colors duration-300"></div>
@@ -253,6 +254,7 @@ function drawSplash() {
     // 3. BOTTONE (SOLO QUANDO FERMO)
     if (linesStopped && !btnVisible) {
         if (exploreBtn) {
+            exploreBtn.addClass("transition-all duration-500");
             exploreBtn.style('visibility', 'visible');
             exploreBtn.style('opacity', '1');
         }

@@ -20,6 +20,8 @@ function changeState(newState, param = null) {
     pageState = newState;
     currentId = param;
 
+    sincronizzaURL();
+
     let params = new URLSearchParams();
     params.set("page", newState.toLowerCase());
 
@@ -46,8 +48,6 @@ function changeState(newState, param = null) {
     else {
         if (typeof setupSplash === "function") setupSplash();
     }
-
-    sincronizzaURL();
 }
 
 // Riflette lo stato attuale nell'URL.
