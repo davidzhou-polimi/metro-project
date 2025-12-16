@@ -357,32 +357,65 @@ function toggleMapInteractions(isActive) {
 }
 
 function aggiungiInterazioniMappa() {
+    // 1. GESTIONE CLICK
     mappa.on("click", (e) => {
         let features = mappa.queryRenderedFeatures(e.point, {
             layers: ["stations-layer", "lines-layer-hitbox"],
         });
+
         if (!features.length) return;
         let topFeature = features[0];
 
+        // --- A. CLICK SU STAZIONE ---
         if (topFeature.layer.id === "stations-layer") {
+            let props = topFeature.properties;
+            // Recuperiamo l'oggetto stazione completo dal DB usando l'ID
+            let stationData = db.stations.find(s => s.id === props.id);
+            if (!stationData) return;
+
             let coordinates = topFeature.geometry.coordinates.slice();
-            new mapboxgl.Popup()
+            let htmlContent = getStationPopupHTML(stationData);
+
+            new mapboxgl.Popup({ offset: 10, maxWidth: '300px', anchor: 'bottom' })
                 .setLngLat(coordinates)
-                .setHTML(
-                    `<div class="font-bold text-sm">${topFeature.properties.name}</div>`
-                )
+                .setHTML(htmlContent)
                 .addTo(mappa);
+            
             return;
         }
+
+        // --- B. CLICK SU LINEA ---
         if (topFeature.layer.id === "lines-layer-hitbox") {
-            new mapboxgl.Popup()
+            let props = topFeature.properties;
+            let lineColor = props.color || "#333";
+            let textColor = isColorLight(lineColor) ? "#000000" : "#ffffff";
+
+            let htmlContent = `
+                <div class="px-4 pt-2.5 pb-3 rounded-xl flex flex-col justify-center items-center min-w-[120px]"
+                     style="background-color: ${lineColor}; color: ${textColor};">
+                    <span class="text-[10px] uppercase tracking-widest opacity-85 font-medium">METRO LINE</span>
+                    <h3 class="font-semibold text-xl leading-none text-center">
+                        ${props.name}
+                    </h3>
+                </div>
+            `;
+
+            // Creiamo il popup
+            let popup = new mapboxgl.Popup({ offset: 0, closeButton: false, anchor: 'bottom' })
                 .setLngLat(e.lngLat)
-                .setHTML(
-                    `<div class="font-bold text-sm text-neutral-600">${topFeature.properties.name}</div>`
-                )
+                .setHTML(htmlContent)
                 .addTo(mappa);
+
+            // Sapendo che è 'bottom', coloriamo solo border-top-color.
+            let popupElem = popup.getElement();
+            let tip = popupElem.querySelector(".mapboxgl-popup-tip");
+            if (tip) {
+                tip.style.setProperty('border-top-color', lineColor, 'important');
+            }
         }
     });
+
+    // 2. GESTIONE CURSORE (HOVER)
     mappa.on("mousemove", (e) => {
         let features = mappa.queryRenderedFeatures(e.point, {
             layers: ["stations-layer", "lines-layer-hitbox"],
@@ -405,9 +438,11 @@ function zoomSuStazione(station) {
 
     mappa.once("moveend", () => {
         toggleMapInteractions(true);
-        new mapboxgl.Popup({ closeButton: false })
+
+        let htmlContent = getStationPopupHTML(station);
+        new mapboxgl.Popup({ offset: 10, maxWidth: '300px', anchor: 'bottom' })
             .setLngLat(coords)
-            .setHTML(`<div class="font-bold text-sm p-1">${station.name}</div>`)
+            .setHTML(htmlContent)
             .addTo(mappa);
     });
 }
@@ -444,4 +479,115 @@ function calcolaBoundsCitta(cityId) {
     }
 
     return hasData ? bounds : null;
+}
+
+function getDistanceFromLine(point, linePoints) {
+    let minDistSq = Infinity;
+    let px = point[0];
+    let py = point[1];
+    for (let i = 0; i < linePoints.length; i++) {
+        let dx = px - linePoints[i][0];
+        let dy = py - linePoints[i][1];
+        let distSq = dx * dx + dy * dy;
+        if (distSq < minDistSq) minDistSq = distSq;
+    }
+    return Math.sqrt(minDistSq);
+}
+
+function getStationPopupHTML(station) {
+    // 1. DATE: Usiamo ESCLUSIVAMENTE i dati della stazione cliccata (specifica della linea)
+    // Se clicco Loreto M2, voglio vedere 1969, non 1964.
+    let bStart = parseYear(station.buildstart);
+    let open = parseYear(station.opening);
+    let close = parseYear(station.closure);
+
+    // 2. SERVING LINES: Qui invece aggreghiamo per mostrare il contesto (Interscambio)
+    let targetName = station.name.trim().toLowerCase();
+    
+    // Cerchiamo fratelli per nome SOLO per popolare le pillole colorate
+    let siblingStations = db.stations.filter(s => 
+        s.city_id === station.city_id && 
+        s.name.trim().toLowerCase() === targetName
+    );
+
+    let lineIds = new Set();
+    for (let sib of siblingStations) {
+        let rels = db.station_lines.filter(sl => sl.station_id === sib.id);
+        rels.forEach(r => lineIds.add(r.line_id));
+    }
+
+    let servingLines = [];
+    lineIds.forEach(lid => {
+        let l = db.lines.find(line => line.id === lid);
+        if (l) servingLines.push(l);
+    });
+    
+    // Ordine alfabetico linee
+    servingLines.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+
+    // 3. Costruzione HTML
+    return `
+        <div class="bg-white border-4 border-neutral-900 rounded-xl min-w-[220px]">
+            <!-- Header -->
+            <h3 class="p-3 bg-neutral-900 font-bold text-lg text-neutral-50 leading-tight">
+                ${station.name}
+            </h3>
+
+            <!-- Serving Lines (Contesto) -->
+            <div class="px-3 my-3">
+                <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block mb-1">SERVING LINES</span>
+                <div class="flex flex-wrap gap-1.5">
+                    ${servingLines.length > 0 ? servingLines.map(l => {
+                        let tColor = isColorLight(fixColor(l.color)) ? '#000' : '#fff';
+                        // Evidenziamo leggermente se la linea corrisponde a quella della stazione cliccata? 
+                        // Opzionale, ma qui le mostriamo tutte uguali.
+                        return `
+                        <span class="text-sm font-bold px-2 py-0.5 rounded-md shadow-sm" 
+                              style="background-color: ${fixColor(l.color)}; color: ${tColor};">
+                            ${l.name}
+                        </span>`;
+                    }).join('') : '<span class="text-sm text-neutral-500 italic">No lines data</span>'}
+                </div>
+            </div>
+
+            <!-- Date (Specifiche del record cliccato) -->
+            <div class="px-3 my-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block">CONSTR.</span>
+                    <span class="font-bold text-neutral-700 tabular-nums">
+                        ${formatDateRange(bStart, open, false)}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block">OPERATIONAL</span>
+                    <span class="font-bold text-neutral-700 tabular-nums">
+                        ${formatDateRange(open, close, true)}
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Formatta date (es. "2000 - 2005" o "Since 2000")
+function formatDateRange(start, end, isOperational) {
+    let s = parseInt(start);
+    let e = parseInt(end);
+    let endOfTime = appState.maxYear || 2025; 
+
+    if (!s || isNaN(s) || s > 2050) s = "?";
+    
+    if (isOperational) {
+        // Se è operativo e la chiusura non c'è o è futura
+        if (!e || isNaN(e) || e >= endOfTime || e === 9999) {
+            return `Since ${s}`;
+        }
+        return `${s} – ${e}`;
+    } else {
+        // Costruzione
+        if (!e || isNaN(e) || e >= endOfTime || e === 9999) {
+            return `${s} – ...`;
+        }
+        return `${s} – ${e}`;
+    }
 }

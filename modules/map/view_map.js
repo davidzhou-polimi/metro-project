@@ -132,7 +132,7 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 function creaContenitoreMappa(parentWrapper) {
     let wrapper = createDiv().parent(parentWrapper);
     wrapper.class(
-        "w-full lg:w-3/4 h-full rounded-xl overflow-hidden relative bg-neutral-50"
+        "w-full lg:w-3/4 h-full rounded-xl overflow-hidden relative bg-neutral-50 transition-shadow duration-500"
     );
 
     let loaderDiv = createDiv().parent(wrapper);
@@ -166,7 +166,7 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col"
+        "w-full lg:w-1/4 h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col shadow-lg"
     );
 
     let sbHeader = createDiv()
@@ -195,7 +195,7 @@ function creaSidebar(parentWrapper, city) {
     createSpan("NETWORK LENGTH")
         .parent(statsDiv)
         .class(
-            "text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded"
+            "text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded-md"
         );
 
     // MODIFICA: Aggiunto ID per aggiornamento dinamico
@@ -268,7 +268,7 @@ function costruisciSistemaUI(system, container) {
 
     let leftSide = createDiv()
         .parent(sysSummary)
-        .class("flex items-center gap-1");
+        .class("flex items-center gap-2");
     createSpan(chevronIcon)
         .class(
             "group-hover/dropdown:rotate-90 group-open:rotate-90 group-open:group-hover/dropdown:-rotate-90 transition duration-300 ease-out"
@@ -316,7 +316,7 @@ function costruisciLineaUI(line, container) {
     let lineSummary = createElement("summary").parent(lineDetail);
     lineSummary
         .class(
-            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300"
+            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300 shadow"
         )
         .style("background-color", hexColor)
         .style("color", useBlack ? "#000000" : "#ffffff");
@@ -451,8 +451,8 @@ function updateTimelineBackground(el) {
     const value = ((val - min) / (max - min)) * 100;
 
     // Colore sinistro: #171717 (Nero)
-    // Colore destro: #A1A1A1 (Grigio)
-    el.style("background", `linear-gradient(to right, #171717 ${value}%, #A1A1A1 ${value}%)`);
+    // Colore destro: #D4D4D4 (Grigio)
+    el.style("background", `linear-gradient(to right, #171717 ${value}%, #D4D4D4 ${value}%)`);
 }
 
 // --- MODULO 3: MAPBOX LOGIC & ANIMATION ---
@@ -490,6 +490,7 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
 
             if (loader) loader.addClass("opacity-0");
             mappaContainer.removeClass("opacity-0");
+            mapWrapper.addClass("shadow-lg"); 
 
             setTimeout(() => {
                 if (loader) loader.remove();

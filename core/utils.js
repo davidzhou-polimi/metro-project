@@ -95,19 +95,6 @@ function getDatiCitta(cityId) {
     return gerarchia;
 }
 
-function getDistanceFromLine(point, linePoints) {
-    let minDistSq = Infinity;
-    let px = point[0];
-    let py = point[1];
-    for (let i = 0; i < linePoints.length; i++) {
-        let dx = px - linePoints[i][0];
-        let dy = py - linePoints[i][1];
-        let distSq = dx * dx + dy * dy;
-        if (distSq < minDistSq) minDistSq = distSq;
-    }
-    return Math.sqrt(minDistSq);
-}
-
 function isColorLight(hex) {
     hex = hex.replace("#", "");
 
