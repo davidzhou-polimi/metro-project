@@ -42,20 +42,33 @@ function setupHome() {
     createHomeLayout(container);
 
     let canvasContainer = select('#home-canvas-container');
-    
-    // --- IL FIX: RICICLAGGIO INTELLIGENTE ---
-    
-    // Cerca se esiste già un canvas creato da p5 (di solito ha id 'defaultCanvas0')
+    // Necessario affinché il sipario assoluto si posizioni rispetto a questo container
+    canvasContainer.style('position', 'relative'); 
+
+    // --- FIX SIPARIO: COPERTURA TEMPORANEA ---
+    // Creiamo un div bianco che copre tutto. 
+    // Nasconde il glitch del resize ("sfumature radiali") ma lascia il canvas attivo sotto.
+    let curtain = createDiv('');
+    curtain.parent(canvasContainer);
+    curtain.style('position', 'absolute');
+    curtain.style('inset', '0'); // Copre tutto (top, left, right, bottom)
+    curtain.style('background-color', 'white'); 
+    curtain.style('z-index', '50'); // Sta sopra il canvas
+
+    // --- IL TUO CODICE DI RICICLAGGIO (INVARIATO) ---
     let existingCanvas = select('canvas');
     
     if (existingCanvas) {
-        // SE ESISTE: Lo adottiamo!
         homeState.canvas = existingCanvas;
-        // Lo stacchiamo da dove era prima e lo mettiamo nel nostro container
         homeState.canvas.parent(canvasContainer);
+        
+        // AGGIUNTA IMPORTANTE: Pulisce subito i vecchi pixel della mappa
+        // prima ancora che il browser provi a ridimensionarli/stirarli.
+        clear(); 
+        background(255); 
+        
     } else {
-        // SE NON ESISTE (prima volta): Lo creiamo
-        homeState.canvas = createCanvas(100, 100); // Dimensione dummy, resize dopo
+        homeState.canvas = createCanvas(100, 100); 
         homeState.canvas.parent(canvasContainer);
     }
 
@@ -63,21 +76,25 @@ function setupHome() {
     homeState.canvas.style('display', 'block');
     homeState.canvas.style('width', '100%');
     homeState.canvas.style('height', '100%');
-    // Rimuovi eventuali stili inline che lo nascondevano
     homeState.canvas.style('visibility', 'visible');
     
     textFont(fonts.heavy);
 
     // Timeout per il resize e il riavvio
     setTimeout(() => {
+        // Le tue operazioni standard
         onHomeResize(); 
         aggiornaTreemap(); 
         
-        // Fondamentale: riattiva il loop se era stato fermato altrove
         loop(); 
-        
         drawHome(); 
-    }, 50);
+        
+        // --- FIX SIPARIO: RIMOZIONE ---
+        // Ora che il drawHome ha disegnato il frame pulito sotto il sipario,
+        // possiamo rimuovere il sipario.
+        curtain.remove();
+        
+    }, 50); // 50ms sono impercettibili ma sufficienti a nascondere il glitch
 
     updateHomeTimelineBackground(select("#home-timeline-slider"));
     window.addEventListener('resize', onHomeResize);

@@ -72,7 +72,7 @@ function setupAbout() {
     // --- 3. STUDENT CARDS ---
     TEAM_MEMBERS.forEach((member, index) => {
         // MODIFICA 1: Aumentato il margine inferiore (mb-12) per spaziare di più gli elementi
-        let item = createDiv().parent(metroWrapper).class("timeline-item relative min-h-[1px] -mt-20 mb-30 pointer-events-none group");
+        let item = createDiv().parent(metroWrapper).class("timeline-item relative min-h-[1px] -mt-20 mb-40 pointer-events-none group");
         
         if (index === 0) item.addClass("!mt-0"); 
 
@@ -122,7 +122,7 @@ function createProfileBox(parent, member) {
         `;
     }
 
-    let card = createDiv().parent(parent).class(`w-[360px] border-4 border-black rounded-xl p-2.5 bg-white relative cursor-pointer transition-all duration-300 pointer-events-auto hover:-translate-y-2 group/card ${marginClass} ${arrowClasses}`);
+    let card = createDiv().parent(parent).class(`w-[360px] border-4 border-black rounded-xl p-8 bg-white relative cursor-pointer transition-all duration-300 pointer-events-auto hover:-translate-y-2 group/card ${marginClass} ${arrowClasses}`);
     
     card.mouseClicked(() => {
         if (card.hasClass('flipped')) card.removeClass('flipped');
@@ -133,8 +133,8 @@ function createProfileBox(parent, member) {
 
     let front = createDiv().parent(inner).class("relative z-10 opacity-100 transition-opacity duration-300 font-medium w-full h-full group-[.flipped]/card:opacity-0 group-[.flipped]/card:pointer-events-none");
     
-    let img = createImg(member.img, `Foto ${member.surname}`).parent(front).class("w-full h-auto block rounded-lg bg-gray-200");
-    img.elt.onerror = function() { this.style.display='none'; }; 
+    //let img = createImg(member.img, `Foto ${member.surname}`).parent(front).class("w-full h-auto block rounded-lg bg-gray-200");
+    //img.elt.onerror = function() { this.style.display='none'; }; 
     
     createElement('h3', member.surname).parent(front).class("text-center m-0 mt-2 text-2xl");
     createSpan(member.name).parent(front).class("text-base block text-center");
