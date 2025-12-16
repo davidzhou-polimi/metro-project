@@ -49,13 +49,15 @@ function setupHome() {
     // per assicurarci che sia nel DOM.
     homeState.canvas = createCanvas(100, 500);
     homeState.canvas.parent(canvasContainer);
+    homeState.canvas.hide();    // Si nasconde per evitare glitch visivi
     
     textFont(fonts.heavy);
 
     // TRUCCO: Forziamo il resize dopo 50ms.
     // Questo dà tempo al browser di calcolare flexbox e scrollbar.
     setTimeout(() => {
-        onHomeResize(); 
+        onHomeResize();
+        homeState.canvas.show();
     }, 50);
 
     aggiornaTreemap();

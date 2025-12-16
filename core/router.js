@@ -43,7 +43,7 @@ function changeState(newState, param = null) {
         }*/
     }
     else if (newState === 'ABOUT') {
-
+        if (typeof setupAbout === "function") setupAbout();
     }
     else {
         if (typeof setupSplash === "function") setupSplash();
