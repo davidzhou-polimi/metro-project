@@ -13,8 +13,61 @@ function createHomeLayout() {
     // --- SEZIONE 1: HEADER CONTROLLI ---
     let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3");
 
-    // Filtri Continenti
-    let contFilterContainer = createDiv().parent(headerControls).class("grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 w-full font-semibold cursor-pointer select-none");
+// INIZIO INTERVENTO CHIARA
+
+// Altezza fissa alla riga per garantire uniformità (h-12 = 48px)
+    let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12");
+
+    // --- BARRA DI RICERCA (Nuova Struttura) ---
+    
+    // 1. Il wrapper ora è il "rettangolo" visibile. 
+    // - border-2: Bordo leggermente più sottile ed elegante.
+    // - flex items-center: Allinea icona e testo perfettamente al centro verticale.
+    // - bg-white: Lo sfondo è qui.
+    let searchWrapper = createDiv().parent(mainControlRow);
+    searchWrapper.class("relative flex items-center w-64 shrink-0 px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-colors");
+    
+    // 2. L'icona è un elemento flex statico (non più absolute).
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 mr-2"); // mr-2 da spazio al testo
+    searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
+
+    // 3. L'input non ha bordi, è trasparente e riempie lo spazio rimanente.
+    let input = createElement('input').parent(searchWrapper);
+    input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
+    
+    // - w-full: Occupa tutto lo spazio rimasto nel flex.
+    // - bg-transparent: Per vedere lo sfondo del wrapper.
+    // - border-none / outline-none: Rimuove lo stile di default.
+    // - h-full: Per assicurare che il click funzioni ovunque.
+    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900");
+    
+    input.input((e) => setHomeFilter('search', e.target.value));
+    homeState.uiElements.searchInput = input;
+
+    // 4. Tasto Clear (rimane absolute o può diventare flex, qui lo lascio absolute per stare a destra estrema)
+    let clearBtn = createButton('').parent(searchWrapper);
+    clearBtn.class("absolute right-2 flex items-center justify-center p-1 text-gray-400 hover:text-red-500 cursor-pointer hidden rounded-full hover:bg-gray-100");
+    clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
+    clearBtn.mousePressed(() => {
+        input.value('');
+        setHomeFilter('search', '');
+        clearBtn.addClass('hidden');
+        input.elt.focus(); // Riporta il focus sull'input dopo aver cancellato
+    });
+    
+    input.elt.addEventListener('input', () => {
+        if(input.value().length > 0) clearBtn.removeClass('hidden');
+        else clearBtn.addClass('hidden');
+    });
+    
+    // Focus effect: Quando clicchi l'input, illumina il bordo del WRAPPER (più elegante)
+    input.elt.addEventListener('focus', () => searchWrapper.addClass('ring-1 ring-neutral-900 border-neutral-900'));
+    input.elt.addEventListener('blur', () => searchWrapper.removeClass('ring-1 ring-neutral-900 border-neutral-900'));
+
+
+    // --- FILTRI CONTINENTI (Adattati al nuovo stile) ---
+
+    let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar");
     
     const continents = ['Europe', 'North America', 'South America', 'Asia', 'Oceania', 'Africa'];
     const contColors = ['bg-blue-600', 'bg-red-700', 'bg-orange-500', 'bg-yellow-500', 'bg-green-600', 'bg-purple-600'];
@@ -23,35 +76,13 @@ function createHomeLayout() {
 
     continents.forEach((cont, i) => {
         let btn = createDiv(cont).parent(contFilterContainer);
-        btn.class(`p-6 text-white rounded-lg shadow text-center transition-all duration-300 hover:opacity-80 opacity-100 ${contColors[i]}`);
+        // Aggiunto "h-full" esplicitamente per sicurezza, anche se flex-stretch lo fa già
+        btn.class(`px-2 flex-1 flex items-center justify-center h-full text-sm md:text-base text-white rounded-lg shadow text-center transition-all duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
         btn.mousePressed(() => setHomeFilter('continent', cont));
         homeState.uiElements.continentBtns[cont] = btn;
     });
-
-    // Barra di ricerca
-    let searchWrapper = createDiv().parent(headerControls).class("relative w-full");
-    let searchIconDiv = createDiv().parent(searchWrapper).class("absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none");
-    searchIconDiv.html('<svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
-
-    let input = createElement('input').parent(searchWrapper);
-    input.attribute('type', 'text').attribute('placeholder', 'Search a city name...');
-    input.class("w-full pl-10 pr-10 py-2 border-[3px] border-neutral-900 rounded-lg focus:outline-none focus:ring-1 focus:ring-neutral-900 shadow-sm font-medium transition-colors");
-    input.input((e) => setHomeFilter('search', e.target.value));
-    homeState.uiElements.searchInput = input;
-
-    let clearBtn = createButton('').parent(searchWrapper);
-    clearBtn.class("absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-red-500 cursor-pointer hidden");
-    clearBtn.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
-    clearBtn.mousePressed(() => {
-        input.value('');
-        setHomeFilter('search', '');
-        clearBtn.addClass('hidden');
-    });
     
-    input.elt.addEventListener('input', () => {
-        if(input.value().length > 0) clearBtn.removeClass('hidden');
-        else clearBtn.addClass('hidden');
-    });
+    // FINE INTERVENTO CHIARA
 
     // --- SEZIONE 2: CANVAS CONTAINER ---
     let canvasContainer = createDiv().parent(wrapper);
