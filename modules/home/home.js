@@ -28,13 +28,7 @@ function initHomeData() {
 function setupHome() {
     let container = getContentContainer();
     container.html("");
-    
-    // Forza il container a occupare l'altezza disponibile meno eventuali header globali
-    container.style('height', 'calc(100vh - 80px)'); 
-    container.style('display', 'flex');
-    container.style('flex-direction', 'column');
-    container.style('overflow', 'hidden'); // Evita scroll indesiderati al wrapper
-    
+    container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
     document.title = "Home - World Metro";
     
     // Reset Variabili

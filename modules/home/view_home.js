@@ -12,7 +12,7 @@ const PADDING = 2;
  */
 function createHomeLayout() {
     // Il wrapper occupa tutta l'altezza (h-full) e non permette lo scroll (overflow-hidden)
-    let wrapper = createDiv().parent(getContentContainer()).class("flex flex-col w-full h-full relative overflow-hidden pb-4");
+    let wrapper = createDiv().parent(getContentContainer()).class("flex flex-col flex-1 min-h-0 overflow-hidden");
 
     // --- SEZIONE 1: HEADER CONTROLLI (Altezza fissa) ---
     let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3 shrink-0");
@@ -63,14 +63,14 @@ function createHomeLayout() {
     let canvasContainer = createDiv().parent(wrapper);
     canvasContainer.id('home-canvas-container');
     // flex-1 permette al canvas di occupare tutto lo spazio centrale
-    canvasContainer.class("mt-4 w-full shadow-lg rounded-xl overflow-hidden bg-white relative flex-1");
+    canvasContainer.class("mt-4 w-full shadow-lg rounded-xl overflow-hidden bg-white relative flex-1 min-h-0");
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "mt-4 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4 shrink-0 py-2 bg-white/50"
+        "w-full mt-4 lg:mt-6 px-4 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 shrink-0"
     );
 
-    let tlInfo = createDiv().parent(timelineWrapper).class("w-full md:w-auto flex flex-col justify-center min-w-[100px]");
+    let tlInfo = createDiv().parent(timelineWrapper).class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start gap-2");
     createSpan("CITIES EXPANSION").parent(tlInfo).class("block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest");
     let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
