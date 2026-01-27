@@ -7,44 +7,30 @@ const PADDING = 2;
 /**
  * Crea l'intera struttura DOM della Home
  */
+/**
+ * Crea l'intera struttura DOM della Home con Flexbox per garantire visibilità
+ */
 function createHomeLayout() {
-    let wrapper = createDiv().parent(getContentContainer()).class("flex flex-col w-full mx-auto relative");
+    // Il wrapper occupa tutta l'altezza (h-full) e non permette lo scroll (overflow-hidden)
+    let wrapper = createDiv().parent(getContentContainer()).class("flex flex-col w-full h-full relative overflow-hidden pb-4");
 
-    // --- SEZIONE 1: HEADER CONTROLLI ---
-    let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3");
-
-// INIZIO INTERVENTO CHIARA
-
-// Altezza fissa alla riga per garantire uniformità (h-12 = 48px)
+    // --- SEZIONE 1: HEADER CONTROLLI (Altezza fissa) ---
+    let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3 shrink-0");
     let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12");
 
-    // --- BARRA DI RICERCA (Nuova Struttura) ---
-    
-    // 1. Il wrapper ora è il "rettangolo" visibile. 
-    // - border-2: Bordo leggermente più sottile ed elegante.
-    // - flex items-center: Allinea icona e testo perfettamente al centro verticale.
-    // - bg-white: Lo sfondo è qui.
+    // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
     searchWrapper.class("relative flex items-center w-64 shrink-0 px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-colors");
     
-    // 2. L'icona è un elemento flex statico (non più absolute).
-    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 mr-2"); // mr-2 da spazio al testo
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 mr-2");
     searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
 
-    // 3. L'input non ha bordi, è trasparente e riempie lo spazio rimanente.
     let input = createElement('input').parent(searchWrapper);
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
-    
-    // - w-full: Occupa tutto lo spazio rimasto nel flex.
-    // - bg-transparent: Per vedere lo sfondo del wrapper.
-    // - border-none / outline-none: Rimuove lo stile di default.
-    // - h-full: Per assicurare che il click funzioni ovunque.
     input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900");
-    
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
 
-    // 4. Tasto Clear (rimane absolute o può diventare flex, qui lo lascio absolute per stare a destra estrema)
     let clearBtn = createButton('').parent(searchWrapper);
     clearBtn.class("absolute right-2 flex items-center justify-center p-1 text-gray-400 hover:text-red-500 cursor-pointer hidden rounded-full hover:bg-gray-100");
     clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
@@ -52,63 +38,50 @@ function createHomeLayout() {
         input.value('');
         setHomeFilter('search', '');
         clearBtn.addClass('hidden');
-        input.elt.focus(); // Riporta il focus sull'input dopo aver cancellato
+        input.elt.focus();
     });
     
     input.elt.addEventListener('input', () => {
         if(input.value().length > 0) clearBtn.removeClass('hidden');
         else clearBtn.addClass('hidden');
     });
-    
-    // Focus effect: Quando clicchi l'input, illumina il bordo del WRAPPER (più elegante)
-    input.elt.addEventListener('focus', () => searchWrapper.addClass('ring-1 ring-neutral-900 border-neutral-900'));
-    input.elt.addEventListener('blur', () => searchWrapper.removeClass('ring-1 ring-neutral-900 border-neutral-900'));
 
-
-    // --- FILTRI CONTINENTI (Adattati al nuovo stile) ---
-
+    // Filtri Continenti
     let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar");
-    
     const continents = ['Europe', 'North America', 'South America', 'Asia', 'Oceania', 'Africa'];
     const contColors = ['bg-blue-600', 'bg-red-700', 'bg-orange-500', 'bg-yellow-500', 'bg-green-600', 'bg-purple-600'];
-
     homeState.uiElements.continentBtns = {};
 
     continents.forEach((cont, i) => {
         let btn = createDiv(cont).parent(contFilterContainer);
-        // Aggiunto "h-full" esplicitamente per sicurezza, anche se flex-stretch lo fa già
-        btn.class(`px-2 flex-1 flex items-center justify-center h-full text-sm md:text-base text-white rounded-lg shadow text-center transition-all duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
+        btn.class(`px-2 flex-1 flex items-center justify-center h-full text-sm text-white rounded-lg shadow text-center transition-all duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
         btn.mousePressed(() => setHomeFilter('continent', cont));
         homeState.uiElements.continentBtns[cont] = btn;
     });
-    
-    // FINE INTERVENTO CHIARA
 
-    // --- SEZIONE 2: CANVAS CONTAINER ---
+    // --- SEZIONE 2: CANVAS CONTAINER (Flessibile) ---
     let canvasContainer = createDiv().parent(wrapper);
     canvasContainer.id('home-canvas-container');
-    canvasContainer.class("mt-8 w-full shadow-lg rounded-xl overflow-hidden bg-white relative");
+    // flex-1 permette al canvas di occupare tutto lo spazio centrale
+    canvasContainer.class("mt-4 w-full shadow-lg rounded-xl overflow-hidden bg-white relative flex-1");
 
-    // --- SEZIONE 3: TIMELINE ---
+    // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "mt-12 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
+        "mt-4 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4 shrink-0 py-2 bg-white/50"
     );
 
     let tlInfo = createDiv().parent(timelineWrapper).class("w-full md:w-auto flex flex-col justify-center min-w-[100px]");
     createSpan("CITIES EXPANSION").parent(tlInfo).class("block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest");
-    
     let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
 
     let sliderContainer = createDiv().parent(timelineWrapper).class("w-full md:flex-1 flex items-center gap-4 px-2");
-    
     let btnPlay = createButton(playIcon).parent(sliderContainer);
     btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnPlay.mousePressed(() => toggleHomePlayback());
     homeState.uiElements.playBtn = btnPlay;
 
     let sliderWrapper = createDiv().parent(sliderContainer).class("flex-grow relative");
-
     let slider = createElement("input").parent(sliderWrapper);
     slider.id("home-timeline-slider");
     slider.attribute("type", "range");
@@ -117,14 +90,12 @@ function createHomeLayout() {
     slider.attribute("value", "2025");
     slider.class("w-full metro-slider cursor-pointer");
     slider.input(() => updateHomeTimelineBackground(slider));
-    
     homeState.uiElements.slider = slider;
 
     let labels = createDiv().parent(sliderWrapper).class("flex justify-between text-xs text-neutral-400 font-bold mt-1 uppercase");
     createSpan("1863").parent(labels);
     createSpan("2025").parent(labels);
 
-    // --- TOOLTIP ---
     createHomeTooltip(wrapper);
 }
 
@@ -144,29 +115,20 @@ function updateHomeTimelineBackground(slider) {
  * (Sfondo scuro, tipografia pulita, ombreggiatura morbida)
  */
 function createHomeTooltip(parent) {
-    // 1. Container: Sfondo scuro, angoli arrotondati, ombra morbida, posizione fissa
+    // Rimuoviamo il parent specifico e lo appendiamo al body o lo teniamo nel wrapper 
+    // ma con logica di posizionamento assoluta rispetto alla finestra.
     let tt = createDiv().parent(parent).id('home-tooltip');
-    // Usa neutral-900 per lo sfondo scuro, p-5 per spaziatura interna, shadow-2xl per profondità
-    tt.class("hidden fixed z-50 bg-neutral-900 text-white p-4 rounded-xl shadow-xl min-w-[200px] font-sans pointer-events-none flex flex-col items-start");
+    
+    // Usiamo opacity-0 e pointer-events-none, per permettere al browser di calcolare le dimensioni (offsetW/H).
+    tt.class("opacity-0 pointer-events-none fixed z-[9999] bg-neutral-900 text-white p-4 rounded-xl shadow-xl min-w-[200px] font-sans flex flex-col items-start transition-opacity duration-200");
 
-    // Piccola, grigia, tutta maiuscola, tracciamento largo
     createSpan().parent(tt).id('tt-country').class("text-[10px] font-semibold text-neutral-400 uppercase tracking-[0.15em] mb-1");
-
-    // 3. Nome Città Principale (es. "MILAN")
-    // Grande, bianco, grassetto pesante
     createElement('h2', 'CITY NAME').parent(tt).id('tt-title').class("text-xl font-bold text-white leading-none mb-2 tracking-tight");
 
-    // 4. Dettagli Sottostanti (Country & Length)
     let infoDiv = createDiv().parent(tt).class("flex gap-0.5 leading-snug");
-    
-    // Length (es. "102 km") - Testo leggermente più scuro, numerico tabulare
-    // Aggiungiamo un prefisso "Total length:" per chiarezza, stile sottotitolo
     let lenWrapper = createDiv().parent(infoDiv).class("flex items-baseline gap-1.5 text-sm text-neutral-400");
-    //createSpan('Total length:').parent(lenWrapper).class("font-medium");
     createSpan('0 km').parent(lenWrapper).id('tt-len').class("font-bold text-neutral-300 tabular-nums");
 
-    // 5. CTA (Opzionale ma consigliata per UX)
-    // Molto sottile in fondo, separata da una linea scura
     let cta = createDiv().parent(tt).class("mt-4 pt-3 w-full border-t border-neutral-700");
     createDiv('CLICK TO EXPLORE MAP').parent(cta).class("text-[9px] font-bold text-neutral-400 uppercase tracking-[0.2em] text-center");
 }
@@ -331,23 +293,58 @@ function updateAndShowHomeTooltip(node) {
     let tt = select('#home-tooltip');
     if(!tt) return;
     
-    select('#tt-title').html(node.name);
+    // 1. Aggiorna i testi
+    select('#tt-title').html(node.name.toUpperCase());
     select('#tt-len').html(Math.round(node.length) + " km");
     select('#tt-country').html(node.country);
 
-    // FIX: Calcolo posizione per 'fixed' position
-    // Usiamo winMouseX e winMouseY di p5 (coordinate finestra)
-    let posX = winMouseX;
-    let posY = winMouseY;
-
-    tt.style('left', posX + 'px');
-    tt.style('top', (posY - 20) + 'px'); 
-    tt.style('transform', 'translate(-50%, -100%)'); 
+    // 2. Rendi visibile per calcolare le dimensioni
+    tt.style('opacity', '1');
     
-    tt.removeClass('hidden');
+    let ttWidth = tt.elt.offsetWidth;
+    let ttHeight = tt.elt.offsetHeight;
+    let margin = 15; // Margine dai bordi dello schermo
+
+    // Coordinate mouse rispetto alla finestra (winMouseX/Y di p5)
+    let mX = winMouseX;
+    let mY = winMouseY;
+
+    // LOGICA ORIZZONTALE
+    let finalX = mX;
+    let translateX = "-50%"; // Di default centrato sul mouse
+
+    // Se lato sinistro del tooltip esce dallo schermo
+    if (mX - (ttWidth / 2) < margin) {
+        translateX = "0%";
+        finalX = margin;
+    } 
+    // Se lato destro esce dallo schermo
+    else if (mX + (ttWidth / 2) > windowWidth - margin) {
+        translateX = "-100%";
+        finalX = windowWidth - margin;
+    }
+
+    // LOGICA VERTICALE (EVITA COPRIRE NAVBAR)
+    let finalY = mY - 20; // Default: sopra il mouse
+    let translateY = "-100%";
+
+    // Se il mouse è troppo in alto (vicino alla navbar e filtri, circa 120px) o se il tooltip uscirebbe dal bordo superiore
+    if (mY - ttHeight - 20 < 120) {
+        finalY = mY + 25; // Posiziona sotto il cursore
+        translateY = "0%";
+    }
+
+    // 3. Applica i calcoli
+    tt.style('left', finalX + 'px');
+    tt.style('top', finalY + 'px');
+    tt.style('transform', `translate(${translateX}, ${translateY})`);
 }
 
 function hideHomeTooltip() {
     let tt = select('#home-tooltip');
-    if(tt) tt.addClass('hidden');
+    if(tt) {
+        tt.style('opacity', '0');
+        // Spostiamo lontano per evitare che blocchi click involontari anche se opacity 0
+        tt.style('left', '-500px'); 
+    }
 }

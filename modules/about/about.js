@@ -38,7 +38,10 @@ const TEAM_MEMBERS = [
 
 function setupAbout() {
     let parent = getContentContainer();
-    parent.html(""); 
+    parent.html("");
+    parent.style('height', 'auto');
+    parent.style('display', 'block');
+    parent.style('overflow', 'non-visible');
     document.title = "About - World Metro";
 
     // Container Principale
@@ -89,9 +92,14 @@ function drawAbout() {
 }
 
 function removeAbout() {
-    if (aboutContainer) {
-        aboutContainer.remove();
-        aboutContainer = null;
+    let container = getContentContainer();
+    if (container) {
+        // Reset degli stili flex e altezza impostati dalla Home
+        container.style('height', '');
+        container.style('display', '');
+        container.style('flex-direction', '');
+        container.style('overflow', '');
+        container.html(""); // Pulisce il contenuto
     }
 }
 

@@ -19,10 +19,11 @@ function inizializzaMappa(city) {
 
     let container = getContentContainer();
     container.html("");
+    container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
 
     let contentWrapper = createDiv()
         .parent(container)
-        .class("flex flex-col lg:flex-row h-[76vh] gap-8");
+        .class("flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden");
 
     let mapWrapper = creaContenitoreMappa(contentWrapper);
     let sidebar = creaSidebar(contentWrapper, city);
@@ -133,7 +134,7 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 function creaContenitoreMappa(parentWrapper) {
     let wrapper = createDiv().parent(parentWrapper);
     wrapper.class(
-        "w-full lg:w-3/4 h-full rounded-xl overflow-hidden relative bg-neutral-50 transition-shadow duration-500"
+        "w-full lg:w-3/4 h-[40vh] lg:h-full rounded-xl overflow-hidden relative bg-neutral-50 shadow-sm flex-shrink-0 lg:flex-shrink"
     );
 
     let loaderDiv = createDiv().parent(wrapper);
@@ -167,13 +168,13 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col shadow-lg"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col shadow-lg overflow-hidden"
     );
 
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-3 pb-4 bg-neutral-900 flex justify-between items-center"
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center"
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
 
@@ -218,7 +219,7 @@ function creaSidebar(parentWrapper, city) {
 
     let sbContent = createDiv()
         .parent(sidebar)
-        .class("flex-1 overflow-y-auto px-1.5 py-1");
+        .class("flex-1 overflow-y-auto px-1.5 py-1 custom-scrollbar");
 
     let datiCitta = getDatiCitta(city.id);
     if (datiCitta.length === 0) {
@@ -349,13 +350,12 @@ function popolaStazioniUI(cityId) {
 
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
-        //"mt-8 bg-white p-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
-        "mt-12 px-4 rounded-xl flex flex-col md:flex-row items-center gap-4"
+        "w-full mt-4 lg:mt-6 px-4 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
     );
 
     if (!appState.hasValidHistory) {
         timelineWrapper.class(
-            "min-h-20 mt-4 p-4 flex items-center justify-center text-neutral-400 text-xs font-medium tracking-wide uppercase italic"
+            "min-h-20 mt-4 flex items-center justify-center text-neutral-400 text-xs font-medium italic"
         );
         timelineWrapper.html("Construction data not available for this city.");
         return;
@@ -363,7 +363,7 @@ function creaTimeline(container) {
 
     let tlInfo = createDiv()
         .parent(timelineWrapper)
-        .class("w-full md:w-auto flex flex-col justify-center");
+        .class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start gap-2");
     createSpan("NETWORK EVOLUTION")
         .parent(tlInfo)
         .class(
@@ -375,7 +375,7 @@ function creaTimeline(container) {
 
     let sliderContainer = createDiv()
         .parent(timelineWrapper)
-        .class("w-full md:flex-1 flex items-center gap-4 px-2");
+        .class("w-full md:flex-1 flex items-center gap-2 md:gap-4");
 
     let btnPlay = createButton(playIcon).parent(sliderContainer);
     btnPlay.id("btn-play");

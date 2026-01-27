@@ -28,6 +28,13 @@ function initHomeData() {
 function setupHome() {
     let container = getContentContainer();
     container.html("");
+    
+    // Forza il container a occupare l'altezza disponibile meno eventuali header globali
+    container.style('height', 'calc(100vh - 80px)'); 
+    container.style('display', 'flex');
+    container.style('flex-direction', 'column');
+    container.style('overflow', 'hidden'); // Evita scroll indesiderati al wrapper
+    
     document.title = "Home - World Metro";
     
     // Reset Variabili
@@ -43,11 +50,10 @@ function setupHome() {
     createHomeLayout(container);
 
     let canvasContainer = select('#home-canvas-container');
-    // Il contenitore definisce l'area visibile
     canvasContainer.style('position', 'relative');
+    canvasContainer.style('flex', '1 1 auto'); // Il canvas si espande per riempire lo spazio
     canvasContainer.style('width', '100%');
-    canvasContainer.style('height', '60vh'); 
-    canvasContainer.style('min-height', '500px'); 
+    canvasContainer.style('min-height', '200px'); 
 
     // --- GESTIONE CANVAS ---
     let existingCanvas = select('canvas');
@@ -59,20 +65,12 @@ function setupHome() {
         homeState.canvas.parent(canvasContainer);
     }
 
-    // --- FIX RISOLUZIONE (NITIDEZZA) ---
-    // Riabilitiamo la densità pixel del dispositivo (es. Retina = 2)
-    // Ora che abbiamo il CSS bloccato, questo non romperà più il layout.
     pixelDensity(window.devicePixelRatio);
 
-    // --- CONFIGURAZIONE VISIVA ---
-    // Canvas sganciato dal layout, si limita a coprire il contenitore
     homeState.canvas.style('display', 'block');
     homeState.canvas.style('position', 'absolute');
     homeState.canvas.style('top', '0');
     homeState.canvas.style('left', '0');
-    
-    // Forziamo il canvas a stare DENTRO il contenitore visivamente
-    // Indipendentemente da quanti pixel fisici ha (HD/Retina)
     homeState.canvas.style('width', '100%');
     homeState.canvas.style('height', '100%');
     
@@ -88,18 +86,10 @@ function setupHome() {
     homeState.resizeObserver = new ResizeObserver(entries => {
         for (let entry of entries) {
             const { width, height } = entry.contentRect;
-            
             if (width < 10 || height < 10) return;
 
-            // 1. RIDIMENSIONA IL BUFFER P5
-            // Passiamo width/height logici. p5 userà pixelDensity per creare
-            // un buffer più grande se necessario (es. 2000x1000), ma manterrà
-            // le coordinate logiche (1000x500).
             resizeCanvas(Math.floor(width), Math.floor(height));
             
-            // 2. RIPRISTINA LO STILE CSS (IMPORTANTE)
-            // A volte resizeCanvas prova a toccare lo style width/height.
-            // Noi lo forziamo a restare al 100% del contenitore.
             homeState.canvas.style('width', '100%');
             homeState.canvas.style('height', '100%');
 
@@ -111,7 +101,6 @@ function setupHome() {
     });
 
     homeState.resizeObserver.observe(canvasContainer.elt);
-
     updateHomeTimelineBackground(select("#home-timeline-slider"));
 }
 

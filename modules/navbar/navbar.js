@@ -9,7 +9,7 @@ function setupNavbar() {
     content.class("mx-auto px-8 md:px-12 h-[4.5rem] flex items-center justify-between relative");
     
     btnBack = createButton(backIcon);
-    btnBack.parent(content).class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
+    btnBack.parent(content).class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnBack.mousePressed(() => changeState('HOME'));
 
     // Logo / Home Link
@@ -24,14 +24,14 @@ function setupNavbar() {
     let menu = createDiv().parent(content).class("flex justify-end gap-4 text-sm font-bold text-neutral-500");
     
     let btnHome = createButton(homeIcon).parent(menu);
-    btnHome.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
+    btnHome.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnHome.mousePressed((e) => {
         e.preventDefault();
         changeState('HOME');
     });
 
     let btnAbout = createButton(aboutIcon).parent(menu);
-    btnAbout.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
+    btnAbout.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
     btnAbout.mousePressed((e) => {
         e.preventDefault();
         changeState('ABOUT');
