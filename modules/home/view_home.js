@@ -95,7 +95,7 @@ function createHomeLayout() {
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "w-full mt-0 lg:mt-6 py-5 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
+        "w-full mt-0 lg:mt-6 py-9 lg:py-4 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
     );
 
     let tlInfo = createDiv().parent(timelineWrapper).class("flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
