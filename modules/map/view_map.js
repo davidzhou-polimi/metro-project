@@ -628,7 +628,10 @@ function updateSidebarStats() {
                 let visibleStationCount = activeStations.length;
                 let commonBadgeClasses =
                     "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1";
-                //if (visibleStationCount > 0) {
+                let constructionBadgeClasses =
+                    "flex flex-1 items-center justify-center text-orange-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1";
+
+                    //if (visibleStationCount > 0) {
                 let label = visibleStationCount === 1 ? "station" : "stations";
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">${visibleStationCount} ${label}</span>`
@@ -643,7 +646,7 @@ function updateSidebarStats() {
                 //}
                 //if (kmCons > 0) {
                 htmlParts.push(
-                    `<span class="${commonBadgeClasses}">${constructionIcon}${kmCons.toFixed(
+                    `<span class="${kmCons > 0 ? constructionBadgeClasses : commonBadgeClasses}">${constructionIcon}${kmCons.toFixed(
                         1
                     )} km</span>`
                 );
@@ -664,9 +667,15 @@ function updateSidebarStats() {
                             ordinaStazioniNaturalmente(activeStations);
                         let btnShowLine =
                             createDiv("Isola linea").parent(stationsDiv);
+                        let hexColor = fixColor(line.color); // usa le stesse regole dei box delle linee
+                        let useBlack = isColorLight(hexColor);
+
                         btnShowLine.class(
-                            "text-xs font-bold text-neutral-600 cursor-pointer py-1 mb-1 hover:underline"
+                            "text-xs font-semibold cursor-pointer py-1 mb-2 px-2 rounded-lg inline-block select-none hover:opacity-90 transition-opacity"
                         );
+                        btnShowLine.style("background-color", hexColor);
+                        btnShowLine.style("color", useBlack ? "#000000" : "#ffffff");
+
                         btnShowLine.mousePressed(() =>
                             isolaLineaSullaMappa(line.id)
                         );

@@ -153,3 +153,13 @@ canvas {
     height: 8px;
     border-radius: 8px;
 }
+
+/* Nasconde la scrollbar nella sezione linee*/
+.custom-scrollbar {
+  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;  /* old Edge/IE */
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: none;             /* Chrome/Safari */
+}
