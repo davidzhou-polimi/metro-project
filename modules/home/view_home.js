@@ -1,5 +1,9 @@
 // modules/home/view_home.js
 
+const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || windowWidth < 768;
+};
+
 // Costanti grafiche
 const CORNER_RADIUS = 5;
 const PADDING = 2;
@@ -29,6 +33,11 @@ function createHomeLayout() {
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900");
     input.input((e) => setHomeFilter('search', e.target.value));
+    input.elt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            handleSearchNavigation();
+        }
+    });
     homeState.uiElements.searchInput = input;
 
     let clearBtn = createButton('').parent(searchWrapper);
@@ -45,6 +54,25 @@ function createHomeLayout() {
         if(input.value().length > 0) clearBtn.removeClass('hidden');
         else clearBtn.addClass('hidden');
     });
+
+    const handleSearchNavigation = () => {
+    const query = homeState.uiElements.searchInput.value().toLowerCase().trim();
+    if (query.length === 0) return;
+
+    // Cerchiamo tra i nodi processati (tutte le città disponibili)
+    const matches = homeState.processedData.filter(city => 
+        city.name.toLowerCase().startsWith(query)
+    );
+
+    // Se c'è un'unica corrispondenza (o se una corrisponde esattamente)
+    if (matches.length === 1) {
+        handleHomeClick(matches[0]);
+    } else {
+        // Se ci sono più match, controlla se uno è identico alla query
+        const exactMatch = matches.find(m => m.name.toLowerCase() === query);
+        if (exactMatch) handleHomeClick(exactMatch);
+    }
+    };
 
     // Filtri Continenti
     let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar");
@@ -67,7 +95,7 @@ function createHomeLayout() {
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "w-full mt-4 lg:mt-6 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
+        "w-full mt-0 lg:mt-6 py-5 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
     );
 
     let tlInfo = createDiv().parent(timelineWrapper).class("flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
@@ -167,6 +195,7 @@ function drawHomeCanvas(state) {
 }
 
 function drawHomeNodes(nodes) {
+    const isMobile = windowWidth < 768;
     let wx = mouseX;
     let wy = mouseY;
     let foundHover = null;
@@ -190,7 +219,7 @@ function drawHomeNodes(nodes) {
 
         if (dw < 1 || dh < 1) continue;
 
-        let isHover = wx >= dx && wx <= dx + dw && wy >= dy && wy <= dy + dh;
+        let isHover = !isMobile && wx >= dx && wx <= dx + dw && wy >= dy && wy <= dy + dh;
         if (isHover) foundHover = n;
 
         let isMatch = hasSearch && n.name.toLowerCase().includes(filterTxt);
@@ -269,7 +298,7 @@ function drawHomeNodes(nodes) {
 
     homeState.hoveredNode = foundHover;
     
-    if (foundHover) {
+    if (foundHover && !isMobile) {
         cursor(HAND);
         updateAndShowHomeTooltip(foundHover);
     } else {

@@ -350,7 +350,7 @@ function popolaStazioniUI(cityId) {
 
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
-        "w-full mt-4 lg:mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
+        "w-full mt-0 lg:mt-6 py-5 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
     );
 
     if (!appState.hasValidHistory) {
