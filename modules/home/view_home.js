@@ -9,9 +9,6 @@ const CORNER_RADIUS = 5;
 const PADDING = 2;
 
 /**
- * Crea l'intera struttura DOM della Home
- */
-/**
  * Crea l'intera struttura DOM della Home con Flexbox per garantire visibilità
  */
 function createHomeLayout() {
@@ -20,22 +17,50 @@ function createHomeLayout() {
 
     // --- SEZIONE 1: HEADER CONTROLLI (Altezza fissa) ---
     let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3 shrink-0");
-    let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12");
+    let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12 relative");
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    searchWrapper.class("relative flex items-center w-64 shrink-0 px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-colors");
+    searchWrapper.class("relative flex items-center w-12 md:w-64 shrink-0 px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 z-20 overflow-hidden");
     
-    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 mr-2");
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 cursor-pointer md:cursor-default shrink-0");
     searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
 
     let input = createElement('input').parent(searchWrapper);
-    input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
-    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900");
+    input.attribute('type', 'text').attribute('placeholder', 'Search city...');
+    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 ml-2 hidden md:block");
     input.input((e) => setHomeFilter('search', e.target.value));
+    homeState.uiElements.searchInput = input;
+    let closeMobileBtn = createButton('').parent(searchWrapper);
+    closeMobileBtn.class("md:hidden flex items-center justify-center p-1 text-gray-500 hover:text-black hidden shrink-0");
+    closeMobileBtn.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
+
+    searchIconDiv.mousePressed(() => {
+        if (windowWidth < 768) {
+            searchWrapper.removeClass("w-12").addClass("w-full absolute inset-0 md:relative md:w-64");
+            input.removeClass("hidden");
+            closeMobileBtn.removeClass("hidden");
+            input.elt.focus();
+        }
+    });
+
+    closeMobileBtn.mousePressed((e) => {
+        e.stopPropagation();
+        searchWrapper.addClass("w-12").removeClass("w-full absolute inset-0");
+        input.addClass("hidden");
+        closeMobileBtn.addClass("hidden");
+        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura
+        input.value('');
+    });
+
     input.elt.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            handleSearchNavigation();
+            let filterTxt = input.value().toLowerCase().trim();
+            // Trova i nodi che matchano
+            let matches = homeState.activeNodes.filter(n => n.name.toLowerCase().includes(filterTxt));
+            if (matches.length === 1) {
+                handleHomeClick(matches[0]);
+            }
         }
     });
     homeState.uiElements.searchInput = input;
