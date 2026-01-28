@@ -308,13 +308,26 @@ function drawHomeNodes(nodes) {
 }
 
 function mousePressed() {
-    // FIX: Rendi il controllo più robusto
-    // Controlla che siamo sulla Home e che il mouse sia sopra il canvas (hoveredNode non è null)
-    if (pageState === 'HOME' && homeState.hoveredNode) {
-        // Importante: Controlliamo se il click non è stato intercettato da un elemento UI sopra
-        // ma poiché hoveredNode è calcolato su mouseX/Y del canvas, dovrebbe essere OK.
-        handleHomeClick(homeState.hoveredNode);
-        return false; // Prevenire default
+if (pageState === 'HOME') {
+        let targetNode = null;
+
+        // Su mobile cerchiamo manualmente il nodo cliccato
+        if (windowWidth < 768) {
+            targetNode = homeState.activeNodes.find(n => 
+                mouseX >= n.x + PADDING && 
+                mouseX <= n.x + n.w - PADDING && 
+                mouseY >= n.y + PADDING && 
+                mouseY <= n.y + n.h - PADDING
+            );
+        } else {
+            // Su desktop usiamo l'hover calcolato dal draw
+            targetNode = homeState.hoveredNode;
+        }
+
+        if (targetNode) {
+            handleHomeClick(targetNode);
+            return false; // Prevenire default
+        }
     }
 }
 
