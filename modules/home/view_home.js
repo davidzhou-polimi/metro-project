@@ -67,17 +67,17 @@ function createHomeLayout() {
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "w-full mt-4 lg:mt-6 px-4 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 shrink-0"
+        "w-full mt-4 lg:mt-6 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
     );
 
-    let tlInfo = createDiv().parent(timelineWrapper).class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start gap-2");
+    let tlInfo = createDiv().parent(timelineWrapper).class("flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
     createSpan("CITIES EXPANSION").parent(tlInfo).class("block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest");
     let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
 
-    let sliderContainer = createDiv().parent(timelineWrapper).class("w-full md:flex-1 flex items-center gap-4 px-2");
+    let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-6 ml-0 md:ml-2");
     let btnPlay = createButton(playIcon).parent(sliderContainer);
-    btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
+    btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2 shrink-0 mx-0 md:mx-2 my-4 md:my-0");
     btnPlay.mousePressed(() => toggleHomePlayback());
     homeState.uiElements.playBtn = btnPlay;
 

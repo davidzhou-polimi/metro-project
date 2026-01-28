@@ -168,7 +168,7 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col shadow-lg overflow-hidden"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col felx-1 shadow-lg overflow-hidden"
     );
 
     let sbHeader = createDiv()
@@ -350,7 +350,7 @@ function popolaStazioniUI(cityId) {
 
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
-        "w-full mt-4 lg:mt-6 px-4 py-3 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
+        "w-full mt-4 lg:mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
     );
 
     if (!appState.hasValidHistory) {
@@ -363,7 +363,7 @@ function creaTimeline(container) {
 
     let tlInfo = createDiv()
         .parent(timelineWrapper)
-        .class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start gap-2");
+        .class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
     createSpan("NETWORK EVOLUTION")
         .parent(tlInfo)
         .class(
@@ -375,7 +375,7 @@ function creaTimeline(container) {
 
     let sliderContainer = createDiv()
         .parent(timelineWrapper)
-        .class("w-full md:flex-1 flex items-center gap-2 md:gap-4");
+        .class("flex-1 w-full md:w-auto flex items-center gap-6 ml-0 md:ml-2");
 
     let btnPlay = createButton(playIcon).parent(sliderContainer);
     btnPlay.id("btn-play");
@@ -397,7 +397,7 @@ function creaTimeline(container) {
     slider.attribute("value", appState.minYear);
     slider.attribute("step", "1");
     slider.attribute("disabled", "true");
-    slider.class("w-full metro-slider cursor-not-allowed opacity-50 grayscale");
+    slider.class("w-full metro-slider cursor-pointer");
 
     let labels = createDiv()
         .parent(sliderWrapper)
@@ -666,7 +666,7 @@ function updateSidebarStats() {
                         let sortedStations =
                             ordinaStazioniNaturalmente(activeStations);
                         let btnShowLine =
-                            createDiv("Isola linea").parent(stationsDiv);
+                            createDiv("Isolate line").parent(stationsDiv);
                         let hexColor = fixColor(line.color); // usa le stesse regole dei box delle linee
                         let useBlack = isColorLight(hexColor);
 
@@ -685,7 +685,7 @@ function updateSidebarStats() {
                                 stationsDiv
                             );
                             stElem.class(
-                                "text-xs text-neutral-600 hover:text-neutral-600 cursor-pointer py-1 truncate"
+                                "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate"
                             );
                             stElem.mousePressed(() => zoomSuStazione(station));
                         }
