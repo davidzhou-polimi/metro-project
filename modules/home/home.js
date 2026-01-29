@@ -16,10 +16,6 @@ let homeState = {
     resizeObserver: null
 };
 
-let touchStartX = 0;
-let touchStartY = 0;
-const SCROLL_THRESHOLD = 10; // Pixel di tolleranza
-
 function initHomeData() {
     if (db && db.cities && db.lines) {
         homeState.processedData = processHomeData(db);
@@ -100,26 +96,6 @@ function setupHome() {
 
     homeState.resizeObserver.observe(canvasContainer.elt);
     updateHomeTimelineBackground(select("#home-timeline-slider"));
-}
-
-function mousePressed() {
-    touchStartX = mouseX;
-    touchStartY = mouseY;
-}
-
-function mouseReleased() {
-    // Calcolo di quanto si è spostato il dito/mouse
-    let distance = dist(touchStartX, touchStartY, mouseX, mouseY);
-
-    // Se lo spostamento è superiore alla soglia, l'utente sta scrollando
-    if (distance > SCROLL_THRESHOLD) {
-        return; // Interrompe la funzione, non scatta il click
-    }
-
-    // Se così, è un click intenzionale
-    if (homeState.hoveredNode) {
-        handleHomeClick(homeState.hoveredNode);
-    }
 }
 
 function drawHome() {

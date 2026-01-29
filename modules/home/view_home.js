@@ -21,64 +21,78 @@ function createHomeLayout() {
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    searchWrapper.class("relative flex items-center w-12 md:w-64 shrink-0 px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 z-20 overflow-hidden");
+    searchWrapper.class("relative flex items-center w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
     
-    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center text-gray-400 cursor-pointer md:cursor-default shrink-0");
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-gray-400 cursor-pointer md:cursor-default shrink-0 w-12 md:w-5 h-full");
     searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
 
     let input = createElement('input').parent(searchWrapper);
     input.attribute('type', 'text').attribute('placeholder', 'Search city...');
-    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 ml-2 hidden md:block");
+    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 hidden md:block");
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
-    let closeMobileBtn = createButton('').parent(searchWrapper);
-    closeMobileBtn.class("md:hidden flex items-center justify-center p-1 text-gray-500 hover:text-black hidden shrink-0");
-    closeMobileBtn.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
+
+    let clearBtn = createButton('').parent(searchWrapper);
+    clearBtn.class("absolute right-20 md:right-2 flex items-center justify-center p-1 text-gray-400 hover:text-black cursor-pointer hidden rounded-full");
+    clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
+
+    let closeMobileBtn = createButton('Cancel').parent(searchWrapper);
+    closeMobileBtn.class("hidden md:hidden px-3 h-full text-xs font-bold text-black-600 hover:underline shrink-0");
 
     searchIconDiv.mousePressed(() => {
         if (windowWidth < 768) {
-            searchWrapper.removeClass("w-12").addClass("w-full absolute inset-0 md:relative md:w-64");
+            searchWrapper.class("absolute inset-0 z-20 flex items-center transition-all duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm px-3 w-full");
             input.removeClass("hidden");
             closeMobileBtn.removeClass("hidden");
             input.elt.focus();
         }
     });
 
-    closeMobileBtn.mousePressed((e) => {
-        e.stopPropagation();
-        searchWrapper.addClass("w-12").removeClass("w-full absolute inset-0");
+    closeMobileBtn.mousePressed(() => {
+        searchWrapper.class("relative flex items-center transition-all duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm overflow-hidden px-0 md:px-3 w-12 md:w-64");
         input.addClass("hidden");
         closeMobileBtn.addClass("hidden");
-        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura
         input.value('');
+        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura
+        clearBtn.addClass('hidden');
     });
 
-    input.elt.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            let filterTxt = input.value().toLowerCase().trim();
-            // Trova i nodi che matchano
-            let matches = homeState.activeNodes.filter(n => n.name.toLowerCase().includes(filterTxt));
-            if (matches.length === 1) {
-                handleHomeClick(matches[0]);
-            }
-        }
-    });
-    homeState.uiElements.searchInput = input;
-
-    let clearBtn = createButton('').parent(searchWrapper);
-    clearBtn.class("absolute right-2 flex items-center justify-center p-1 text-gray-400 hover:text-red-500 cursor-pointer hidden rounded-full hover:bg-gray-100");
-    clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
     clearBtn.mousePressed(() => {
         input.value('');
         setHomeFilter('search', '');
         clearBtn.addClass('hidden');
         input.elt.focus();
     });
-    
+
     input.elt.addEventListener('input', () => {
-        if(input.value().length > 0) clearBtn.removeClass('hidden');
+        if (input.value().length > 0) clearBtn.removeClass('hidden');
         else clearBtn.addClass('hidden');
     });
+
+    input.elt.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const searchTerm = input.value().toLowerCase().trim();
+            if (searchTerm.length > 0) {
+                // Ricerca di una corrispondenza nei dati processati
+                // Filtraggio x vedere quali nodi sono attualmente "attivi" o corrispondenti
+                let matches = homeState.activeNodes.filter(n => 
+                    n.name.toLowerCase().includes(searchTerm)
+                );
+
+                // Se c'è una corrispondenza univoca
+                if (matches.length === 1) {
+                    handleHomeClick(matches[0]);
+                    
+                    // Se su mobile, chiude la barra dopo l'invio
+                    if (windowWidth < 768) {
+                        cancelBtn.elt.click(); 
+                    }
+                }
+            }
+        }
+    });
+
+    homeState.uiElements.searchInput = input;
 
     const handleSearchNavigation = () => {
     const query = homeState.uiElements.searchInput.value().toLowerCase().trim();
