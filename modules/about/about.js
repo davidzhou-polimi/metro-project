@@ -2,7 +2,7 @@
 
 let aboutContainer = null;
 
-// Dati del team (usando i percorsi immagini e dati dal tuo HTML)
+// Dati del team (usando i percorsi immagini e dati dall'HTML)
 const TEAM_MEMBERS = [
     {
         surname: "BASSO", name: "MICHELE LUCIO",
