@@ -1,6 +1,6 @@
 // core/router.js
 
-// Funzione globale per cambiare pagina: pulisce lo vecchio stato, avvia quello nuovo e chiede di aggiornare l'URL.
+// Funzione globale per cambiare pagina: pulisce il vecchio stato, avvia quello nuovo e chiede di aggiornare l'URL.
 function changeState(newState, param = null) {
     console.log(`ROUTER: Cambio stato da ${pageState} a ${newState}`);
 

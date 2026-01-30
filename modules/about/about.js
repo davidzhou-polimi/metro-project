@@ -13,15 +13,23 @@ const TEAM_MEMBERS = [
 
 function setupAbout() {
     let parent = getContentContainer();
-    parent.html(""); 
+    parent.html("");
+
+    // RESET CLASSI DEL PARENT
+    // Rimozione classi restrittive, che potrebbero arrivare dalla Home
+    parent.removeClass("h-[calc(100vh-4.5rem)]");
+    parent.removeClass("max-h-screen");
+    parent.addClass("min-h-screen");
+    parent.removeClass("p-4"); 
+    parent.addClass("p-0");
+
     document.title = "About - World Metro";
 
-    aboutContainer = createDiv().parent(parent).class("w-full max-w-[1200px] mx-auto px-4 relative min-h-screen flex flex-col");
+    aboutContainer = createDiv().parent(parent).class("w-full max-w-[1200px] mx-auto px-4 relative flex flex-col");
 
-    // --- LINEA VERTICALE MOBILE ---
-    createDiv().parent(aboutContainer).class("block md:hidden absolute left-1/2 top-0 bottom-0 -translate-x-1/2 w-[4px] bg-black z-0");
+    // Linea verticale mobile
+    createDiv().parent(aboutContainer).class("block md:hidden absolute left-1/2 -top-12 -bottom-24 -translate-x-1/2 w-[4px] bg-black z-0");
 
-    // --- 1. METRO WRAPPER (SVG Desktop) ---
     let metroWrapper = createDiv().parent(aboutContainer).class("absolute inset-0 w-full h-full pointer-events-none");
 
     let svgContent = `
@@ -40,12 +48,12 @@ function setupAbout() {
     createTopInfoBox(introWrapper, "WHAT IS THE PROJECT ABOUT?", 
         "This page wants to show users the presence and extension of subway lines in the world.");
 
-    // Sezione "WHO ARE WE?"
+    // "WHO ARE WE?"
     let whoAreWeWrapper = createDiv().parent(contentSection).class("flex justify-center md:pt-[60px] mb-20 md:mb-32");
     createTopInfoBox(whoAreWeWrapper, "WHO ARE WE?", 
         "We are a group of students of the Politecnico di Milano, from the course of “Laboratorio di Computer Grafica”, C2 section, studying Design della Comunicazione.", true);
 
-    // --- 3. STUDENT CARDS ---
+    // Schede studenti
     TEAM_MEMBERS.forEach((member) => {
         let item = createDiv().parent(contentSection).class("relative flex flex-col items-center md:block mb-24 md:mb-36 w-full");
         
@@ -68,7 +76,6 @@ function createTopInfoBox(parent, title, htmlContent, isWhoAreWe = false) {
 function createProfileBox(parent, member) {
     let posClass = member.side === 'left' ? "md:mr-[58%] md:ml-auto" : "md:ml-[58%] md:mr-auto";
     
-    // Rimosso aspect-[4/5] per permettere alla card di adattarsi all'altezza del contenuto (meno spazio bianco)
     let card = createDiv().parent(parent).class(`w-[90%] max-w-[400px] border-[4px] border-black rounded-2xl bg-white relative cursor-pointer transition-all duration-300 hover:-translate-y-2 group/card overflow-hidden z-20 ${posClass}`);
     
     card.mouseClicked(() => card.toggleClass('flipped'));
@@ -76,21 +83,18 @@ function createProfileBox(parent, member) {
     // Container interno flessibile
     let inner = createDiv().parent(card).class("relative w-full flex flex-col");
 
-    // FRONT
     let front = createDiv().parent(inner).class("flex flex-col p-4 transition-all duration-500 group-[.flipped]/card:opacity-0");
     
-    // Foto: manteniamo un'altezza fissa proporzionale per le immagini (es. aspect-video o altezza fissa)
+    // Altezza fissa proporzionale per le immagini
     let imgContainer = createDiv().parent(front).class("w-full aspect-[4/3] overflow-hidden rounded-lg border-2 border-black mb-3");
     createImg(member.img, member.surname).parent(imgContainer).class("w-full h-full object-cover");
     
-    // Nome studente (senza spazi bianchi eccessivi sotto)
     createElement('h3', `${member.surname} ${member.name}`).parent(front).class("text-base font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis uppercase");
 
-    // BACK
     let back = createDiv().parent(inner).class("absolute inset-0 bg-white flex flex-col items-center justify-center p-6 opacity-0 transition-all duration-500 group-[.flipped]/card:opacity-100 group-[.flipped]/card:z-30");
     createElement('h3', "CONTACT").parent(back).class("text-base font-bold mb-4");
     
-    // CORREZIONE EMAIL: uso diretto del campo member.email per gestire nomi/cognomi composti
+    // Uso diretto del campo member.email x gestire nomi/cognomi composti
     let emailDisplay = member.email; 
     let mailLink = createA(`mailto:${member.email}`, emailDisplay, "_blank").parent(back);
     mailLink.class("text-base text-black underline underline-offset-4 hover:text-gray-500 transition-colors text-center break-all font-medium");
