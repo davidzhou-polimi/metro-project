@@ -4,7 +4,7 @@ let aboutContainer = null;
 
 const TEAM_MEMBERS = [
     { surname: "Basso", name: "Michele Lucio", img: "assets/images/basso_michelelucio.jpeg", email: "michelelucio.basso@mail.polimi.it", side: "left" },
-    { surname: "Della Valle", name: "Emma", img: "assets/images/cavallo.jpg", email: "emma.dellavalle@mail.polimi.it", side: "right" },
+    { surname: "Della Valle", name: "Emma", img: "assets/images/dellavalle_emma.jpeg", email: "emma.dellavalle@mail.polimi.it", side: "right" },
     { surname: "Favre", name: "Mathias", img: "assets/images/favre_mathias.jpeg", email: "mathias.favre@mail.polimi.it", side: "left" },
     { surname: "Fois", name: "Chiara", img: "assets/images/fois_chiara.jpeg", email: "chiara.fois@mail.polimi.it", side: "right" },
     { surname: "Naldi", name: "Viola", img: "assets/images/naldi_viola.jpeg", email: "viola.naldi@mail.polimi.it", side: "left" },
@@ -88,12 +88,12 @@ function createProfileBox(parent, member) {
 
     // BACK
     let back = createDiv().parent(inner).class("absolute inset-0 bg-white flex flex-col items-center justify-center p-6 opacity-0 transition-all duration-500 group-[.flipped]/card:opacity-100 group-[.flipped]/card:z-30");
-    createElement('h3', "CONTACT").parent(back).class("text-lg font-bold mb-4");
+    createElement('h3', "CONTACT").parent(back).class("text-base font-bold mb-4");
     
     // CORREZIONE EMAIL: uso diretto del campo member.email per gestire nomi/cognomi composti
     let emailDisplay = member.email; 
     let mailLink = createA(`mailto:${member.email}`, emailDisplay, "_blank").parent(back);
-    mailLink.class("text-xs text-black underline underline-offset-4 hover:text-gray-500 transition-colors text-center break-all font-medium");
+    mailLink.class("text-base text-black underline underline-offset-4 hover:text-gray-500 transition-colors text-center break-all font-medium");
     
     mailLink.mouseClicked((e) => e.stopPropagation());
 }
