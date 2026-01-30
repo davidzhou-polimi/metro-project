@@ -86,7 +86,7 @@ function createProfileBox(parent, member) {
     let front = createDiv().parent(inner).class("flex flex-col p-4 transition-all duration-500 group-[.flipped]/card:opacity-0");
     
     // Altezza fissa proporzionale per le immagini
-    let imgContainer = createDiv().parent(front).class("w-full aspect-[4/3] overflow-hidden rounded-lg border-2 border-black mb-3");
+    let imgContainer = createDiv().parent(front).class("w-full aspect-[4/3] overflow-hidden rounded-lg mb-3");
     createImg(member.img, member.surname).parent(imgContainer).class("w-full h-full object-cover");
     
     createElement('h3', `${member.surname} ${member.name}`).parent(front).class("text-base font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis uppercase");

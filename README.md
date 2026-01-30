@@ -56,7 +56,7 @@ Una **sidebar** organizza i dati in modo gerarchico, mostrando i sistemi di tras
 
 #### Attività condivise
 - **Brainstorming:** sessioni collettive per la scelta del tema del progetto e la definizione dell'identità visiva.
-- **Data visualization:** decisione collegiale sulle modalità di visualizzazione dei dati per rendere efficace il racconto dell'informazione e il confronto tra i sistemi metropolitani.
+- **Data visualization:** decisione collegiale sulle modalità di visualizzazione dei dati, per rendere efficace il racconto dell'informazione e il confronto tra i sistemi metropolitani.
 
 </details>
 

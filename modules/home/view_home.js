@@ -178,15 +178,14 @@ function updateHomeTimelineBackground(slider) {
 }
 
 /**
- * Crea il tooltip della Home con lo stile "Dark Mode Minimal"
- * (Sfondo scuro, tipografia pulita, ombreggiatura morbida)
+ * Tooltip della Home
  */
 function createHomeTooltip(parent) {
-    // Rimuoviamo il parent specifico e lo appendiamo al body o lo teniamo nel wrapper 
-    // ma con logica di posizionamento assoluta rispetto alla finestra.
+    // Rimozione parent specifico e lo appendiamo al body o lo teniamo nel wrapper 
+    // ma con logica di posizionamento assoluta rispetto alla finestra
     let tt = createDiv().parent(parent).id('home-tooltip');
     
-    // Usiamo opacity-0 e pointer-events-none, per permettere al browser di calcolare le dimensioni (offsetW/H).
+    // Opacity-0 e pointer-events-none, x permettere al browser di calcolare le dimensioni (offsetW/H)
     tt.class("opacity-0 pointer-events-none fixed z-[9999] bg-neutral-900 text-white p-4 rounded-xl shadow-xl min-w-[200px] font-sans flex flex-col items-start transition-opacity duration-200");
 
     createSpan().parent(tt).id('tt-country').class("text-[10px] font-semibold text-neutral-400 uppercase tracking-[0.15em] mb-1");
@@ -224,7 +223,7 @@ function drawHomeCanvas(state) {
         push();
         fill(150); textAlign(CENTER, CENTER); textSize(16); noStroke();
         textFont(fonts.medium);
-        text("Nessuna metropolitana trovata.", width/2, height/2);
+        text("No metro found", width/2, height/2);
         pop();
         hideHomeTooltip();
         return;
@@ -263,7 +262,7 @@ function drawHomeNodes(nodes) {
 
         let isMatch = hasSearch && n.name.toLowerCase().includes(filterTxt);
 
-        // --- GESTIONE COLORI ---
+        // GESTIONE COLORI
         let nodeColor = color(n.color);
 
         if (hasSearch) {
@@ -289,8 +288,8 @@ function drawHomeNodes(nodes) {
 
         rect(dx, dy, dw, dh, CORNER_RADIUS);
 
-        // --- TESTO ---
-        // Mostriamo il testo solo se c'è spazio E (se non stiamo cercando OPPURE se è un match)
+        // TESTO
+        // Mostriamo il testo solo se c'è spazio E se non stiamo cercando OPPURE se è un match
         // Questo pulisce la vista durante la ricerca
         if (dw > 20 && dh > 20 && (!hasSearch || isMatch)) {
             fill(255); noStroke(); textAlign(LEFT, TOP);
@@ -341,7 +340,7 @@ function drawHomeNodes(nodes) {
         cursor(HAND);
         updateAndShowHomeTooltip(foundHover);
     } else {
-        cursor(ARROW);
+        cursor(HAND);
         hideHomeTooltip();
     }
 }
@@ -394,7 +393,7 @@ function updateAndShowHomeTooltip(node) {
     let finalX = mX;
     let translateX = "-50%"; // Di default centrato sul mouse
 
-    // Se lato sinistro del tooltip esce dallo schermo
+    // Se lato sinistro tooltip esce dallo schermo
     if (mX - (ttWidth / 2) < margin) {
         translateX = "0%";
         finalX = margin;
@@ -409,7 +408,7 @@ function updateAndShowHomeTooltip(node) {
     let finalY = mY - 20; // Default: sopra il mouse
     let translateY = "-100%";
 
-    // Se il mouse è troppo in alto (vicino alla navbar e filtri, circa 120px) o se il tooltip uscirebbe dal bordo superiore
+    // Se mouse è troppo in alto (vicino alla navbar e filtri, circa 120px) o se il tooltip uscirebbe dal bordo superiore
     if (mY - ttHeight - 20 < 120) {
         finalY = mY + 25; // Posiziona sotto il cursore
         translateY = "0%";

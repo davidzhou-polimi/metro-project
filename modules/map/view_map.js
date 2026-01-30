@@ -273,7 +273,7 @@ function costruisciSistemaUI(system, container) {
         .class("flex items-center gap-2");
     createSpan(chevronIcon)
         .class(
-            "group-hover/dropdown:rotate-90 group-open:rotate-90 group-open:group-hover/dropdown:-rotate-90 transition duration-300 ease-out"
+            "group-open:rotate-180 transition duration-300 ease-out"
         )
         .parent(leftSide);
     createSpan(system.name).parent(leftSide);
@@ -325,15 +325,40 @@ function costruisciLineaUI(line, container) {
 
     let headerLine = createDiv()
         .parent(lineSummary)
-        .class("flex items-center gap-2 w-full");
+        .class("flex items-center justify-between w-full");
     /*let hexColor = fixColor(line.color);
     createSpan("")
         .parent(headerLine)
         .class("w-3 h-3 rounded-full shadow-sm block flex-shrink-0")
         .style("background-color", hexColor);*/
-    createSpan(line.name)
+
+    let leftSideGroup = createDiv()
         .parent(headerLine)
+        .class("flex items-center gap-2");
+
+    createSpan(chevronIcon)
+        .parent(leftSideGroup)
+        .class(
+            "group-open/line:rotate-180 transition duration-300 ease-out"
+        );
+        
+    createSpan(line.name)
+        .parent(leftSideGroup)
         .class("ml-1 font-semibold opacity-95");
+
+    let btnIsolate = createSpan("Isolate line")
+        .parent(headerLine)
+        .class("text-[14px] font-medium tracking-wider hover:opacity-100 hover:underline hover:font-bold transition-all cursor-pointer px-1");
+
+    btnIsolate.mousePressed((e) => {
+        e.stopPropagation(); // Impedisce apertura/chiusura del details al click
+
+        if (appState.isolatedLineId === line.id) {
+            resetFiltriMappa();
+        } else {
+            isolaLineaSullaMappa(line.id);
+        }
+    });
 
     let statsContainer = createDiv().parent(lineSummary);
     statsContainer.id(`line-stats-${line.id}`);
@@ -341,7 +366,7 @@ function costruisciLineaUI(line, container) {
 
     let stationsDiv = createDiv().parent(lineDetail);
     stationsDiv.id(`stations-list-${line.id}`);
-    stationsDiv.class("pl-4 border-l-2 border-neutral-200 ml-3 mt-2 space-y-1");
+    stationsDiv.class("pl-6 border-l-2 border-neutral-200 ml-3 mt-2 space-y-1");
 }
 
 function popolaStazioniUI(cityId) {
@@ -665,21 +690,7 @@ function updateSidebarStats() {
                     if (visibleStationCount > 0) {
                         let sortedStations =
                             ordinaStazioniNaturalmente(activeStations);
-                        let btnShowLine =
-                            createDiv("Isolate line").parent(stationsDiv);
-                        let hexColor = fixColor(line.color); // usa le stesse regole dei box delle linee
-                        let useBlack = isColorLight(hexColor);
-
-                        btnShowLine.class(
-                            "text-xs font-semibold cursor-pointer py-1 mb-2 px-2 rounded-lg inline-block select-none hover:opacity-90 transition-opacity"
-                        );
-                        btnShowLine.style("background-color", hexColor);
-                        btnShowLine.style("color", useBlack ? "#000000" : "#ffffff");
-
-                        btnShowLine.mousePressed(() =>
-                            isolaLineaSullaMappa(line.id)
-                        );
-
+                        
                         for (let station of sortedStations) {
                             let stElem = createDiv(station.name).parent(
                                 stationsDiv

@@ -79,7 +79,7 @@ function setupSplash() {
 function resetSplashVariables(w, h) {
   btnVisible = false;
   linesStopped = false;
-  centerPoint = w / 2; // Salviamo il centro solo per il cerchio visivo
+  centerPoint = w / 2; // Salvataggio centro, solo per il cerchio visivo
 
   currentSpeed = w * 0.004; // Velocità ottimizzata
   if (currentSpeed < 3) currentSpeed = 3;
@@ -203,42 +203,40 @@ function calculateIntersections(w, h) {
   intersectionX_RedDevGreen = fixedYRed + stopXRed - fixedYGreen;
 }
 
-// --- UI CREATION ---
+// Interfaccia utente
 function createSplashUI(container) {
   splashUIContainer = createDiv();
   splashUIContainer.parent(container);
 
   splashUIContainer.class(
-    "absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-end pb-40 md:pb-44 h-full w-full"
+    "absolute inset-0 z-10 pointer-events-none flex flex-col items-center justify-center h-full w-full"
   );
 
-  // 1. TITOLO
+  // TITOLO
   titleElem = createElement("h1", "WORLD METRO");
   titleElem.parent(splashUIContainer);
   titleElem.style("opacity", "0");
   titleElem.class(
-    "font-underground font-semibold leading-tight text-4xl md:text-6xl lg:text-8xl select-none text-center text-neutral-900 mb-6 transition-opacity duration-1000 ease-out"
+    "font-underground font-semibold leading-tight text-4xl md:text-6xl lg:text-8xl select-none text-center text-neutral-900 mb-4 transition-opacity duration-1000 ease-out"
   );
 
-  // 2. DESCRIZIONE
+  // DESCRIZIONE
   descElem = createP(
-    "Dive into the colorful history of the underground.<br>Watch lines connect, stations pop up, and cities transform.<br>It’s the world's transit history, fast-forwarded."
+    "<br>Explore the complexity and history of the underground.<br>Watch metro lines transform, connect<br>and cities transform over time and space."
   );
   descElem.parent(splashUIContainer);
   descElem.style("opacity", "0");
   descElem.class(
-    "text-center max-w-lg px-4 text-neutral-600 mb-32 font-medium leading-relaxed transition-opacity duration-1000 ease-out"
+    "text-center max-w-lg px-4 text-neutral-600 mb-8 font-medium leading-relaxed transition-opacity duration-1000 ease-out"
   );
 
-  // 3. BOTTONE
+  // BOTTONE
   exploreBtn = createDiv();
   exploreBtn.parent(splashUIContainer);
   exploreBtn.id("explore-btn");
   exploreBtn.style("opacity", "0");
   exploreBtn.style("visibility", "hidden");
 
-  // --- FIX FLASH: RIMOSSO 'transition-all' e 'duration-500' DA QUI ---
-  // Le aggiungeremo dinamicamente nel drawSplash solo quando serve.
   exploreBtn.class(
     "group pointer-events-auto ease-out flex flex-col items-center cursor-pointer mt-4 hover:-translate-y-2"
   );
@@ -268,7 +266,7 @@ function drawSplash() {
   let elapsed = millis() - animStartTime;
 
   // --- LOGICA STOP OTTIMIZZATA ---
-  // Verifichiamo che TUTTE le linee abbiano completato il loro percorso
+  // Verifica che TUTTE le linee abbiano completato il loro percorso
   // La verde deve finire la larghezza, le verticali devono finire l'altezza
   let greenFinished = x1green >= w;
   let yellowFinished = y2yellow >= h;
@@ -289,17 +287,17 @@ function drawSplash() {
 
   // --- SEQUENZA TESTI ---
 
-  // 1. TITOLO (Dopo 1 secondo)
+  // TITOLO (Dopo 1 secondo)
   if (elapsed > 400) {
     if (titleElem) titleElem.style("opacity", "1");
   }
 
-  // 2. DESCRIZIONE (Dopo 2 secondi)
+  // DESCRIZIONE (Dopo 2 secondi)
   if (elapsed > 1200) {
     if (descElem) descElem.style("opacity", "1");
   }
 
-  // 3. BOTTONE (SOLO QUANDO FERMO)
+  // BOTTONE (SOLO QUANDO FERMO)
   if (linesStopped && !btnVisible) {
     if (exploreBtn) {
       exploreBtn.addClass("transition-all duration-500");
