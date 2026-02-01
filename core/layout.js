@@ -1,11 +1,11 @@
 // core/layout.js
 
 function initializeLayout() {
-    console.log("LAYOUT: Creazione struttura fissa...");
+    console.log("LAYOUT: Fixed structure creation...");
 
     let app = select("#app-container");
     if (!app) {
-        console.error("ERRORE CRITICO: #app-container non trovato nell'HTML!");
+        console.error("CRITICAL ERROR: #app-container non trovato nell'HTML!");
         return;
     }
 
@@ -22,7 +22,7 @@ function initializeLayout() {
     // 3. CREAZIONE MAIN CONTENT (Il "Buco")
     layout.main = createDiv().parent(app).id("main-content");
     layout.main.class(
-        "flex-grow w-full relative min-h-[calc(100svh-4.5rem)] mx-auto p-4 md:p-8"
+        "flex-grow w-full relative min-h-[calc(100svh-4.5rem)] mx-auto p-4 md:p-8 overflow-hidden"
     );
 
     // 4. CREAZIONE FOOTER
@@ -116,7 +116,7 @@ function initializeLayout() {
     // Iniezione del contenuto HTML nel footer
     layout.footer.html(footerContent);
 
-    console.log("LAYOUT: Struttura creata e salvata in globale.");
+    console.log("LAYOUT: Structure created and saved in global layout object.");
 }
 
 function getContentContainer() {
@@ -124,7 +124,7 @@ function getContentContainer() {
     // SE È NULLO (qualcuno l'ha cancellato), LO RICREA AL VOLO.
     if (!layout.main) {
         console.warn(
-            "ATTENZIONE: Il layout è stato cancellato per errore. Ripristino in corso..."
+            "ATTENZIONE: Layout has been deleted. Recreating..."
         );
         initializeLayout();
     }

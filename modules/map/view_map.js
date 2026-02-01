@@ -168,7 +168,7 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col felx-1 shadow-lg overflow-hidden"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden"
     );
 
     let sbHeader = createDiv()
@@ -375,7 +375,7 @@ function popolaStazioniUI(cityId) {
 
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
-        "w-full mt-0 lg:mt-6 py-2 lg:py-4 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
+        "w-full mt-0 lg:mt-6 py-9 lg:py-4 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
     );
 
     if (!appState.hasValidHistory) {

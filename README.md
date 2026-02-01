@@ -32,7 +32,10 @@ Una **sidebar** organizza i dati in modo gerarchico, mostrando i sistemi di tras
 <summary>Team e ruoli (WIP)</summary>
 
 #### Michele Lucio Basso
-- 
+- **Idea** proposta del tema progettuale sviluppato e dell'utilizzo di un grafico treemap.
+-**Sviluppo splash** progettazione e implementazione tecnica della pagina splash attraverso p5.js.
+-**Rifinitura tecnica ed estetica** implementazione di miglioramenti delle funzionalità tecniche per la ricerca e navigazione interna, creazione schede studenti about.
+-**Adattamento a mobile** progettazione e implementazione funzionalità responsive di tutte le pagine per mobile.
 
 #### Emma Della Valle
 - 
