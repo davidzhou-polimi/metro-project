@@ -36,5 +36,13 @@ function removeMap() {
     
     // Pulisce HTML
     let container = getContentContainer();
+    container.removeClass("overflow-hidden");
+
+    if (layout.main) {
+        layout.main.removeClass("lg:overflow-hidden"); // Libera il main per About
+    }
+
+    select('body').style('overflow', 'auto');
+    
     container.html("");
 }

@@ -19,11 +19,12 @@ function inizializzaMappa(city) {
 
     let container = getContentContainer();
     container.html("");
-    container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
+    container.class("min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col p-4 overflow-hidden");
+    layout.main.addClass("lg:overflow-hidden");
 
     let contentWrapper = createDiv()
         .parent(container)
-        .class("flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden");
+        .class("flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden relative");
 
     let mapWrapper = creaContenitoreMappa(contentWrapper);
     let sidebar = creaSidebar(contentWrapper, city);
@@ -168,31 +169,45 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-all duration-500 ease-in-out sidebar-mobile-container"
     );
 
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center"
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default"
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
-
-    createElement("div", city.country)
-        .parent(titleContainer)
-        .class(
-            "text-xs text-neutral-400 font-bold uppercase tracking-widest mb-0.5"
-        );
-    createElement("h2", city.name)
+    
+    let titleRow = createDiv().parent(titleContainer).class("flex items-center gap-2");
+    let mobileChevron = createSpan(chevronIcon)
+        .parent(titleRow)
+        .class("text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-0");
+    
+        createElement("h2", city.name)
         .parent(titleContainer)
         .class(
             "text-2xl font-bold text-neutral-50 tracking-tight leading-none"
         );
 
+    createElement("div", city.country)
+        .parent(titleContainer)
+        .class(
+            "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1 lg:ml-0 ml-7"
+        );
+
+    sbHeader.mousePressed(() => {
+        if (window.innerWidth < 1024) {
+            sidebar.toggleClass("mobile-expanded");
+            mobileChevron.toggleClass("rotate-180"); 
+        }
+    });
+
+
     let kmTotali = calcolaLunghezzaRete(city.id);
     let statsDiv = createDiv()
         .parent(titleContainer)
-        .class("flex items-center gap-2 mt-2");
+        .class("flex items-center gap-2 mt-2 lg:ml-0 ml-7");
 
     createSpan("NETWORK LENGTH")
         .parent(statsDiv)
@@ -253,6 +268,15 @@ function creaSidebar(parentWrapper, city) {
     updateSidebarStats();
     return sidebar;
 }
+
+window.addEventListener('resize', () => {
+    if (window.innerWidth >= 1024) {
+        let sidebar = select(".sidebar-mobile-container");
+        let chevron = select(".mobile-chevron-icon");
+        if (sidebar) sidebar.removeClass("mobile-expanded");
+        if (chevron) chevron.removeClass("rotate-180");
+    }
+});
 
 function costruisciSistemaUI(system, container) {
     let sysDetail = createElement("details")

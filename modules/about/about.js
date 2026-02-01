@@ -22,10 +22,15 @@ function setupAbout() {
     parent.addClass("min-h-screen");
     parent.removeClass("p-4"); 
     parent.addClass("p-0");
+    parent.removeClass("overflow-hidden"); 
+    parent.class("w-full h-auto");
 
     document.title = "About - World Metro";
 
-    aboutContainer = createDiv().parent(parent).class("w-full max-w-[1200px] mx-auto px-4 relative flex flex-col");
+    let scrollWrapper = createDiv().parent(parent)
+        .class("w-full h-full overflow-x-hidden");
+
+    aboutContainer = createDiv().parent(scrollWrapper).class("w-full max-w-[1200px] mx-auto px-4 relative flex flex-col");
 
     // Linea verticale mobile
     createDiv().parent(aboutContainer).class("block md:hidden absolute left-1/2 -top-12 -bottom-24 -translate-x-1/2 w-[4px] bg-black z-0");

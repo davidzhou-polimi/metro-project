@@ -163,3 +163,51 @@ canvas {
 .custom-scrollbar::-webkit-scrollbar {
   display: none;             /* Chrome/Safari */
 }
+
+/* Nasconde la chevron su desktop */
+.lg\:hidden {
+    display: none;
+}
+
+@media (max-width: 1023px) {
+    .lg\:hidden {
+        display: block;
+    }
+
+    /* Altezza iniziale ridotta su mobile */
+    .sidebar-mobile-container {
+        height: auto;
+        max-height: 110px; /* Mostra solo l'header */
+        flex-shrink: 0;
+    }
+
+    .sidebar-mobile-container.mobile-expanded {
+        max-height: 45vh; /* Altezza fino a cui si espande la sidebar su mobile */
+        flex-grow:1
+    }
+
+    .sidebar-mobile-container .custom-scrollbar {
+        overflow-y: auto;
+        flex-1: 1 1 auto;
+    }
+
+    .mobile-chevron-icon {
+        display: inline-block;
+        transform: rotate(0deg);
+        transition: transform 0.3s ease;
+    }
+    .mobile-chevron-icon.rotate-180 {
+        transform: rotate(-180deg);
+    }
+}
+    
+    /* Reset automatico se si allarga lo schermo */
+    @media (min-width: 1024px) {
+        .sidebar-mobile-container {
+            max-height: 100% !important;
+            height: 100% !important;
+        }
+        .mobile-chevron-icon {
+            display: none !important;
+        }
+    }
