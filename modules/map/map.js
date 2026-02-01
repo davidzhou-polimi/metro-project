@@ -25,22 +25,16 @@ function enterMap(cityId) {
     }
 }
 
-// In map.js
 function removeMap() {
-    sidebarExpanded = false; // Reset variabile globale
-
-    let container = getContentContainer();
-    if (container) {
-        // Ripristina lo stato di default del layout.js
-        container.class("flex-grow w-full relative min-h-[calc(100svh-4.5rem)] mx-auto p-4 md:p-8 overflow-hidden");
-        container.style("height", ""); // Rimuove stili inline
-        container.style("min-height", "");
-        container.html(""); 
-    }
-
+    // Chiama le funzioni di pulizia di view_map (se esistono) o distrugge mapbox
     if (typeof mappa !== "undefined" && mappa) {
         mappa.remove();
         mappa = null;
     }
+    // Ferma animazioni timeline
     if (typeof stopAnimation === "function") stopAnimation();
+    
+    // Pulisce HTML
+    let container = getContentContainer();
+    container.html("");
 }

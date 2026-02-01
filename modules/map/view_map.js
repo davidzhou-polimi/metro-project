@@ -1,8 +1,7 @@
 // --- FUNZIONE PRINCIPALE (ORCHESTRATOR) ---
 
 let lineCoordinatesMap;
-let currentPopup = null;
-let sidebarExpanded = false; 
+let currentPopup = null; 
 
 function inizializzaMappa(city) {
     // 1. Pulizia e Setup Stato
@@ -168,31 +167,17 @@ function creaContenitoreMappa(parentWrapper) {
 
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
-    sidebar.id("map-sidebar");
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-all duration-500 ease-in-out h-[40vh]"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden"
     );
 
     let sbHeader = createDiv()
         .parent(sidebar)
-        .id("sidebar-header-clickable")
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer select-none"
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center"
         );
-
-    sbHeader.mousePressed(() => {
-        if (window.innerWidth < 1024) toggleSidebarMobile();
-    });
-
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
-    let titleRow = createDiv().parent(titleContainer).class("flex items-center gap-2");
 
-    let mobileToggle = createSpan(chevronIcon)
-        .parent(titleRow)
-        .class("lg:hidden text-neutral-50 transition-transform duration-300")
-        .id("sidebar-mobile-toggle");
-    
-mobileToggle.style("transform", sidebarExpanded ? "rotate(-90deg)" : "rotate(90deg)");
     createElement("div", city.country)
         .parent(titleContainer)
         .class(
@@ -234,7 +219,6 @@ mobileToggle.style("transform", sidebarExpanded ? "rotate(-90deg)" : "rotate(90d
 
     let sbContent = createDiv()
         .parent(sidebar)
-        sbContent.id("sidebar-content-scroll")
         .class("flex-1 overflow-y-auto px-1.5 py-1 custom-scrollbar");
 
     let datiCitta = getDatiCitta(city.id);
@@ -268,36 +252,6 @@ mobileToggle.style("transform", sidebarExpanded ? "rotate(-90deg)" : "rotate(90d
 
     updateSidebarStats();
     return sidebar;
-}
-
-function toggleSidebarMobile() {
-    sidebarExpanded = !sidebarExpanded;
-    const sidebar = select("#map-sidebar");
-    const container = getContentContainer();
-    const toggleBtn = select("#sidebar-mobile-toggle");
-    const timeline = select(".py-9.lg\\:py-4"); // Seleziona il wrapper della timeline
-
-    if (sidebarExpanded) {
-        // ESPANSIONE: 75vh è solitamente vicino al margine inferiore della timeline
-        sidebar.style("height", "75vh"); 
-        
-        // Permettiamo alla pagina di crescere per mostrare timeline e footer sotto
-        container.removeClass("h-[calc(100vh-4.5rem)]");
-        container.removeClass("overflow-hidden");
-        container.addClass("min-h-screen"); // Permette al footer di scorrere sotto
-        
-        if (toggleBtn) toggleBtn.style("transform", "rotate(-90deg)");
-    } else {
-        // CHIUSURA
-        sidebar.style("height", "40vh");
-        
-        // Ripristina i vincoli del layout originale
-        container.addClass("h-[calc(100vh-4.5rem)]");
-        container.addClass("overflow-hidden");
-        container.removeClass("min-h-screen");
-        
-        if (toggleBtn) toggleBtn.style("transform", "rotate(90deg)");
-    }
 }
 
 function costruisciSistemaUI(system, container) {
