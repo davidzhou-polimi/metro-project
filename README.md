@@ -41,7 +41,9 @@ Una **sidebar** organizza i dati in modo gerarchico, mostrando i sistemi di tras
 - 
 
 #### Mathias Favre
-- 
+- **Brand Identity:** scelta della tipografia, dei colori, delle icone e dell'identità visiva generale.
+- **Sviluppo timeline e header**: progettazione e sviluppo della timeline a scorrimento in basso alla visione di dettaglio e dell'header con l'integrazione delle icone di navigazione.
+- **Sviluppo pop up stazioni e linee**: progettazione grafica e sviluppo dei pop up informativi delle linee e delle stazioni nella visione di dettaglio. 
 
 #### Chiara Fois
 -
