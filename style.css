@@ -182,7 +182,7 @@ canvas {
     }
 
     .sidebar-mobile-container.mobile-expanded {
-        max-height: 45vh; /* Altezza fino a cui si espande la sidebar su mobile */
+        max-height: 42vh; /* Altezza fino a cui si espande la sidebar su mobile */
         flex-grow:1
     }
 
