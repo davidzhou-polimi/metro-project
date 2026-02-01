@@ -33,11 +33,11 @@ function createHomeLayout() {
     homeState.uiElements.searchInput = input;
 
     let clearBtn = createButton('').parent(searchWrapper);
-    clearBtn.class("absolute right-20 md:right-2 flex items-center justify-center p-1 text-gray-400 hover:text-black cursor-pointer hidden rounded-full");
+    clearBtn.class("absolute right-20 md:right-20 flex items-center justify-center p-1 text-gray-400 hover:text-black cursor-pointer hidden rounded-full");
     clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
 
     let closeMobileBtn = createButton('Cancel').parent(searchWrapper);
-    closeMobileBtn.class("hidden md:hidden px-3 h-full text-xs font-bold text-black-600 hover:underline shrink-0");
+    closeMobileBtn.class("hidden px-3 h-full text-xs font-bold text-black-600 hover:underline shrink-0");
 
     searchIconDiv.mousePressed(() => {
         if (windowWidth < 768) {
