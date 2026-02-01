@@ -28,7 +28,7 @@ function setupAbout() {
     document.title = "About - World Metro";
 
     let scrollWrapper = createDiv().parent(parent)
-        .class("w-full h-full overflow-x-hidden");
+        .class("w-full h-full overflow-hidden");
 
     aboutContainer = createDiv().parent(scrollWrapper).class("w-full max-w-[1200px] mx-auto px-4 relative flex flex-col");
 
