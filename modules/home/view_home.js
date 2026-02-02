@@ -240,7 +240,6 @@ function drawHomeNodes(nodes) {
     let filterTxt = homeState.filters.search;
     let hasSearch = filterTxt.length > 0; // Flag: stiamo cercando qualcosa?
 
-    // ... (SPECIAL_SPLITS resta uguale) ...
     const SPECIAL_SPLITS = {
         "GUANGZHOU": "GUANG\nZHOU", "SHANGHAI": "SHANG\nHAI", "SHENZHEN": "SHEN\nZHEN",
         "CHONGQING": "CHONG\nQING", "HONG KONG": "HONG\nKONG", "NEW YORK": "NEW\nYORK",
@@ -299,7 +298,6 @@ function drawHomeNodes(nodes) {
             
             let label = n.name.toUpperCase();
             
-            // ... (Calcolo dimensionamento testo resta uguale) ...
              let targetSize = Math.sqrt(n.size) * 2.8; 
             targetSize = constrain(targetSize, 10, 50);
             

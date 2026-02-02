@@ -1,4 +1,4 @@
-// --- START OF FILE splash.js ---
+// modules/splash/splash.js
 
 // --- VARIABILI GLOBALI SPLASH ---
 let splashUIContainer;

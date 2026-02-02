@@ -258,7 +258,7 @@ function bloccaVistaConBuffer() {
     );
 
     // 6. Applicazione Limiti
-    // MODIFICA: Usiamo 1.5 fisso invece di 'currentZoom', così l'utente può 
+    // Usiamo 1.5 fisso invece di 'currentZoom', così l'utente può 
     // sempre dezoomare fino alla vista mondo, ma non oltre (infinito).
     mappa.setMinZoom(1.5); 
     mappa.setMaxBounds(maxBounds);
@@ -445,7 +445,7 @@ function zoomSuStazione(station) {
     mappa.once("moveend", () => {
         toggleMapInteractions(true);
         
-        // MODIFICA: Ri-applichiamo i limiti di movimento dopo lo zoom
+        // Ri-applichiamo i limiti di movimento dopo lo zoom
         // così l'utente non può scappare via dalla città
         bloccaVistaConBuffer();
 

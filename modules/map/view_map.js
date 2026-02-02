@@ -1,7 +1,7 @@
 // --- FUNZIONE PRINCIPALE (ORCHESTRATOR) ---
 
 let lineCoordinatesMap;
-let currentPopup = null; 
+let currentPopup = null;
 
 function inizializzaMappa(city) {
     // 1. Pulizia e Setup Stato
@@ -19,11 +19,15 @@ function inizializzaMappa(city) {
 
     let container = getContentContainer();
     container.html("");
-    container.class("min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col p-4 overflow-hidden");
+    container.class(
+        "min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col p-4 overflow-hidden",
+    );
 
     let contentWrapper = createDiv()
         .parent(container)
-        .class("flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden relative");
+        .class(
+            "flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden relative",
+        );
 
     let mapWrapper = creaContenitoreMappa(contentWrapper);
     let sidebar = creaSidebar(contentWrapper, city);
@@ -41,10 +45,10 @@ function calcolaRangeAnni(cityId) {
     let lineIds = new Set(cityLines.map((l) => l.id));
 
     let filteredSectionLines = db.section_lines.filter(
-        (sl) => sl.city_id === cityId && lineIds.has(sl.line_id)
+        (sl) => sl.city_id === cityId && lineIds.has(sl.line_id),
     );
     let validSectionIds = new Set(
-        filteredSectionLines.map((sl) => sl.section_id)
+        filteredSectionLines.map((sl) => sl.section_id),
     );
     let citySections = db.sections.filter((s) => validSectionIds.has(s.id));
 
@@ -73,7 +77,6 @@ function calcolaRangeAnni(cityId) {
     }
 }
 
-// MODIFICA: Aggiunto parametro 'year' opzionale per calcolo dinamico
 function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
     let targetSectionIds = new Set();
 
@@ -82,14 +85,14 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 
     if (systemLineIds) {
         let rels = db.section_lines.filter((sl) =>
-            systemLineIds.includes(sl.line_id)
+            systemLineIds.includes(sl.line_id),
         );
         rels.forEach((r) => targetSectionIds.add(r.section_id));
     } else {
         let cityLines = db.lines.filter((l) => l.city_id === cityId);
         let lineIds = cityLines.map((l) => l.id);
         let rels = db.section_lines.filter((sl) =>
-            lineIds.includes(sl.line_id)
+            lineIds.includes(sl.line_id),
         );
         rels.forEach((r) => targetSectionIds.add(r.section_id));
     }
@@ -134,24 +137,24 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 function creaContenitoreMappa(parentWrapper) {
     let wrapper = createDiv().parent(parentWrapper);
     wrapper.class(
-        "w-full lg:w-3/4 h-[40vh] lg:h-full rounded-xl overflow-hidden relative bg-neutral-50 shadow-sm flex-shrink-0 lg:flex-shrink"
+        "w-full lg:w-3/4 h-[40vh] lg:h-full rounded-xl overflow-hidden relative bg-neutral-50 shadow-sm flex-shrink-0 lg:flex-shrink",
     );
 
     let loaderDiv = createDiv().parent(wrapper);
     loaderDiv.id("map-loader");
     loaderDiv.class(
-        "absolute inset-0 flex flex-col items-center justify-center z-10 bg-white transition-opacity duration-500"
+        "absolute inset-0 flex flex-col items-center justify-center z-10 bg-white transition-opacity duration-500",
     );
 
     let spinner = createDiv().parent(loaderDiv);
     spinner.class(
-        "w-8 h-8 border-4 border-neutral-200 border-t-neutral-600 rounded-full animate-spin mb-4"
+        "w-8 h-8 border-4 border-neutral-200 border-t-neutral-600 rounded-full animate-spin mb-4",
     );
 
     createSpan("Loading map...")
         .parent(loaderDiv)
         .class(
-            "text-neutral-500 text-sm font-semibold tracking-wide uppercase"
+            "text-neutral-500 text-sm font-semibold tracking-wide uppercase",
         );
 
     let mapDivNativo = document.createElement("div");
@@ -168,40 +171,43 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-all duration-500 ease-in-out sidebar-mobile-container"
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-all duration-500 ease-in-out sidebar-mobile-container",
     );
 
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default"
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default",
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
-    
-    let titleRow = createDiv().parent(titleContainer).class("flex items-center gap-2");
+
+    let titleRow = createDiv()
+        .parent(titleContainer)
+        .class("flex items-center gap-2");
     let mobileChevron = createSpan(chevronIcon)
         .parent(titleRow)
-        .class("text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-90");
-    
-        createElement("h2", city.name)
+        .class(
+            "text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-90",
+        );
+
+    createElement("h2", city.name)
         .parent(titleContainer)
         .class(
-            "text-2xl font-bold text-neutral-50 tracking-tight leading-none"
+            "text-2xl font-bold text-neutral-50 tracking-tight leading-none",
         );
 
     createElement("div", city.country)
         .parent(titleContainer)
         .class(
-            "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1 lg:ml-0 ml-7"
+            "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1 lg:ml-0 ml-7",
         );
 
     sbHeader.mousePressed(() => {
         if (window.innerWidth < 1024) {
             sidebar.toggleClass("mobile-expanded");
-            mobileChevron.toggleClass("rotate-0"); 
+            mobileChevron.toggleClass("rotate-0");
         }
     });
-
 
     let kmTotali = calcolaLunghezzaRete(city.id);
     let statsDiv = createDiv()
@@ -211,10 +217,9 @@ function creaSidebar(parentWrapper, city) {
     createSpan("NETWORK LENGTH")
         .parent(statsDiv)
         .class(
-            "text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded-md"
+            "text-[10px] leading-none font-bold text-neutral-300 bg-neutral-700 px-2 py-1.5 rounded-md",
         );
 
-    // MODIFICA: Aggiunto ID per aggiornamento dinamico
     let kmSpan = createSpan(`${kmTotali} km`)
         .parent(statsDiv)
         .class("text-sm font-bold text-neutral-300 tabular-nums");
@@ -227,7 +232,7 @@ function creaSidebar(parentWrapper, city) {
     btnReset.id("btn-reset");
     btnReset.attribute("disabled", "true");
     btnReset.class(
-        "rounded-full bg-neutral-700 text-neutral-500 cursor-not-allowed p-2"
+        "rounded-full bg-neutral-700 text-neutral-500 cursor-not-allowed p-2",
     );
     btnReset.mousePressed(() => resetFiltriMappa());
 
@@ -268,7 +273,7 @@ function creaSidebar(parentWrapper, city) {
     return sidebar;
 }
 
-window.addEventListener('resize', () => {
+window.addEventListener("resize", () => {
     if (window.innerWidth >= 1024) {
         let sidebar = select(".sidebar-mobile-container");
         let chevron = select(".mobile-chevron-icon");
@@ -283,24 +288,23 @@ function costruisciSistemaUI(system, container) {
         .class("group mb-2");
     sysDetail.attribute("open", "true");
 
-    // MODIFICA: Aggiunto attributo data per selezione sicura
     sysDetail.attribute("data-system-name", system.name);
 
     let sysSummary = createElement("summary").parent(sysDetail);
     sysSummary.class(
-        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"
+        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2",
     );
 
-let leftSide = createDiv()
+    let leftSide = createDiv()
         .parent(sysSummary)
-        .class("flex items-center gap-0.5"); 
+        .class("flex items-center gap-0.5");
 
     createSpan(chevronIcon)
         .class(
-            "-rotate-90 group-open:rotate-0 transition duration-300 ease-out"
+            "-rotate-90 group-open:rotate-0 transition duration-300 ease-out",
         )
         .parent(leftSide);
-        
+
     createSpan(system.name).parent(leftSide);
 
     let rightSide = createDiv()
@@ -313,7 +317,7 @@ let leftSide = createDiv()
     createSpan(`${kmSistema} km`)
         .parent(rightSide)
         .class(
-            "text-xs font-medium text-neutral-600 bg-white border border-neutral-300 px-2 py-1.5 rounded"
+            "text-xs font-medium text-neutral-600 bg-white border border-neutral-300 px-2 py-1.5 rounded",
         );
 
     let lineCount = system.lines.length;
@@ -334,7 +338,6 @@ function costruisciLineaUI(line, container) {
         .parent(container)
         .class("group/line");
 
-    // MODIFICA: Aggiunto ID univoco per nascondere/mostrare
     lineDetail.id("line-wrapper-" + line.id);
 
     let hexColor = fixColor(line.color);
@@ -343,7 +346,7 @@ function costruisciLineaUI(line, container) {
     let lineSummary = createElement("summary").parent(lineDetail);
     lineSummary
         .class(
-            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300 shadow"
+            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300 shadow",
         )
         .style("background-color", hexColor)
         .style("color", useBlack ? "#000000" : "#ffffff");
@@ -359,26 +362,28 @@ function costruisciLineaUI(line, container) {
 
     let leftSideGroup = createDiv()
         .parent(headerLine)
-        .class("flex items-center gap-0.5"); 
+        .class("flex items-center gap-0.5");
 
     createSpan(chevronIcon)
         .parent(leftSideGroup)
         .class(
-            "-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out"
+            "-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out",
         );
-        
+
     createSpan(line.name)
         .parent(leftSideGroup)
-        .class("font-semibold opacity-100"); 
+        .class("font-semibold opacity-100");
 
     let btnIsolate = createSpan("Isolate line")
         .parent(headerLine)
-        .class("text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1 relative z-10");
+        .class(
+            "text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1 relative z-10",
+        );
 
-    // MODIFICA: Usiamo l'EventListener nativo 'click' invece di mousePressed.
-    // Questo è l'unico modo sicuro per dire al browser "Non aprire il details quando clicco qui".
+    // Usiamo l'EventListener nativo 'click' invece di mousePressed.
+    // Questo è l'unico modo sicuro per dire al browser di non aprire il details quando si clicca lì.
     btnIsolate.elt.addEventListener("click", (e) => {
-        e.preventDefault();  // Blocca ASSOLUTAMENTE l'azione predefinita (apertura)
+        e.preventDefault(); // Blocca ASSOLUTAMENTE l'azione predefinita (apertura)
         e.stopPropagation(); // Ferma la risalita del click ai genitori
 
         if (appState.isolatedLineId === line.id) {
@@ -402,13 +407,15 @@ function popolaStazioniUI(cityId) {
 }
 
 function creaTimeline(container) {
-    let timelineWrapper = createDiv().parent(container).class(
-        "w-full px-4 pb-4 md:pt-3 mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8"
-    );
+    let timelineWrapper = createDiv()
+        .parent(container)
+        .class(
+            "w-full px-4 pb-4 md:pt-3 mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8",
+        );
 
     if (!appState.hasValidHistory) {
         timelineWrapper.class(
-            "min-h-20 mt-4 flex items-center justify-center text-neutral-400 text-xs font-medium italic"
+            "min-h-20 mt-4 flex items-center justify-center text-neutral-400 text-xs font-medium italic",
         );
         timelineWrapper.html("Construction data not available for this city.");
         return;
@@ -416,11 +423,13 @@ function creaTimeline(container) {
 
     let tlInfo = createDiv()
         .parent(timelineWrapper)
-        .class("w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
+        .class(
+            "w-full md:w-auto flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1",
+        );
     createSpan("NETWORK EVOLUTION")
         .parent(tlInfo)
         .class(
-            "block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest"
+            "block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest",
         );
     let yearDisplay = createElement("h3", appState.minYear)
         .parent(tlInfo)
@@ -434,7 +443,7 @@ function creaTimeline(container) {
     btnPlay.id("btn-play");
     btnPlay.attribute("disabled", "true");
     btnPlay.class(
-        "rounded-full bg-neutral-200 text-neutral-400 cursor-not-allowed p-2"
+        "rounded-full bg-neutral-200 text-neutral-400 cursor-not-allowed p-2",
     );
     btnPlay.mousePressed(() => togglePlayback());
 
@@ -455,7 +464,7 @@ function creaTimeline(container) {
     let labels = createDiv()
         .parent(sliderWrapper)
         .class(
-            "flex justify-between text-xs text-neutral-400 font-bold mt-1 uppercase"
+            "flex justify-between text-xs text-neutral-400 font-bold mt-1 uppercase",
         );
     createSpan(appState.minYear).parent(labels);
     createSpan(appState.maxYear).parent(labels);
@@ -475,7 +484,7 @@ function sbloccaControlliTimeline() {
     if (btnPlay) {
         btnPlay.removeAttribute("disabled");
         btnPlay.class(
-            "rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2"
+            "rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2",
         );
     }
 
@@ -491,7 +500,7 @@ function sbloccaControlliSidebar() {
     if (btnReset) {
         btnReset.removeAttribute("disabled");
         btnReset.class(
-            "rounded-full bg-white text-neutral-800 hover:text-neutral-900 hover:rotate-180 transition duration-700 ease-out cursor-pointer p-2"
+            "rounded-full bg-white text-neutral-800 hover:text-neutral-900 hover:rotate-180 transition duration-700 ease-out cursor-pointer p-2",
         );
     }
 }
@@ -506,7 +515,10 @@ function updateTimelineBackground(el) {
 
     // Colore sinistro: #171717 (Nero)
     // Colore destro: #D4D4D4 (Grigio)
-    el.style("background", `linear-gradient(to right, #171717 ${value}%, #D4D4D4 ${value}%)`);
+    el.style(
+        "background",
+        `linear-gradient(to right, #171717 ${value}%, #D4D4D4 ${value}%)`,
+    );
 }
 
 // --- MODULO 3: MAPBOX LOGIC & ANIMATION ---
@@ -528,7 +540,7 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
         new mapboxgl.NavigationControl({
             showCompass: false,
         }),
-        "top-right"
+        "top-right",
     );
     mappa.addControl(new mapboxgl.ScaleControl());
     // disable map rotation using right click + drag
@@ -544,7 +556,7 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
 
             if (loader) loader.addClass("opacity-0");
             mappaContainer.removeClass("opacity-0");
-            mapWrapper.addClass("shadow-lg"); 
+            mapWrapper.addClass("shadow-lg");
 
             setTimeout(() => {
                 if (loader) loader.remove();
@@ -567,7 +579,6 @@ function isolaLineaSullaMappa(lineId) {
     }
 }
 
-// MODIFICA: Logica completamente dinamica per numeri, visibilità e stazioni
 function updateSidebarStats() {
     if (!appState.activeCityId) return;
 
@@ -580,7 +591,7 @@ function updateSidebarStats() {
         let totalCityKm = calcolaLunghezzaRete(
             appState.activeCityId,
             null,
-            year
+            year,
         );
         headerKm.html(`${totalCityKm} km`);
     }
@@ -590,7 +601,7 @@ function updateSidebarStats() {
     for (let system of datiCitta) {
         // Selezione sicura tramite attributo dati (NO p5 select per evitare errori)
         let allSystems = document.querySelectorAll(
-            `details[data-system-name="${system.name}"]`
+            `details[data-system-name="${system.name}"]`,
         );
         if (allSystems.length === 0) continue;
         let sysDetailNative = allSystems[0];
@@ -656,12 +667,12 @@ function updateSidebarStats() {
 
                 // Ricostruiamo lista stazioni per contare quelle attive
                 let stationRels = db.station_lines.filter(
-                    (sl) => sl.line_id === line.id
+                    (sl) => sl.line_id === line.id,
                 );
                 let activeStations = [];
                 for (let rel of stationRels) {
                     let station = db.stations.find(
-                        (s) => s.id === rel.station_id
+                        (s) => s.id === rel.station_id,
                     );
                     if (station) {
                         let b = parseYear(station.buildstart);
@@ -679,18 +690,18 @@ function updateSidebarStats() {
                 }
 
                 let visibleStationCount = activeStations.length;
-                
+
                 // DEFINIZIONE CLASSI: Usiamo SOLO quella comune (testo grigio neutro)
                 let commonBadgeClasses =
                     "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white px-1.5 py-2 rounded-lg gap-1";
 
                 let label = visibleStationCount === 1 ? "station" : "stations";
-                
-                // 1. STAZIONI 
+
+                // 1. STAZIONI
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">
                         <span class="mt-[2px]">${visibleStationCount} ${label}</span>
-                    </span>`
+                    </span>`,
                 );
 
                 // 2. KM OPERATIVI (Icona VERDE se > 0, Testo NEUTRO)
@@ -700,28 +711,28 @@ function updateSidebarStats() {
                     `<span class="${commonBadgeClasses}">
                         <span class="${opIconColorClass}">${operativeIcon}</span>
                         <span class="mt-[2px]">${kmOp.toFixed(1)} km</span>
-                    </span>`
+                    </span>`,
                 );
 
                 // 3. KM IN COSTRUZIONE (Icona ARANCIO se > 0, Testo NEUTRO)
                 let iconColorClass = kmCons > 0 ? "text-orange-600" : "";
-                
+
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">
                         <span class="${iconColorClass}">${constructionIcon}</span>
                         <span class="mt-[2px]">${kmCons.toFixed(1)} km</span>
-                    </span>`
+                    </span>`,
                 );
-                
+
                 // In assenza di dati
                 if (sections.length === 0 && stationRels.length === 0) {
                     htmlParts.push(
-                        `<span class="${commonBadgeClasses}">MISSING DATA</span>`
+                        `<span class="${commonBadgeClasses}">MISSING DATA</span>`,
                     );
                 }
-                
+
                 statsContainer.html(htmlParts.join(""));
-              
+
                 // LISTA STAZIONI (Renderizzata solo se linea attiva)
                 let stationsDiv = select(`#stations-list-${line.id}`);
                 if (stationsDiv) {
@@ -729,13 +740,13 @@ function updateSidebarStats() {
                     if (visibleStationCount > 0) {
                         let sortedStations =
                             ordinaStazioniNaturalmente(activeStations);
-                        
+
                         for (let station of sortedStations) {
                             let stElem = createDiv(station.name).parent(
-                                stationsDiv
+                                stationsDiv,
                             );
                             stElem.class(
-                                "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate"
+                                "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate",
                             );
                             stElem.mousePressed(() => zoomSuStazione(station));
                         }
@@ -752,13 +763,13 @@ function updateSidebarStats() {
         if (activeLinesCount > 0) {
             sysDetailNative.style.display = "block";
             let rightSide = sysDetailNative.querySelector(
-                "summary > div:last-child"
+                "summary > div:last-child",
             );
             if (rightSide) {
                 let kmSistema = calcolaLunghezzaRete(
                     appState.activeCityId,
                     systemLineIds,
-                    year
+                    year,
                 );
                 let labelLinee = activeLinesCount === 1 ? "line" : "lines";
                 rightSide.innerHTML = `
@@ -772,7 +783,7 @@ function updateSidebarStats() {
     }
 }
 
-// --- FUNZIONE MST + SUBTREE SIZE (Invariato) ---
+// --- FUNZIONE MST + SUBTREE SIZE ---
 function ordinaStazioniNaturalmente(stations) {
     if (!stations || stations.length < 2) return stations;
 
@@ -879,12 +890,12 @@ function ordinaStazioniNaturalmente(stations) {
 document.addEventListener("keydown", (e) => {
     // 1. Controlla se c'è una città attiva (siamo nella mappa)
     // Usiamo una verifica generica sullo stato o sulla variabile mappa
-    let isMapActive = typeof appState !== 'undefined' && appState.activeCityId;
+    let isMapActive = typeof appState !== "undefined" && appState.activeCityId;
 
     if (isMapActive && e.code === "Space") {
         e.preventDefault(); // Blocca lo scroll della pagina ("salto")
-        
-        if (typeof togglePlayback === 'function') {
+
+        if (typeof togglePlayback === "function") {
             togglePlayback();
         }
     }

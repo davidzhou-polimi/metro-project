@@ -20,7 +20,7 @@ function toggleHomePlayback(forceState) {
 
         // Se siamo alla fine, ricomincia dall'inizio
         if (homeState.filters.year >= HOME_MAX_YEAR) {
-            // FIX: Aggiorna sia il filtro logico CHE l'interfaccia (Slider) immediatamente
+            // Aggiorna sia il filtro logico sia l'interfaccia (Slider) immediatamente
             setHomeFilter('year', HOME_MIN_YEAR);
             updateHomeUIForAnimation(HOME_MIN_YEAR); 
         }
