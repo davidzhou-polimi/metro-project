@@ -21,7 +21,7 @@ function createHomeLayout() {
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    searchWrapper.class("relative flex items-center gap-1.5 w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
+    searchWrapper.class("relative flex items-center gap-1.5 w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-700 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
 
     let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-gray-400 cursor-pointer md:cursor-default shrink-0 w-12 md:w-5 h-full");
     searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
@@ -134,17 +134,17 @@ function createHomeLayout() {
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
-        "w-full mt-0 lg:mt-6 py-9 lg:py-4 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0"
+        "w-full px-4 pb-4 md:pt-3 mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8"
     );
 
     let tlInfo = createDiv().parent(timelineWrapper).class("flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
     createSpan("CITIES EXPANSION").parent(tlInfo).class("block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest");
-    let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-3xl font-black text-neutral-700 tabular-nums");
+    let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-2xl md:text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
 
-    let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-6 ml-0 md:ml-2");
+    let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-6");
     let btnPlay = createButton(playIcon).parent(sliderContainer);
-    btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2 shrink-0 mx-0 md:mx-2 my-4 md:my-0");
+    btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2 shrink-0");
     btnPlay.mousePressed(() => toggleHomePlayback());
     homeState.uiElements.playBtn = btnPlay;
 

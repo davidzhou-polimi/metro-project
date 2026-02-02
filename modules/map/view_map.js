@@ -20,7 +20,6 @@ function inizializzaMappa(city) {
     let container = getContentContainer();
     container.html("");
     container.class("min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col p-4 overflow-hidden");
-    layout.main.addClass("lg:overflow-hidden");
 
     let contentWrapper = createDiv()
         .parent(container)
@@ -404,7 +403,7 @@ function popolaStazioniUI(cityId) {
 
 function creaTimeline(container) {
     let timelineWrapper = createDiv().parent(container).class(
-        "w-full mt-0 lg:mt-6 py-9 max-sm:mb-3 lg:py-4 bg-white/50 rounded-xl flex flex-col md:flex-row items-center gap-4 flex-shrink-0"
+        "w-full px-4 pb-4 md:pt-3 mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8"
     );
 
     if (!appState.hasValidHistory) {
@@ -425,11 +424,11 @@ function creaTimeline(container) {
         );
     let yearDisplay = createElement("h3", appState.minYear)
         .parent(tlInfo)
-        .class("text-3xl font-black text-neutral-700 tabular-nums");
+        .class("text-2xl md:text-3xl font-black text-neutral-700 tabular-nums");
 
     let sliderContainer = createDiv()
         .parent(timelineWrapper)
-        .class("flex-1 w-full md:w-auto flex items-center gap-6 ml-0 md:ml-2");
+        .class("flex-1 w-full md:w-auto flex items-center gap-6");
 
     let btnPlay = createButton(playIcon).parent(sliderContainer);
     btnPlay.id("btn-play");

@@ -19,7 +19,7 @@ function initializeLayout() {
         "sticky top-0 z-50 w-full bg-white border-b-4 border-neutral-900"
     );
 
-    // 3. CREAZIONE MAIN CONTENT (Il "Buco")
+    // 3. CREAZIONE MAIN CONTENT
     layout.main = createDiv().parent(app).id("main-content");
     layout.main.class(
         "flex-grow w-full relative min-h-[calc(100svh-4.5rem)] mx-auto p-4 md:p-8 overflow-hidden"
@@ -121,7 +121,7 @@ function initializeLayout() {
 
 function getContentContainer() {
     // Restituisce il contenitore globale.
-    // SE È NULLO (qualcuno l'ha cancellato), LO RICREA AL VOLO.
+    // SE È NULLO, LO RICREA.
     if (!layout.main) {
         console.warn(
             "ATTENZIONE: Layout has been deleted. Recreating..."

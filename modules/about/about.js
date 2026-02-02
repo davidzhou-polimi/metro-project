@@ -47,20 +47,21 @@ function setupAbout() {
     let contentSection = createDiv().parent(aboutContainer).class("relative z-10 w-full");
 
     // Intro Boxes
-    let introWrapper = createDiv().parent(contentSection).class("flex flex-row justify-center items-stretch gap-4 md:gap-10 pt-12 mb-20");
-    createTopInfoBox(introWrapper, "WHERE HAVE WE GOTTEN THE DATA?", 
-        "The data used to display information comes from the Citylines project, collecting information on urban transportation networks in cities around the world.");
-    createTopInfoBox(introWrapper, "WHAT IS THE PROJECT ABOUT?", 
-        "This page wants to show users the presence and extension of subway lines in the world.");
+    let introWrapper1 = createDiv().parent(contentSection).class("flex flex-row justify-center items-stretch gap-4 md:gap-10 pt-12 md:mb-20");
+    createTopInfoBox(introWrapper1, "OUR DATA SOURCE", 
+        `The information visualized here is sourced from <a href="https://www.citylines.co/" target="_blank" class="underline">Citylines.co</a>, a global initiative that maps and archives urban transportation networks in cities all over the world.`);
+    let introWrapper2 = createDiv().parent(contentSection).class("flex flex-row justify-center items-stretch gap-4 md:gap-10 pt-12 mb-12 md:mb-20");
+    createTopInfoBox(introWrapper2, "WHAT IS THE PROJECT ABOUT?", 
+        "The project is an interactive web experience that invites users to discover the intricate network of subways and transportation systems that crisscross major global cities. It is not a simple static map, but rather a visual exploration tool that allows users to navigate between cities, countries, and continents to understand how we move within the urban fabric.");
 
     // "WHO ARE WE?"
-    let whoAreWeWrapper = createDiv().parent(contentSection).class("flex justify-center md:pt-[60px] mb-20 md:mb-32");
+    let whoAreWeWrapper = createDiv().parent(contentSection).class("flex justify-center mb-12 md:mb-32");
     createTopInfoBox(whoAreWeWrapper, "WHO ARE WE?", 
-        "We are a group of students of the Politecnico di Milano, from the course of “Laboratorio di Computer Grafica”, C2 section, studying Design della Comunicazione.", true);
+        `We are six Communication Design students from Politecnico di Milano working together in the <a href="https://github.com/lcg-infodesign" target="_blank" class="underline">Laboratorio di Computer Grafica per l'Information Design</a> (C2).`, true);
 
     // Schede studenti
     TEAM_MEMBERS.forEach((member) => {
-        let item = createDiv().parent(contentSection).class("relative flex flex-col items-center md:block mb-24 md:mb-36 w-full");
+        let item = createDiv().parent(contentSection).class("relative flex flex-col items-center md:block mb-12 md:mb-36 w-full");
         
         createDiv().parent(item).class("hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-white border-[4px] border-black rounded-full z-30 transition-transform duration-300 hover:scale-125 hover:bg-black pointer-events-auto");
 
@@ -71,7 +72,7 @@ function setupAbout() {
 }
 
 function createTopInfoBox(parent, title, htmlContent, isWhoAreWe = false) {
-    let widthClass = isWhoAreWe ? "w-[90%] md:w-[550px]" : "w-1/2 max-w-[480px]";
+    let widthClass = "w-[90%] md:w-[550px]";
     let box = createDiv().parent(parent).class(`${widthClass} border-[4px] border-black p-6 rounded-2xl bg-white z-20 shadow-none`);
     
     createElement('h3', title).parent(box).class("text-lg md:text-xl mb-3 font-bold uppercase");

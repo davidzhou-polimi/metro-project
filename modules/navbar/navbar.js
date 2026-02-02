@@ -6,7 +6,7 @@ function setupNavbar() {
     headerContainer.html(""); // Pulizia preventiva
     
     let content = createDiv().parent(headerContainer);
-    content.class("mx-auto px-8 md:px-12 h-[4.5rem] flex items-center justify-between relative");
+    content.class("mx-auto px-4 md:px-8 h-[4.5rem] flex items-center justify-between relative");
     
     btnBack = createButton(backIcon);
     btnBack.parent(content).class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
@@ -14,13 +14,14 @@ function setupNavbar() {
 
     // Logo / Home Link
     let logo = createButton("WORLD METRO").parent(content);
-    logo.class("mt-1 absolute left-1/2 -translate-x-1/2 z-20 text-4xl font-black tracking-tight text-neutral-900 hover:text-neutral-600 transition-colors no-underline cursor-pointer outline-none leading-[0.8]");    logo.mousePressed((e) => {
+    logo.class("mt-1 absolute left-1/2 -translate-x-1/2 z-20 text-3xl sm:text-4xl font-black tracking-tight text-neutral-900 hover:text-neutral-600 transition-colors no-underline cursor-pointer outline-none leading-[0.9] md:leading-[0.8]");
+    logo.mousePressed((e) => {
         e.preventDefault(); 
         changeState('SPLASH'); 
     });
 
     // Menu destra
-    let menu = createDiv().parent(content).class("flex justify-end gap-4 text-sm font-bold text-neutral-500");
+    let menu = createDiv().parent(content).class("flex justify-end gap-2 md:gap-4 text-sm font-bold text-neutral-500");
     
     let btnHome = createButton(homeIcon).parent(menu);
     btnHome.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2");
