@@ -29,16 +29,17 @@ Una **sidebar** organizza i dati in modo gerarchico, mostrando i sistemi di tras
 </details>
 
 <details>
-<summary>Team e ruoli (WIP)</summary>
+<summary>Team e ruoli</summary>
 
 #### Michele Lucio Basso
-- **Idea** proposta del tema progettuale sviluppato e dell'utilizzo di un grafico treemap.
--**Sviluppo splash** progettazione e implementazione tecnica della pagina splash attraverso p5.js.
--**Rifinitura tecnica ed estetica** implementazione di miglioramenti delle funzionalità tecniche per la ricerca e navigazione interna, creazione schede studenti about.
--**Adattamento a mobile** progettazione e implementazione funzionalità responsive di tutte le pagine per mobile.
+- **Sviluppo splash:** progettazione e implementazione tecnica della pagina splash attraverso p5.js.
+- **Rifinitura tecnica ed estetica:** implementazione di miglioramenti delle funzionalità tecniche per la ricerca e navigazione interna, creazione schede studenti about.
+- **Adattamento a mobile:** progettazione e implementazione funzionalità responsive di tutte le pagine per mobile.
 
 #### Emma Della Valle
-- 
+- **Progettazione UI/UX della pagina About:** realizzazione del prototipo grafico su Figma e definizione dell'architettura delle informazioni.
+- **Obiettivi di conoscenza:** individuazione e definizione degli obiettivi informativi e didattici del progetto, per guidare i contenuti e l’impostazione generale del sito.
+- **Sviluppo della pagina About:** traduzione del design in codice e cura della parte editoriale per la presentazione dei membri e degli obiettivi.
 
 #### Mathias Favre
 - **Brand Identity:** scelta della tipografia, dei colori, delle icone e dell'identità visiva generale.
@@ -46,11 +47,13 @@ Una **sidebar** organizza i dati in modo gerarchico, mostrando i sistemi di tras
 - **Sviluppo pop up stazioni e linee**: progettazione grafica e sviluppo dei pop up informativi delle linee e delle stazioni nella visione di dettaglio. 
 
 #### Chiara Fois
--
+- **Obiettivi di conoscenza:** individuazione e definizione degli obiettivi informativi e didattici del progetto, per guidare i contenuti e l’impostazione generale del sito.
+- **Sviluppo della home page:** progettazione logica e realizzazione tecnica dell'interfaccia principale e dell'architettura di navigazione.
+- **Implementazione della treemap:** sviluppo della visualizzazione dinamica e delle componenti di interazione, inclusi i filtri per area geografica e il sistema di evidenziazione tramite ricerca puntuale.
 
 #### Viola Naldi
 - **Architettura dell'informazione e layout:** definizione della struttura logica, delle gerarchie visive e dell'organizzazione dei contenuti per ottimizzare la navigazione.
-- **Visual & Interaction Design:** progettazione dell'interfaccia grafica su Figma e sviluppo delle componenti interattive (stati, micro-interazioni e transizioni).
+- **Visual & Interaction Design:** progettazione dell’interfaccia grafica su Figma, sviluppo delle componenti interattive (stati, micro-interazioni e transizioni), e mockup interattivo come riferimento per l’implementazione in codice.
 - **Sviluppo sidebar:** sviluppo e codifica della sidebar nella pagina di dettaglio, curandone struttura, interazione e integrazione con il resto dell’interfaccia.
 
 #### David Zhou
