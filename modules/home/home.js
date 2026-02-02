@@ -32,7 +32,7 @@ function setupHome() {
     document.title = "Home - World Metro";
     
     // Reset Variabili
-    homeState.filters.year = 2025;
+    homeState.filters.year = 1863;
     homeState.filters.continent = null;
     homeState.filters.search = "";
     homeState.hoveredNode = null;
@@ -95,7 +95,21 @@ function setupHome() {
     });
 
     homeState.resizeObserver.observe(canvasContainer.elt);
-    updateHomeTimelineBackground(select("#home-timeline-slider"));
+let sliderElement = select("#home-timeline-slider");
+    
+    // 1. Forziamo visivamente lo slider all'anno di partenza
+    if(sliderElement) {
+        sliderElement.value(1863);
+        updateHomeTimelineBackground(sliderElement);
+    }
+
+    // 2. AVVIO AUTOMATICO
+    // Se non sta già suonando, premiamo "Play" in automatico
+    if (typeof toggleHomePlayback === 'function' && !homeState.isPlaying) {
+        setTimeout(() => {
+            toggleHomePlayback();
+        }, 500); // Un piccolo ritardo di mezzo secondo rende l'animazione più fluida all'ingresso
+    }
 }
 
 function drawHome() {
