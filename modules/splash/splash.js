@@ -236,9 +236,11 @@ function createSplashUI(container) {
   exploreBtn.id("explore-btn");
   exploreBtn.style("opacity", "0");
   exploreBtn.style("visibility", "hidden");
-
+  exploreBtn.style("position", "absolute");
+  exploreBtn.style("bottom", "18%"); 
+  
   exploreBtn.class(
-    "group pointer-events-auto ease-out flex flex-col items-center cursor-pointer mt-4 hover:-translate-y-2"
+    "group pointer-events-auto ease-out flex flex-col items-center cursor-pointer hover:-translate-y-2"
   );
 
   let btnContent = `

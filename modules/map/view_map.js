@@ -368,11 +368,11 @@ function costruisciLineaUI(line, container) {
         
     createSpan(line.name)
         .parent(leftSideGroup)
-        .class("ml-1 font-semibold opacity-95");
+        .class("ml-1 font-semibold opacity-100");
 
     let btnIsolate = createSpan("Isolate line")
         .parent(headerLine)
-        .class("text-[14px] font-medium tracking-wider hover:opacity-100 hover:underline hover:font-bold transition-all cursor-pointer px-1");
+        .class("text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1");
 
     btnIsolate.mousePressed((e) => {
         e.stopPropagation(); // Impedisce apertura/chiusura del details al click
@@ -675,38 +675,47 @@ function updateSidebarStats() {
                 }
 
                 let visibleStationCount = activeStations.length;
+                
+                // DEFINIZIONE CLASSI: Usiamo SOLO quella comune (testo grigio neutro)
                 let commonBadgeClasses =
-                    "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1";
-                let constructionBadgeClasses =
-                    "flex flex-1 items-center justify-center text-orange-600 text-sm leading-none font-medium bg-white p-2.5 rounded-lg gap-1";
+                    "flex flex-1 items-center justify-center text-neutral-600 text-sm leading-none font-medium bg-white px-1.5 py-2 rounded-lg gap-1";
 
-                    //if (visibleStationCount > 0) {
                 let label = visibleStationCount === 1 ? "station" : "stations";
+                
+                // 1. STAZIONI 
                 htmlParts.push(
-                    `<span class="${commonBadgeClasses}">${visibleStationCount} ${label}</span>`
+                    `<span class="${commonBadgeClasses}">
+                        <span class="mt-[2px]">${visibleStationCount} ${label}</span>
+                    </span>`
                 );
-                //}
-                //if (kmOp > 0) {
+
+                // 2. KM OPERATIVI (Icona VERDE, Testo NEUTRO)
                 htmlParts.push(
-                    `<span class="${commonBadgeClasses}">${operativeIcon}${kmOp.toFixed(
-                        1
-                    )} km</span>`
+                    `<span class="${commonBadgeClasses}">
+                        <span class="text-emerald-600">${operativeIcon}</span>
+                        <span class="mt-[2px]">${kmOp.toFixed(1)} km</span>
+                    </span>`
                 );
-                //}
-                //if (kmCons > 0) {
+
+                // 3. KM IN COSTRUZIONE (Icona ARANCIO se > 0, Testo NEUTRO)
+                let iconColorClass = kmCons > 0 ? "text-orange-600" : "";
+                
                 htmlParts.push(
-                    `<span class="${kmCons > 0 ? constructionBadgeClasses : commonBadgeClasses}">${constructionIcon}${kmCons.toFixed(
-                        1
-                    )} km</span>`
+                    `<span class="${commonBadgeClasses}">
+                        <span class="${iconColorClass}">${constructionIcon}</span>
+                        <span class="mt-[2px]">${kmCons.toFixed(1)} km</span>
+                    </span>`
                 );
-                //}
+                
+                // In assenza di dati
                 if (sections.length === 0 && stationRels.length === 0) {
                     htmlParts.push(
                         `<span class="${commonBadgeClasses}">MISSING DATA</span>`
                     );
                 }
+                
                 statsContainer.html(htmlParts.join(""));
-
+              
                 // LISTA STAZIONI (Renderizzata solo se linea attiva)
                 let stationsDiv = select(`#stations-list-${line.id}`);
                 if (stationsDiv) {

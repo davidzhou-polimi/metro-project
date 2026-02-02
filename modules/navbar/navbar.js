@@ -14,10 +14,10 @@ function setupNavbar() {
 
     // Logo / Home Link
     let logo = createButton("WORLD METRO").parent(content);
-    logo.class("mt-1 absolute left-1/2 -translate-x-1/2 text-4xl font-black tracking-tight text-neutral-900 no-underline cursor-default outline-none leading-[0.8]");
+    logo.class("mt-1 absolute left-1/2 -translate-x-1/2 text-4xl font-black tracking-tight text-neutral-900 no-underline cursor-pointer outline-none leading-[0.8]");
     logo.mousePressed((e) => {
-        e.preventDefault(); // Evita ricaricamento pagina
-        //changeState('HOME');
+        e.preventDefault(); 
+        changeState('SPLASH'); 
     });
 
     // Menu destra

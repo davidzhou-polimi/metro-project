@@ -21,13 +21,13 @@ function createHomeLayout() {
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    searchWrapper.class("relative flex items-center w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
-    
+    searchWrapper.class("relative flex items-center gap-1.5 w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-900 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
+
     let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-gray-400 cursor-pointer md:cursor-default shrink-0 w-12 md:w-5 h-full");
     searchIconDiv.html('<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>');
 
     let input = createElement('input').parent(searchWrapper);
-    input.attribute('type', 'text').attribute('placeholder', 'Search city...');
+    input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 hidden md:block");
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
@@ -76,9 +76,9 @@ function createHomeLayout() {
                 // Ricerca di una corrispondenza nei dati processati
                 // Filtraggio x vedere quali nodi sono attualmente "attivi" o corrispondenti
                 let matches = homeState.activeNodes.filter(n => 
-                    n.name.toLowerCase().includes(searchTerm)
+                    n.name.toLowerCase().includes(searchTerm) || 
+                    n.country.toLowerCase().includes(searchTerm)
                 );
-
                 // Se c'è una corrispondenza univoca
                 if (matches.length === 1) {
                     handleHomeClick(matches[0]);
@@ -260,7 +260,10 @@ function drawHomeNodes(nodes) {
         let isHover = !isMobile && wx >= dx && wx <= dx + dw && wy >= dy && wy <= dy + dh;
         if (isHover) foundHover = n;
 
-        let isMatch = hasSearch && n.name.toLowerCase().includes(filterTxt);
+        let isMatch = hasSearch && (
+            n.name.toLowerCase().includes(filterTxt) || 
+            n.country.toLowerCase().includes(filterTxt)
+        );
 
         // GESTIONE COLORI
         let nodeColor = color(n.color);
