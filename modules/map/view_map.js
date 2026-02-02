@@ -12,7 +12,7 @@ function inizializzaMappa(city) {
     appState.activeCityId = city.id;
     appState.isolatedLineId = null;
     stopAnimation();
-    document.title = `${city.name} - World Metro`;
+    document.title = `${city.name} – World Metro`;
     //sincronizzaURL();
 
     calcolaRangeAnni(city.id);

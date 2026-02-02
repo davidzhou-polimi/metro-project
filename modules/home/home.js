@@ -29,7 +29,7 @@ function setupHome() {
     let container = getContentContainer();
     container.html("");
     container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
-    document.title = "Home - World Metro";
+    document.title = "Home – World Metro";
     
     // Reset Variabili
     homeState.filters.year = 2025;

@@ -25,7 +25,7 @@ function setupAbout() {
     parent.removeClass("overflow-hidden"); 
     parent.class("w-full h-auto");
 
-    document.title = "About - World Metro";
+    document.title = "About – World Metro";
 
     let scrollWrapper = createDiv().parent(parent)
         .class("w-full h-full overflow-hidden");
