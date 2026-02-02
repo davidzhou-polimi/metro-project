@@ -233,33 +233,36 @@ function disegnaElementiMappa(cityId, cityName) {
 function bloccaVistaConBuffer() {
     if (!mappa) return;
 
-    let currentView = mappa.getBounds();
-    
+    // --- FIX: Usa i bounds della città invece della vista corrente ---
+    // Se usassimo mappa.getBounds() mentre siamo zoomati, bloccheremmo la vista
+    // in quella piccola area. Usando boundsCittaCorrente ripristiniamo i limiti globali.
+    let boundsRiferimento = (typeof boundsCittaCorrente !== 'undefined' && boundsCittaCorrente && !boundsCittaCorrente.isEmpty()) 
+        ? boundsCittaCorrente 
+        : mappa.getBounds();
+
     // 1. Dimensioni contenitore in pixel
     const container = mappa.getContainer();
     const wPixel = container.clientWidth;
     const hPixel = container.clientHeight;
 
-    // 2. Dimensioni mappa in gradi
-    let spanLng = currentView.getEast() - currentView.getWest(); 
-    let spanLat = currentView.getNorth() - currentView.getSouth(); 
+    // 2. Dimensioni mappa in gradi (basate sulla città intera)
+    let spanLng = boundsRiferimento.getEast() - boundsRiferimento.getWest(); 
+    let spanLat = boundsRiferimento.getNorth() - boundsRiferimento.getSouth(); 
 
     // 3. PIXEL DI MARGINE (Buffer): 400px per lato
     const PIXEL_BUFFER = 400; 
 
-    // 4. Conversione Pixel -> Gradi
+    // 4. Conversione Pixel -> Gradi (proporzionata alla città intera)
     let bufferX = (spanLng / wPixel) * PIXEL_BUFFER;
     let bufferY = (spanLat / hPixel) * PIXEL_BUFFER;
 
     // 5. Creazione MaxBounds
     let maxBounds = new mapboxgl.LngLatBounds(
-        [currentView.getWest() - bufferX, currentView.getSouth() - bufferY],
-        [currentView.getEast() + bufferX, currentView.getNorth() + bufferY]
+        [boundsRiferimento.getWest() - bufferX, boundsRiferimento.getSouth() - bufferY],
+        [boundsRiferimento.getEast() + bufferX, boundsRiferimento.getNorth() + bufferY]
     );
 
     // 6. Applicazione Limiti
-    // Usiamo 1.5 fisso invece di 'currentZoom', così l'utente può 
-    // sempre dezoomare fino alla vista mondo, ma non oltre (infinito).
     mappa.setMinZoom(1.5); 
     mappa.setMaxBounds(maxBounds);
 }
