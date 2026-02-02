@@ -182,7 +182,7 @@ function creaSidebar(parentWrapper, city) {
     let titleRow = createDiv().parent(titleContainer).class("flex items-center gap-2");
     let mobileChevron = createSpan(chevronIcon)
         .parent(titleRow)
-        .class("text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-0");
+        .class("text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-90");
     
         createElement("h2", city.name)
         .parent(titleContainer)
@@ -199,7 +199,7 @@ function creaSidebar(parentWrapper, city) {
     sbHeader.mousePressed(() => {
         if (window.innerWidth < 1024) {
             sidebar.toggleClass("mobile-expanded");
-            mobileChevron.toggleClass("rotate-180"); 
+            mobileChevron.toggleClass("rotate-0"); 
         }
     });
 
@@ -274,7 +274,7 @@ window.addEventListener('resize', () => {
         let sidebar = select(".sidebar-mobile-container");
         let chevron = select(".mobile-chevron-icon");
         if (sidebar) sidebar.removeClass("mobile-expanded");
-        if (chevron) chevron.removeClass("rotate-180");
+        if (chevron) chevron.removeClass("rotate-0");
     }
 });
 
@@ -297,7 +297,7 @@ function costruisciSistemaUI(system, container) {
         .class("flex items-center gap-2");
     createSpan(chevronIcon)
         .class(
-            "group-open:rotate-180 transition duration-300 ease-out"
+            "-rotate-90 group-open:rotate-0 transition duration-300 ease-out"
         )
         .parent(leftSide);
     createSpan(system.name).parent(leftSide);
@@ -363,7 +363,7 @@ function costruisciLineaUI(line, container) {
     createSpan(chevronIcon)
         .parent(leftSideGroup)
         .class(
-            "group-open/line:rotate-180 transition duration-300 ease-out"
+            "-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out"
         );
         
     createSpan(line.name)
