@@ -431,3 +431,22 @@ function hideHomeTooltip() {
         tt.style('left', '-500px'); 
     }
 }
+
+// --- EVENTO TASTIERA GLOBALE (SPAZIO = PLAY/PAUSE) ---
+document.addEventListener("keydown", (e) => {
+    // 1. Controlla se siamo nella pagina HOME
+    if (typeof pageState !== 'undefined' && pageState === 'HOME') {
+        
+        // 2. Se premi SPAZIO
+        if (e.code === "Space") {
+            // 3. Controllo fondamentale: Se stai scrivendo nella ricerca, IGNORA (altrimenti non puoi fare spazi)
+            if (document.activeElement && document.activeElement.tagName === "INPUT") return;
+
+            // 4. Blocca lo scroll della pagina e ferma/avvia la timeline
+            e.preventDefault(); 
+            if (typeof toggleHomePlayback === 'function') {
+                toggleHomePlayback();
+            }
+        }
+    }
+});

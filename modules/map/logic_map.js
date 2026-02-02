@@ -230,13 +230,11 @@ function disegnaElementiMappa(cityId, cityName) {
 }
 
 // --- NUOVA FUNZIONE HELPER PER IL BLOCCO DELLA VISTA ---
-// Calcola un buffer basato sui pixel dello schermo, così è uguale ovunque
 function bloccaVistaConBuffer() {
     if (!mappa) return;
 
     let currentView = mappa.getBounds();
-    let currentZoom = mappa.getZoom();
-
+    
     // 1. Dimensioni contenitore in pixel
     const container = mappa.getContainer();
     const wPixel = container.clientWidth;
@@ -246,7 +244,7 @@ function bloccaVistaConBuffer() {
     let spanLng = currentView.getEast() - currentView.getWest(); 
     let spanLat = currentView.getNorth() - currentView.getSouth(); 
 
-    // 3. PIXEL DI MARGINE (Buffer): 100px per lato
+    // 3. PIXEL DI MARGINE (Buffer): 400px per lato
     const PIXEL_BUFFER = 400; 
 
     // 4. Conversione Pixel -> Gradi
@@ -260,7 +258,9 @@ function bloccaVistaConBuffer() {
     );
 
     // 6. Applicazione Limiti
-    mappa.setMinZoom(currentZoom);
+    // MODIFICA: Usiamo 1.5 fisso invece di 'currentZoom', così l'utente può 
+    // sempre dezoomare fino alla vista mondo, ma non oltre (infinito).
+    mappa.setMinZoom(1.5); 
     mappa.setMaxBounds(maxBounds);
 }
 
@@ -434,8 +434,10 @@ function zoomSuStazione(station) {
     // Chiudiamo eventuali popup aperti PRIMA di muoverci
     chiudiPopupCorrente();
 
+    // Sblocchiamo SOLO i confini di movimento per permettere il volo,
+    // ma MANTENIAMO il limite di zoom minimo (1.5) così non si vede il mondo minuscolo.
     mappa.setMaxBounds(null);
-    mappa.setMinZoom(null);
+    // mappa.setMinZoom(null); <--- RIMOSSO: Questo causava il bug "dezoom infinito"
 
     toggleMapInteractions(false);
     mappa.flyTo({ center: coords, zoom: 15 });
@@ -443,6 +445,10 @@ function zoomSuStazione(station) {
     mappa.once("moveend", () => {
         toggleMapInteractions(true);
         
+        // MODIFICA: Ri-applichiamo i limiti di movimento dopo lo zoom
+        // così l'utente non può scappare via dalla città
+        bloccaVistaConBuffer();
+
         let htmlContent = getStationPopupHTML(station);
 
         // Salviamo il riferimento in currentPopup

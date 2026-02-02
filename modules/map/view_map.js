@@ -292,14 +292,16 @@ function costruisciSistemaUI(system, container) {
         "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2"
     );
 
-    let leftSide = createDiv()
+let leftSide = createDiv()
         .parent(sysSummary)
-        .class("flex items-center gap-2");
+        .class("flex items-center gap-0.5"); 
+
     createSpan(chevronIcon)
         .class(
             "-rotate-90 group-open:rotate-0 transition duration-300 ease-out"
         )
         .parent(leftSide);
+        
     createSpan(system.name).parent(leftSide);
 
     let rightSide = createDiv()
@@ -358,7 +360,7 @@ function costruisciLineaUI(line, container) {
 
     let leftSideGroup = createDiv()
         .parent(headerLine)
-        .class("flex items-center gap-2");
+        .class("flex items-center gap-0.5"); 
 
     createSpan(chevronIcon)
         .parent(leftSideGroup)
@@ -368,14 +370,17 @@ function costruisciLineaUI(line, container) {
         
     createSpan(line.name)
         .parent(leftSideGroup)
-        .class("ml-1 font-semibold opacity-100");
+        .class("font-semibold opacity-100"); 
 
     let btnIsolate = createSpan("Isolate line")
         .parent(headerLine)
-        .class("text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1");
+        .class("text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1 relative z-10");
 
-    btnIsolate.mousePressed((e) => {
-        e.stopPropagation(); // Impedisce apertura/chiusura del details al click
+    // MODIFICA: Usiamo l'EventListener nativo 'click' invece di mousePressed.
+    // Questo è l'unico modo sicuro per dire al browser "Non aprire il details quando clicco qui".
+    btnIsolate.elt.addEventListener("click", (e) => {
+        e.preventDefault();  // Blocca ASSOLUTAMENTE l'azione predefinita (apertura)
+        e.stopPropagation(); // Ferma la risalita del click ai genitori
 
         if (appState.isolatedLineId === line.id) {
             resetFiltriMappa();
@@ -689,10 +694,12 @@ function updateSidebarStats() {
                     </span>`
                 );
 
-                // 2. KM OPERATIVI (Icona VERDE, Testo NEUTRO)
+                // 2. KM OPERATIVI (Icona VERDE se > 0, Testo NEUTRO)
+                let opIconColorClass = kmOp > 0 ? "text-emerald-600" : "";
+
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">
-                        <span class="text-emerald-600">${operativeIcon}</span>
+                        <span class="${opIconColorClass}">${operativeIcon}</span>
                         <span class="mt-[2px]">${kmOp.toFixed(1)} km</span>
                     </span>`
                 );
@@ -868,3 +875,18 @@ function ordinaStazioniNaturalmente(stations) {
 
     return finalOrder;
 }
+
+// --- EVENTO TASTIERA GLOBALE (SPAZIO = PLAY/PAUSE) ---
+document.addEventListener("keydown", (e) => {
+    // 1. Controlla se c'è una città attiva (siamo nella mappa)
+    // Usiamo una verifica generica sullo stato o sulla variabile mappa
+    let isMapActive = typeof appState !== 'undefined' && appState.activeCityId;
+
+    if (isMapActive && e.code === "Space") {
+        e.preventDefault(); // Blocca lo scroll della pagina ("salto")
+        
+        if (typeof togglePlayback === 'function') {
+            togglePlayback();
+        }
+    }
+});
