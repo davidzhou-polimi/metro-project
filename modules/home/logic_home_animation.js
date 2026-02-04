@@ -2,7 +2,6 @@
 
 const HOME_MIN_YEAR = 1863;
 const HOME_MAX_YEAR = 2025;
-const ANIMATION_SPEED = 150; // ms per anno
 
 function toggleHomePlayback(forceState) {
     let shouldPlay = forceState !== undefined ? forceState : !homeState.isPlaying;
@@ -39,7 +38,7 @@ function toggleHomePlayback(forceState) {
                 // Fine ciclo
                 toggleHomePlayback(false);
             }
-        }, ANIMATION_SPEED);
+        }, appState.speed);
     } else {
         // Pausa
         homeState.isPlaying = false;
