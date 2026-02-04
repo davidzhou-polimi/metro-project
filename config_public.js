@@ -1,3 +1,0 @@
-// config-public.js
-
-const MAPBOX_PUBLIC_TOKEN = "pk.eyJ1IjoiZGF2aWR6aG91cG9saW1pIiwiYSI6ImNtbDVxcDB3cTA1d3MzY3M4cWIyMmJhNHUifQ.pvgVyaAO5_NTN1FkKZWC9A";

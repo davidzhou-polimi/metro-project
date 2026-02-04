@@ -29,15 +29,14 @@ let appState = {
 
 // --- TOKEN di MAPBOX ---
 
+const MAPBOX_PUBLIC_TOKEN = "pk.eyJ1IjoiZGF2aWR6aG91cG9saW1pIiwiYSI6ImNtbDVxcDB3cTA1d3MzY3M4cWIyMmJhNHUifQ.pvgVyaAO5_NTN1FkKZWC9A";
+
 // Verifichiamo se il token privato esiste ed è diverso dal segnaposto
 const isPrivateTokenValid = typeof MAPBOX_PRIVATE_TOKEN !== "undefined" && MAPBOX_PRIVATE_TOKEN !== "pk.use_your_own_token";
 
-// Scegliamo il token finale
-const finalToken = isPrivateTokenValid ? MAPBOX_PRIVATE_TOKEN : MAPBOX_PUBLIC_TOKEN;
+const MAPBOX_TOKEN = isPrivateTokenValid ? MAPBOX_PRIVATE_TOKEN : MAPBOX_PUBLIC_TOKEN;
 
-mapboxgl.accessToken = finalToken;
-
-// Debug opzionale per confermare quale token è in uso
+// Debug per confermare quale token è in uso
 console.log(`Token Mapbox in uso: ${isPrivateTokenValid ? "Privato" : "Pubblico"}`);
 
 // --- Icone ---
