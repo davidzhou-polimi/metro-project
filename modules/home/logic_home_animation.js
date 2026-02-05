@@ -14,7 +14,7 @@ function toggleHomePlayback(forceState) {
         
         // Aggiorna icona pulsante
         if (homeState.uiElements.playBtn) {
-            homeState.uiElements.playBtn.html(pauseIcon); 
+            homeState.uiElements.playBtn.html(icons.pause); 
         }
 
         // Se siamo alla fine, ricomincia dall'inizio
@@ -44,7 +44,7 @@ function toggleHomePlayback(forceState) {
         homeState.isPlaying = false;
         
         if (homeState.uiElements.playBtn) {
-            homeState.uiElements.playBtn.html(playIcon); 
+            homeState.uiElements.playBtn.html(icons.play); 
         }
         
         if (homeState.animationInterval) clearInterval(homeState.animationInterval);
@@ -56,7 +56,7 @@ function stopHomeAnimation() {
     homeState.isPlaying = false;
     
     if (homeState.uiElements.playBtn) {
-        homeState.uiElements.playBtn.html(playIcon);
+        homeState.uiElements.playBtn.html(icons.play);
     }
 }
 

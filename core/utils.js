@@ -28,7 +28,7 @@ function unpackData(dataObj) {
     // 4. CASO COUNTRIES "STRANO" (Oggetto con chiavi numeriche {0:.., 1:..})
     // Se non è un array, ma ha la chiave '0', è un "finto array".
     if (dataObj[0] !== undefined) {
-        console.log("--- FIX: Converto Oggetto {0:..} in Array [...] ---");
+        //console.log("--- Converto Oggetto {0:..} in Array [...] ---");
         return Object.values(dataObj);
     }
 

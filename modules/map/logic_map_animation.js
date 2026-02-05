@@ -8,7 +8,7 @@ function togglePlayback(forceState) {
         
         appState.isPlaying = true;
         let btn = select("#btn-play");
-        if (btn) btn.html(pauseIcon);
+        if (btn) btn.html(icons.pause);
 
         if (appState.currentYear >= appState.maxYear) {
             appState.currentYear = appState.minYear - 1;
@@ -37,7 +37,7 @@ function togglePlayback(forceState) {
         // Pausa
         appState.isPlaying = false;
         let btn = select("#btn-play");
-        if (btn) btn.html(playIcon);
+        if (btn) btn.html(icons.play);
         // Chiude l'intervallo
         if (appState.animationInterval) clearInterval(appState.animationInterval);
     }
@@ -47,7 +47,7 @@ function stopAnimation() {
     if (appState.animationInterval) clearInterval(appState.animationInterval);
     appState.isPlaying = false;
     let btn = select("#btn-play");
-    if (btn) btn.html(playIcon);
+    if (btn) btn.html(icons.play);
 }
 
 function updateUIForAnimation() {

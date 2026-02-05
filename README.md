@@ -89,9 +89,9 @@ L’AI è stata un prezioso strumento di supporto. In particolare, abbiamo utili
 - Viola Naldi
 - David Zhou
 
-#### Licenza di utilizzo
+#### Licenze di utilizzo
 
 Questo progetto utilizza diverse licenze a seconda della tipologia di materiale:
 
-- **Codice sorgente:** Il codice di questo sito è rilasciato sotto licenza [MIT](LICENSE).
-- **Contenuti e design:** I testi, le immagini e il design del sito sono rilasciati sotto licenza [Creative Commons Attribution 4.0 International (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/).
+- Il codice è rilasciato sotto licenza [MIT](LICENSE).
+- I testi, le immagini e il design sono rilasciati sotto licenza [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/).

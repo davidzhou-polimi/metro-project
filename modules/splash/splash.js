@@ -213,7 +213,7 @@ function createSplashUI(container) {
   );
 
   // TITOLO
-  titleElem = createElement("h1", "WORLD METRO");
+  titleElem = createElement("h1", "WORLD<br />METRO");
   titleElem.parent(splashUIContainer);
   titleElem.style("opacity", "0");
   titleElem.class(
