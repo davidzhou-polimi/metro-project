@@ -91,5 +91,7 @@ L’AI è stata un prezioso strumento di supporto. In particolare, abbiamo utili
 
 #### Licenza di utilizzo
 
-[Creative Commons Attribution 4.0 International (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/)
-</details>
+Questo progetto utilizza diverse licenze a seconda della tipologia di materiale:
+
+- **Codice sorgente:** Il codice di questo sito è rilasciato sotto licenza [MIT](LICENSE).
+- **Contenuti e design:** I testi, le immagini e il design del sito sono rilasciati sotto licenza [Creative Commons Attribution 4.0 International (CC-BY-4.0)](https://creativecommons.org/licenses/by/4.0/).
