@@ -162,14 +162,14 @@ function disegnaElementiMappa(cityId, cityName) {
         type: "line",
         source: "metro-lines",
         layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
-        paint: { "line-color": "#6e7b8d", "line-width": 3, "line-dasharray": [2, 2], "line-opacity": 0.8 },
+        paint: { "line-color": "#6e7b8d", "line-width": 5, "line-dasharray": [2, 2], "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-operational",
         type: "line",
         source: "metro-lines",
         layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
-        paint: { "line-color": ["get", "color"], "line-width": 4, "line-opacity": 0.8 },
+        paint: { "line-color": ["get", "color"], "line-width": 5, "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-layer-hitbox",
@@ -270,7 +270,9 @@ function bloccaVistaConBuffer() {
 function aggiornaFiltriCombinati() {
     if (!mappa) return;
     let year = appState.currentYear;
-    let isoId = appState.isolatedLineId;
+    
+    // Recuperiamo la blacklist (assicurandoci che sia un array)
+    let hiddenIds = appState.hiddenLineIds || [];
 
     const condIsOpened = ["<=", ["get", "opening"], year];
     const condNotClosed = [
@@ -280,12 +282,16 @@ function aggiornaFiltriCombinati() {
     ];
     const condBuildStarted = ["<=", ["get", "buildstart"], year];
     const condNotYetOpen = [">", ["get", "opening"], year];
-    const condLineIso = isoId
-        ? ["==", ["get", "lineId"], isoId]
-        : ["has", "lineId"];
+    
+    // --- FILTRO MULTI-SELEZIONE ---
+    // La condizione è: l'ID della linea NON deve essere nell'array hiddenIds
+    const condNotHidden = hiddenIds.length > 0 
+        ? ["!", ["in", ["get", "lineId"], ["literal", hiddenIds]]] 
+        : true;
 
-    const filterOp = ["all", condIsOpened, condNotClosed, condLineIso];
-    const filterCons = ["all", condBuildStarted, condNotYetOpen, condLineIso];
+    const filterOp = ["all", condIsOpened, condNotClosed, condNotHidden];
+    const filterCons = ["all", condBuildStarted, condNotYetOpen, condNotHidden];
+    // Hitbox deve seguire la visibilità: se è nascosta, non deve essere cliccabile
     const filterHit = ["any", filterOp, filterCons];
 
     try {
@@ -293,19 +299,32 @@ function aggiornaFiltriCombinati() {
         mappa.setFilter("lines-construction", filterCons);
         mappa.setFilter("lines-layer-hitbox", filterHit);
     } catch (e) {
-        console.error(e);
+        console.error("Errore update filtri linee:", e);
     }
 
+    // --- FILTRO STAZIONI (Smart) ---
+    // Nascondiamo le stazioni che non sono servite da nessuna linea visibile
     let filterSt = ["all", condBuildStarted, condNotClosed];
 
-    if (isoId) {
-        let relazioni = db.station_lines.filter((sl) => sl.line_id === isoId);
-        let validStationIds = relazioni.map((r) => r.station_id);
+    if (appState.activeCityId) {
+        let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
+        
+        // Calcola quali linee sono visibili ORA
+        let visibleLineIds = cityLines
+            .map(l => l.id)
+            .filter(id => !hiddenIds.includes(id));
 
-        if (validStationIds.length > 0) {
-            filterSt.push(["in", ["get", "id"], ["literal", validStationIds]]);
+        // Troviamo le relazioni per queste linee
+        let visibleRelations = db.station_lines.filter(sl => visibleLineIds.includes(sl.line_id));
+        
+        // Estraiamo gli ID stazioni univoci
+        let visibleStationIds = [...new Set(visibleRelations.map(r => r.station_id))];
+
+        if (visibleStationIds.length > 0) {
+            filterSt.push(["in", ["get", "id"], ["literal", visibleStationIds]]);
         } else {
-            filterSt = ["==", "id", -1];
+            // Se tutte le linee sono nascoste, nascondi tutte le stazioni
+            filterSt.push(["==", ["get", "id"], -1]);
         }
     }
 
@@ -316,14 +335,13 @@ function aggiornaFiltriCombinati() {
     updateSidebarStats();
 }
 
-function isolaLineaSullaMappa(lineId) {
-    appState.isolatedLineId = lineId;
-    aggiornaFiltriCombinati();
-}
-
 function resetFiltriMappa() {
-    appState.isolatedLineId = null;
+    appState.hiddenLineIds = [];
     appState.currentYear = appState.maxYear;
+
+    // Aggiorna le icone visivamente
+    applicaCambiamentiVisibilita();
+
     updateUIForAnimation();
     aggiornaFiltriCombinati();
 

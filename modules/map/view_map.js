@@ -4,13 +4,16 @@ let lineCoordinatesMap;
 let currentPopup = null;
 
 function inizializzaMappa(city) {
+    Tooltip.init();
+
     // 1. Pulizia e Setup Stato
     if (typeof mappa !== "undefined" && mappa) {
         mappa.remove();
         mappa = null;
     }
     appState.activeCityId = city.id;
-    appState.isolatedLineId = null;
+    appState.hiddenLineIds = [];
+
     stopAnimation();
     document.title = `${city.name} – World Metro`;
     //sincronizzaURL();
@@ -26,7 +29,7 @@ function inizializzaMappa(city) {
     let contentWrapper = createDiv()
         .parent(container)
         .class(
-            "flex flex-col lg:flex-row flex-1 min-h-0 gap-0 lg:gap-8 overflow-hidden relative",
+            "flex flex-col lg:flex-row flex-1 min-h-0 gap-4 overflow-hidden relative",
         );
 
     let mapWrapper = creaContenitoreMappa(contentWrapper);
@@ -184,7 +187,7 @@ function creaSidebar(parentWrapper, city) {
     let titleRow = createDiv()
         .parent(titleContainer)
         .class("flex items-center gap-2");
-    let mobileChevron = createSpan(chevronIcon)
+    let mobileChevron = createSpan(icons.chevron)
         .parent(titleRow)
         .class(
             "text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-90",
@@ -228,7 +231,7 @@ function creaSidebar(parentWrapper, city) {
     /*createSpan("Sistemi & Linee")
         .parent(sbHeader)
         .class("font-bold text-neutral-700");*/
-    let btnReset = createButton(resetIcon).parent(sbHeader);
+    let btnReset = createButton(icons.reset).parent(sbHeader);
     btnReset.id("btn-reset");
     btnReset.attribute("disabled", "true");
     btnReset.class(
@@ -285,21 +288,21 @@ window.addEventListener("resize", () => {
 function costruisciSistemaUI(system, container) {
     let sysDetail = createElement("details")
         .parent(container)
-        .class("group mb-2");
+        .class("group");
     sysDetail.attribute("open", "true");
 
     sysDetail.attribute("data-system-name", system.name);
 
     let sysSummary = createElement("summary").parent(sysDetail);
     sysSummary.class(
-        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 py-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2",
+        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 pt-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2",
     );
 
     let leftSide = createDiv()
         .parent(sysSummary)
         .class("flex items-center gap-0.5");
 
-    createSpan(chevronIcon)
+    createSpan(icons.chevron)
         .class(
             "-rotate-90 group-open:rotate-0 transition duration-300 ease-out",
         )
@@ -326,7 +329,7 @@ function costruisciSistemaUI(system, container) {
         .parent(rightSide)
         .class("text-xs font-normal text-neutral-400");
 
-    let linesDiv = createDiv().parent(sysDetail).class("flex flex-col gap-2");
+    let linesDiv = createDiv().parent(sysDetail).class("flex flex-col gap-2 pt-3 pb-2");
 
     for (let line of system.lines) {
         costruisciLineaUI(line, linesDiv);
@@ -336,60 +339,108 @@ function costruisciSistemaUI(system, container) {
 function costruisciLineaUI(line, container) {
     let lineDetail = createElement("details")
         .parent(container)
-        .class("group/line");
+        .class("group/line relative");
 
     lineDetail.id("line-wrapper-" + line.id);
 
     let hexColor = fixColor(line.color);
     let useBlack = isColorLight(hexColor);
 
+    // Controlliamo stato iniziale
+    let isHidden = appState.hiddenLineIds && appState.hiddenLineIds.includes(line.id);
+
     let lineSummary = createElement("summary").parent(lineDetail);
-    lineSummary
-        .class(
-            "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-opacity duration-300 shadow",
-        )
+    
+    // IMPORTANTE: Assegniamo un ID nativo per trovarlo dopo con document.getElementById
+    lineSummary.id(`line-summary-${line.id}`);
+
+    // Classi Base
+    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-all duration-300 shadow";
+
+    lineSummary.class(`${baseClasses} ${isHidden ? "opacity-50 hover:opacity-60" : ""}`)
         .style("background-color", hexColor)
         .style("color", useBlack ? "#000000" : "#ffffff");
 
+    lineSummary.elt.addEventListener("click", (e) => {
+        // Verifica stato corrente (non solo quello all'avvio)
+        let currentHidden = appState.hiddenLineIds && appState.hiddenLineIds.includes(line.id);
+
+        if (currentHidden) {
+            e.preventDefault(); // BLOCCA L'APERTURA
+            e.stopPropagation();
+
+            // 1. Aggiungi animazione shake
+            let el = document.getElementById(`line-summary-${line.id}`);
+            if (el) {
+                el.classList.add("animate-shake");
+                // Rimuovi dopo 300ms
+                setTimeout(() => el.classList.remove("animate-shake"), 300);
+            }
+
+            // 2. Mostra Tooltip
+            let elToggle = document.getElementById(`line-toggle-btn-${line.id}`);
+            if(elToggle) {
+                Tooltip.show(
+                    `<span class="font-bold text-red-400 block">Line disabled</span>
+                    <span class="text-neutral-400 font-normal">Unhide to view stations</span>`,
+                    elToggle, 
+                    {
+                        placement: 'left',
+                        duration: 1500,
+                    }
+                );
+            }
+        }
+    });
+
     let headerLine = createDiv()
         .parent(lineSummary)
-        .class("flex items-center justify-between w-full");
-    /*let hexColor = fixColor(line.color);
-    createSpan("")
-        .parent(headerLine)
-        .class("w-3 h-3 rounded-full shadow-sm block flex-shrink-0")
-        .style("background-color", hexColor);*/
+        .class("flex items-center justify-between w-full relative");
 
     let leftSideGroup = createDiv()
         .parent(headerLine)
         .class("flex items-center gap-0.5");
 
-    createSpan(chevronIcon)
+    createSpan(icons.chevron)
         .parent(leftSideGroup)
-        .class(
-            "-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out",
-        );
+        .class("-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out");
 
     createSpan(line.name)
         .parent(leftSideGroup)
         .class("font-semibold opacity-100");
 
-    let btnIsolate = createSpan("Isolate line")
+    // --- ICONA OCCHIO ---
+    let currentIcon = isHidden ? icons.showLine : icons.hideLine;
+
+    let lineToggleBtn = createSpan(currentIcon)
         .parent(headerLine)
-        .class(
-            "text-[12px] font-medium tracking-wider opacity-85 underline underline-offset-2 hover:opacity-100 hover:font-bold transition-all cursor-pointer px-1 relative z-10",
+        .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors z-10 relative");
+    
+    lineToggleBtn.id(`line-toggle-btn-${line.id}`);
+
+    // --- NUOVI EVENTI TOOLTIP GLOBALE ---
+    lineToggleBtn.elt.addEventListener("mouseenter", () => {
+        Tooltip.show(
+            `<span class="font-bold block">Click to toggle</span>
+            <span class="text-neutral-400 font-normal">Alt + Click to isolate</span>`,
+            lineToggleBtn.elt, // Usa direttamente il riferimento esistente
+            { placement: 'left' }
         );
+    });
+    
+    lineToggleBtn.elt.addEventListener("mouseleave", () => {
+        Tooltip.hide();
+    });
 
-    // Usiamo l'EventListener nativo 'click' invece di mousePressed.
-    // Questo è l'unico modo sicuro per dire al browser di non aprire il details quando si clicca lì.
-    btnIsolate.elt.addEventListener("click", (e) => {
-        e.preventDefault(); // Blocca ASSOLUTAMENTE l'azione predefinita (apertura)
-        e.stopPropagation(); // Ferma la risalita del click ai genitori
+    lineToggleBtn.elt.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        Tooltip.hide(); // Nascondi subito al click
 
-        if (appState.isolatedLineId === line.id) {
-            resetFiltriMappa();
+        if (e.altKey) {
+            isolaSoloQuestaLinea(line.id);
         } else {
-            isolaLineaSullaMappa(line.id);
+            toggleVisibilitaLinea(line.id);
         }
     });
 
@@ -400,6 +451,116 @@ function costruisciLineaUI(line, container) {
     let stationsDiv = createDiv().parent(lineDetail);
     stationsDiv.id(`stations-list-${line.id}`);
     stationsDiv.class("pl-6 border-l-2 border-neutral-200 ml-3 mt-2 space-y-1");
+}
+
+// Funzione 1: Toggle semplice (Click)
+function toggleVisibilitaLinea(lineId) {
+    if (!appState.hiddenLineIds) appState.hiddenLineIds = [];
+
+    const index = appState.hiddenLineIds.indexOf(lineId);
+    
+    if (index > -1) {
+        // Era nascosto -> MOSTRA (Rimuovi da blacklist)
+        appState.hiddenLineIds.splice(index, 1);
+    } else {
+        // Era visibile -> NASCONDI (Aggiungi a blacklist)
+        appState.hiddenLineIds.push(lineId);
+    }
+
+    // --- LOGICA AUTO-CLOSE: Se nascondo, chiudo il dettaglio ---
+    if (isNowHidden) {
+        let details = document.getElementById(`line-wrapper-${lineId}`);
+        if (details && details.hasAttribute("open")) {
+            details.removeAttribute("open");
+        }
+    }
+
+    applicaCambiamentiVisibilita();
+}
+
+function toggleVisibilitaLinea(lineId) {
+    if (!appState.hiddenLineIds) appState.hiddenLineIds = [];
+
+    const index = appState.hiddenLineIds.indexOf(lineId);
+    let isNowHidden = false;
+    
+    if (index > -1) {
+        // Era nascosto -> MOSTRA
+        appState.hiddenLineIds.splice(index, 1);
+        isNowHidden = false;
+    } else {
+        // Era visibile -> NASCONDI
+        appState.hiddenLineIds.push(lineId);
+        isNowHidden = true;
+    }
+
+    // --- LOGICA AUTO-CLOSE: Se nascondo, chiudo il dettaglio ---
+    if (isNowHidden) {
+        let details = document.getElementById(`line-wrapper-${lineId}`);
+        if (details && details.hasAttribute("open")) {
+            details.removeAttribute("open");
+        }
+    }
+
+    applicaCambiamentiVisibilita();
+}
+
+// Funzione 2: Isolamento (ALT + Click)
+function isolaSoloQuestaLinea(targetLineId) {
+    if (!appState.activeCityId) return;
+
+    // Recupera TUTTE le linee della città corrente
+    let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
+    
+    // La nuova blacklist deve contenere TUTTI gli ID tranne quello target
+    appState.hiddenLineIds = cityLines
+        .map(l => l.id)
+        .filter(id => id !== targetLineId);
+
+    // Chiudi tutti i pannelli delle linee appena nascoste
+    for (let line of cityLines) {
+        if (line.id !== targetLineId) {
+            let details = document.getElementById(`line-wrapper-${line.id}`);
+            if (details) details.removeAttribute("open");
+        }
+    }
+
+    applicaCambiamentiVisibilita();
+}
+
+// Funzione Helper Centrale per aggiornare tutto
+function applicaCambiamentiVisibilita() {
+    // 1. Aggiorna la mappa
+    aggiornaFiltriCombinati();
+
+    // 2. Aggiorna UI Sidebar
+    let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
+    
+    for (let line of cityLines) {
+        let isHidden = appState.hiddenLineIds.includes(line.id);
+
+        // A. Aggiorna Icona Occhio
+        let btn = select(`#line-toggle-btn-${line.id}`);
+        if (btn) {
+            btn.html(isHidden ? icons.showLine : icons.hideLine);
+        }
+
+        // B. Aggiorna Stile Blocco Intero (SOLUZIONE BUG VISIVO)
+        // Usiamo Javascript nativo per gestire le classi in modo affidabile
+        let summaryBlock = document.getElementById(`line-summary-${line.id}`);
+        if (summaryBlock) {
+            if (isHidden) {
+                summaryBlock.classList.add("opacity-50", "hover:opacity-60");
+            } else {
+                summaryBlock.classList.remove("opacity-50", "hover:opacity-60");
+            }
+        }
+    }
+
+    // 3. Sblocca il tasto Reset
+    if (typeof sbloccaControlliSidebar === 'function') {
+        sbloccaControlliSidebar();
+    }
 }
 
 function popolaStazioniUI(cityId) {
@@ -439,7 +600,7 @@ function creaTimeline(container) {
         .parent(timelineWrapper)
         .class("flex-1 w-full md:w-auto flex items-center gap-6");
 
-    let btnPlay = createButton(playIcon).parent(sliderContainer);
+    let btnPlay = createButton(icons.play).parent(sliderContainer);
     btnPlay.id("btn-play");
     btnPlay.attribute("disabled", "true");
     btnPlay.class(
@@ -484,7 +645,7 @@ function sbloccaControlliTimeline() {
     if (btnPlay) {
         btnPlay.removeAttribute("disabled");
         btnPlay.class(
-            "rounded-full bg-neutral-900 hover:bg-neutral-700 text-neutral-200 hover:text-neutral-100 transition-colors cursor-pointer p-2",
+            "rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2",
         );
     }
 
@@ -568,15 +729,6 @@ function avviaMapbox(city, mapWrapper, lineCoordinatesMap) {
             }, 600);
         });
     });
-}
-
-function isolaLineaSullaMappa(lineId) {
-    if (appState.isolatedLineId === lineId) {
-        resetFiltriMappa();
-    } else {
-        appState.isolatedLineId = lineId;
-        aggiornaFiltriCombinati();
-    }
 }
 
 function updateSidebarStats() {
@@ -709,7 +861,7 @@ function updateSidebarStats() {
 
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">
-                        <span class="${opIconColorClass}">${operativeIcon}</span>
+                        <span class="${opIconColorClass}">${icons.operative}</span>
                         <span class="mt-[2px]">${kmOp.toFixed(1)} km</span>
                     </span>`,
                 );
@@ -719,7 +871,7 @@ function updateSidebarStats() {
 
                 htmlParts.push(
                     `<span class="${commonBadgeClasses}">
-                        <span class="${iconColorClass}">${constructionIcon}</span>
+                        <span class="${iconColorClass}">${icons.construction}</span>
                         <span class="mt-[2px]">${kmCons.toFixed(1)} km</span>
                     </span>`,
                 );

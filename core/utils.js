@@ -129,3 +129,300 @@ function isColorLight(hex) {
 
     return brightness > 180;  // >160 = colore chiaro
 }
+
+// --- GLOBAL TOOLTIP MANAGER ---
+
+const Tooltip = {
+    element: null,
+    arrow: null,
+    targetMode: 'mouse', // 'mouse' | 'element'
+    targetElement: null,
+    placement: 'top', 
+    align: 'center',      
+    arrowAlign: 'center', // 'start' | 'center' | 'end'
+    gap: 12, 
+    timer: null,
+    
+    init() {
+        if (document.getElementById('global-tooltip')) return;
+        
+        // 1. Container Tooltip
+        let el = document.createElement('div');
+        el.id = 'global-tooltip';
+        el.className = 'fixed pointer-events-none z-[9999] opacity-0 invisible transition-opacity duration-150 px-3 py-2 bg-neutral-900 text-white text-[11px] leading-tight rounded-md shadow-xl text-center border border-neutral-700 whitespace-nowrap';
+        
+        // 2. Elemento Freccia
+        let arrow = document.createElement('div');
+        arrow.className = 'absolute w-0 h-0 border-[6px] border-transparent';
+        el.appendChild(arrow);
+        this.arrow = arrow;
+
+        document.body.appendChild(el);
+        this.element = el;
+        
+        // CSS Shake
+        if (!document.getElementById('shake-style')) {
+            let style = document.createElement('style');
+            style.id = 'shake-style';
+            style.innerHTML = `
+                @keyframes horizontal-shaking {
+                    0% { transform: translateX(0) }
+                    25% { transform: translateX(4px) }
+                    50% { transform: translateX(-4px) }
+                    75% { transform: translateX(4px) }
+                    100% { transform: translateX(0) }
+                }
+                .animate-shake { animation: horizontal-shaking 0.3s ease-in-out; }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.addEventListener('mousemove', (e) => {
+            if (this.targetMode === 'mouse' && !this.element.classList.contains('opacity-0')) {
+                this.updatePositionForMouse(e.clientX, e.clientY);
+            }
+        });
+    },
+
+    // options: { placement, align, arrowAlign, duration }
+    show(htmlContent, target = null, options = {}) {
+        if (!this.element) this.init();
+        
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+
+        this.element.innerHTML = htmlContent;
+        this.element.appendChild(this.arrow); 
+        
+        if (target instanceof HTMLElement) {
+            this.targetMode = 'element';
+            this.targetElement = target;
+            this.placement = options.placement || 'top';
+            this.align = options.align || 'center';
+            this.arrowAlign = options.arrowAlign || 'center'; 
+            this.updatePositionForElement();
+        } else {
+            this.targetMode = 'mouse';
+            this.placement = 'top'; 
+            this.arrow.style.display = 'none'; 
+        }
+
+        requestAnimationFrame(() => {
+            this.element.classList.remove('opacity-0', 'invisible');
+            this.element.classList.add('opacity-100', 'visible');
+        });
+
+        if (options.duration) {
+            this.timer = setTimeout(() => {
+                this.hide();
+            }, options.duration);
+        }
+    },
+
+    hide() {
+        if (!this.element) return;
+        
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+
+        this.element.classList.remove('opacity-100', 'visible');
+        this.element.classList.add('opacity-0', 'invisible');
+    },
+
+    // Aggiornato per ricevere i dati di posizione e calcolare il centro reale
+    updateArrow(placement, targetRect, tooltipPos, tooltipRect) {
+        this.arrow.style.display = 'block';
+        this.arrow.className = 'absolute w-0 h-0 border-[6px] border-transparent';
+        
+        // Reset completo stili inline per evitare conflitti
+        this.arrow.style.top = ''; 
+        this.arrow.style.bottom = ''; 
+        this.arrow.style.left = ''; 
+        this.arrow.style.right = ''; 
+        this.arrow.style.transform = '';
+
+        const color = '#171717'; 
+        const arrowSize = 6; // dimensione bordo in px
+        const borderRadius = 6; // stima del border radius del tooltip per clamping
+
+        // Funzione per calcolare la posizione esatta (pixel) rispetto al target
+        const calculateCenterPos = (axis) => {
+            // Se non abbiamo i dati del target (es. mouse mode), fallback al 50%
+            if (!targetRect || !tooltipPos) return { style: '50%', transform: 'translate(-50%)' };
+
+            let posValue;
+            
+            if (axis === 'horizontal') {
+                // Calcola il centro del target (es. occhio)
+                const targetCenter = targetRect.left + (targetRect.width / 2);
+                // Calcola dove dovrebbe stare la freccia RELATIVAMENTE al tooltip
+                let arrowLeft = targetCenter - tooltipPos.left - arrowSize;
+                
+                // CLAMP: Impedisce alla freccia di uscire dai bordi arrotondati del tooltip
+                const maxLeft = tooltipRect.width - (arrowSize * 2) - borderRadius;
+                const minLeft = borderRadius;
+                arrowLeft = Math.max(minLeft, Math.min(arrowLeft, maxLeft));
+                
+                return { style: `${arrowLeft}px`, transform: 'none' };
+            } 
+            else { // vertical
+                const targetCenter = targetRect.top + (targetRect.height / 2);
+                let arrowTop = targetCenter - tooltipPos.top - arrowSize;
+                
+                const maxTop = tooltipRect.height - (arrowSize * 2) - borderRadius;
+                const minTop = borderRadius;
+                arrowTop = Math.max(minTop, Math.min(arrowTop, maxTop));
+                
+                return { style: `${arrowTop}px`, transform: 'none' };
+            }
+        };
+
+        // Helper per posizionamento statico (start/end)
+        const setStaticPos = (side) => {
+            const edgeOffset = '10px';
+            if (this.arrowAlign === 'start') {
+                this.arrow.style[side] = edgeOffset;
+            } else if (this.arrowAlign === 'end') {
+                this.arrow.style[side === 'left' ? 'right' : 'bottom'] = edgeOffset;
+                this.arrow.style[side] = 'auto';
+            }
+        };
+
+        // Logica principale
+        if (this.arrowAlign === 'center') {
+            switch (placement) {
+                case 'top':
+                case 'bottom':
+                    const hPos = calculateCenterPos('horizontal');
+                    this.arrow.style.left = hPos.style;
+                    if (hPos.transform !== 'none') this.arrow.style.transform = `translateX(${hPos.transform})`;
+                    break;
+                case 'left':
+                case 'right':
+                    const vPos = calculateCenterPos('vertical');
+                    this.arrow.style.top = vPos.style;
+                    if (vPos.transform !== 'none') this.arrow.style.transform = `translateY(${vPos.transform})`;
+                    break;
+            }
+        } else {
+            // Se l'utente specifica start/end esplicitamente
+            if (placement === 'top' || placement === 'bottom') setStaticPos('left');
+            else setStaticPos('top');
+        }
+
+        // Posizionamento della freccia sul bordo corretto
+        switch (placement) {
+            case 'top':
+                this.arrow.style.borderTopColor = color;
+                this.arrow.style.bottom = '-12px';
+                break;
+            case 'bottom':
+                this.arrow.style.borderBottomColor = color;
+                this.arrow.style.top = '-12px';
+                break;
+            case 'left':
+                this.arrow.style.borderLeftColor = color;
+                this.arrow.style.right = '-12px';
+                break;
+            case 'right':
+                this.arrow.style.borderRightColor = color;
+                this.arrow.style.left = '-12px';
+                break;
+            case 'center':
+                this.arrow.style.display = 'none';
+                break;
+        }
+    },
+
+    updatePositionForMouse(mouseX, mouseY) {
+        this.arrow.style.display = 'none';
+
+        const rect = this.element.getBoundingClientRect();
+        const winW = window.innerWidth;
+        
+        let left = mouseX - (rect.width / 2);
+        let top = mouseY - rect.height - 15; 
+        
+        if (left < 10) left = 10;
+        else if (left + rect.width > winW - 10) left = winW - rect.width - 10;
+        
+        if (top < 10) top = mouseY + 25;
+
+        this.element.style.left = `${left}px`;
+        this.element.style.top = `${top}px`;
+    },
+
+    updatePositionForElement() {
+        if (!this.targetElement) return;
+        
+        const tr = this.targetElement.getBoundingClientRect(); 
+        const er = this.element.getBoundingClientRect();
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const padding = 10; 
+        
+        const calcPos = (place) => {
+            let t = 0, l = 0;
+            
+            if (place === 'center') {
+                l = tr.left + (tr.width / 2) - (er.width / 2);
+                if (this.align === 'start') t = tr.top; 
+                else if (this.align === 'end') t = tr.bottom - er.height;
+                else t = tr.top + (tr.height / 2) - (er.height / 2);
+                return { top: t, left: l };
+            }
+
+            switch (place) {
+                case 'top':    t = tr.top - er.height - this.gap; break;
+                case 'bottom': t = tr.bottom + this.gap; break;
+                case 'left':   l = tr.left - er.width - this.gap; break;
+                case 'right':  l = tr.right + this.gap; break;
+            }
+
+            if (place === 'top' || place === 'bottom') {
+                if (this.align === 'start') l = tr.left;
+                else if (this.align === 'end') l = tr.right - er.width;
+                else l = tr.left + (tr.width / 2) - (er.width / 2); 
+            }
+            else { 
+                if (this.align === 'start') t = tr.top;
+                else if (this.align === 'end') t = tr.bottom - er.height;
+                else t = tr.top + (tr.height / 2) - (er.height / 2); 
+            }
+
+            return { top: t, left: l };
+        };
+
+        let pos = calcPos(this.placement);
+        let activePlacement = this.placement;
+
+        if (this.placement !== 'center') {
+             const outTop = pos.top < padding;
+             const outBottom = pos.top + er.height > winH - padding;
+             const outLeft = pos.left < padding;
+             const outRight = pos.left + er.width > winW - padding;
+
+             if (this.placement === 'top' && outTop) activePlacement = 'bottom';
+             else if (this.placement === 'bottom' && outBottom) activePlacement = 'top';
+             else if (this.placement === 'left' && outLeft) activePlacement = 'right';
+             else if (this.placement === 'right' && outRight) activePlacement = 'left';
+
+             if (activePlacement !== this.placement) {
+                 pos = calcPos(activePlacement);
+             }
+        }
+
+        pos.left = Math.max(padding, Math.min(pos.left, winW - er.width - padding));
+        pos.top = Math.max(padding, Math.min(pos.top, winH - er.height - padding));
+
+        this.element.style.left = `${pos.left}px`;
+        this.element.style.top = `${pos.top}px`;
+
+        // Passiamo TUTTI i dati necessari per calcolare la posizione precisa della freccia
+        this.updateArrow(activePlacement, tr, pos, er);
+    }
+};
