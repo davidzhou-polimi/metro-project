@@ -634,7 +634,7 @@ function creaTimeline(container) {
 
     let sliderContainer = createDiv()
         .parent(timelineWrapper)
-        .class("flex-1 w-full md:w-auto flex items-center gap-6");
+        .class("flex-1 w-full md:w-auto flex items-center gap-4");
 
     let btnPlay = createButton(icons.play).parent(sliderContainer);
     btnPlay.id("btn-play");

@@ -212,6 +212,10 @@ canvas {
         transform: rotate(-180deg);
     }
 }
+
+@media (max-width: 767px) {
+    /* Home Search Mobile Expansion - Logic now in Tailwind classes */
+}
     
 /* Reset automatico se si allarga lo schermo */
 @media (min-width: 1024px) {

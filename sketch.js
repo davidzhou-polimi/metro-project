@@ -101,5 +101,10 @@ function windowResized() {
         }
     } else {
         // Logica standard per altre pagine se necessario
+        if (windowWidth >= 768 && pageState === 'HOME') {
+            if (homeState && homeState.uiElements && homeState.uiElements.closeMobileSearch) {
+                homeState.uiElements.closeMobileSearch();
+            }
+        }
     }
 }

@@ -21,7 +21,7 @@ function setupNavbar() {
     });
 
     // Menu destra
-    let menu = createDiv().parent(content).class("flex justify-end gap-2 md:gap-4 text-sm font-bold text-neutral-500");
+    let menu = createDiv().parent(content).class("flex justify-end gap-2 md:gap-3 text-sm font-bold text-neutral-500");
     
     let btnHome = createButton(icons.home).parent(menu);
     btnHome.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2");

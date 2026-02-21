@@ -17,20 +17,20 @@ function createHomeLayout() {
 
     // --- SEZIONE 1: HEADER CONTROLLI (Altezza fissa) ---
     let headerControls = createDiv().parent(wrapper).class("flex flex-col gap-3 shrink-0");
-    let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12 relative");
+    let mainControlRow = createDiv().parent(headerControls).class("flex flex-row w-full gap-2 h-12 relative home-main-control-row");
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    let searchWrapperStyle = "relative flex items-center gap-2 w-12 md:w-64 shrink-0 md:px-3 border-[3px] border-neutral-700 rounded-lg bg-white shadow-sm transition-[width,inset,padding] duration-300 overflow-hidden";
+    let searchWrapperStyle = "relative flex items-center justify-start gap-0 md:gap-2 w-12 md:w-64 min-w-12 shrink-0 md:px-3 border-[3px] border-neutral-700 rounded-lg bg-white shadow-sm overflow-hidden home-search-wrapper [.search-active_&]:flex-1 [.search-active_&]:gap-2";
     searchWrapper.class(searchWrapperStyle);
 
-    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-neutral-900 cursor-pointer md:cursor-default shrink-0 w-11 md:w-5 h-full pb-[1px]");
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-neutral-900 cursor-pointer md:cursor-default shrink-0 w-[42px] md:w-5 h-full pb-[1px]");
     searchIconDiv.html(icons.search);
 
     let input = createElement('input').parent(searchWrapper);
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.attribute('name', 'search');
-    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 hidden md:block pt-[1px]");
+    input.class("flex-1 h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 invisible md:visible opacity-0 md:opacity-100 transition-opacity duration-300 pt-[1px]");
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
 
@@ -43,21 +43,33 @@ function createHomeLayout() {
 
     searchIconDiv.mousePressed(() => {
         if (windowWidth < 768) {
-            searchWrapper.class("absolute inset-0 z-20 flex items-center transition-[width,inset,padding] duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm w-full");
-            input.removeClass("hidden");
+            mainControlRow.addClass("search-active");
+            mainControlRow.removeClass("gap-2");
+            input.removeClass("invisible");
+            // Delay opacity to ensure visibility transition is ready, or just set it
+            setTimeout(() => input.removeClass("opacity-0"), 10); 
             closeMobileBtn.removeClass("hidden");
             input.elt.focus();
         }
     });
 
-    closeMobileBtn.mousePressed(() => {
-        searchWrapper.class(searchWrapperStyle);
-        input.addClass("hidden");
+    const closeHomeMobileSearch = () => {
+        mainControlRow.removeClass("search-active");
+        mainControlRow.addClass("gap-2");
+        input.addClass("opacity-0");
+        setTimeout(() => input.addClass("invisible"), 300);
         closeMobileBtn.addClass("hidden");
+    };
+
+    closeMobileBtn.mousePressed(() => {
+        closeHomeMobileSearch();
         input.value('');
-        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura
+        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura manuale
         clearBtn.addClass('hidden');
     });
+    
+    // Esponiamo la funzione di chiusura per permetterne l'uso esterno (es. resize)
+    homeState.uiElements.closeMobileSearch = closeHomeMobileSearch;
 
     clearBtn.mousePressed(() => {
         input.value('');
@@ -87,7 +99,7 @@ function createHomeLayout() {
                     
                     // Se su mobile, chiude la barra dopo l'invio
                     if (windowWidth < 768) {
-                        cancelBtn.elt.click(); 
+                        closeMobileBtn.elt.click(); 
                     }
                 }
             }
@@ -116,7 +128,7 @@ function createHomeLayout() {
     };
 
     // Filtri Continenti
-    let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar");
+    let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar home-cont-filter-container [.search-active_&]:flex-none [.search-active_&]:w-0 [.search-active_&]:pointer-events-none [.search-active_&]:overflow-hidden opacity-100 [.search-active_&]:opacity-0");
     const continents = ['Europe', 'North America', 'South America', 'Asia', 'Oceania', 'Africa'];
     const contColors = ['bg-blue-600', 'bg-red-700', 'bg-orange-500', 'bg-yellow-500', 'bg-green-600', 'bg-purple-600'];
     homeState.uiElements.continentBtns = {};
@@ -144,7 +156,7 @@ function createHomeLayout() {
     let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-2xl md:text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
 
-    let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-6");
+    let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-4");
     let btnPlay = createButton(icons.play).parent(sliderContainer);
     btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2 shrink-0");
     btnPlay.mousePressed(() => toggleHomePlayback());
@@ -166,6 +178,12 @@ function createHomeLayout() {
     createSpan("2025").parent(labels);
 
     createHomeTooltip(wrapper);
+
+    // Abilita le transizioni solo dopo il mount per evitare animazioni al page load
+    setTimeout(() => {
+        searchWrapper.addClass("transition-[flex-grow,width,margin,padding] duration-300 ease-in-out");
+        contFilterContainer.addClass("transition-[flex-grow,width,opacity] duration-300 ease-in-out");
+    }, 100);
 }
 
 function updateHomeTimelineBackground(slider) {
