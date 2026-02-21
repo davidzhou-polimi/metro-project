@@ -244,9 +244,9 @@ function createSplashUI(container) {
   );
 
   let btnContent = `
-        <div class="bg-[#0f1014] text-white font-underground font-bold tracking-widest uppercase px-6 py-3 rounded-xl shadow-xl border-neutral-900 group-hover:bg-white border-4 group-hover:text-neutral-900 group-hover:border-neutral-900 group-hover:border-4 transition-all duration-300 flex items-center justify-center text-sm md:text-base whitespace-nowrap leading-none">
+        <div class="bg-[#0f1014] text-white font-underground font-bold tracking-widest uppercase px-6 py-3 rounded-xl shadow-xl border-neutral-900 group-hover:bg-white border-4 group-hover:text-neutral-900 group-hover:border-neutral-900 group-hover:border-4 transition-colors duration-300 flex items-center justify-center text-sm md:text-base whitespace-nowrap leading-none">
             <span class="pt-[2px]">EXPLORE</span>
-            <svg class="h-4 w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:ml-2 transition-all duration-300 self-center" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg class="h-4 w-0 opacity-0 group-hover:w-4 group-hover:opacity-100 group-hover:ml-2 transition-[width,opacity,margin] duration-300 self-center" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
         </div>
@@ -302,7 +302,7 @@ function drawSplash() {
   // BOTTONE (SOLO QUANDO FERMO)
   if (linesStopped && !btnVisible) {
     if (exploreBtn) {
-      exploreBtn.addClass("transition-all duration-500");
+      exploreBtn.addClass("transition-opacity duration-500");
       exploreBtn.style("visibility", "visible");
       exploreBtn.style("opacity", "1");
     }

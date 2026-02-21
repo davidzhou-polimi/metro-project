@@ -21,14 +21,16 @@ function createHomeLayout() {
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    searchWrapper.class("relative flex items-center gap-1.5 w-12 md:w-64 shrink-0 md:px-3 border-2 border-neutral-700 rounded-lg bg-white shadow-sm transition-all duration-300 overflow-hidden");
+    let searchWrapperStyle = "relative flex items-center gap-2 w-12 md:w-64 shrink-0 md:px-3 border-[3px] border-neutral-700 rounded-lg bg-white shadow-sm transition-[width,inset,padding] duration-300 overflow-hidden";
+    searchWrapper.class(searchWrapperStyle);
 
-    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-gray-400 cursor-pointer md:cursor-default shrink-0 w-12 md:w-5 h-full");
+    let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-neutral-900 cursor-pointer md:cursor-default shrink-0 w-11 md:w-5 h-full pb-[1px]");
     searchIconDiv.html(icons.search);
 
     let input = createElement('input').parent(searchWrapper);
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
-    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 hidden md:block");
+    input.attribute('name', 'search');
+    input.class("w-full h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 hidden md:block pt-[1px]");
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
 
@@ -37,11 +39,11 @@ function createHomeLayout() {
     clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
 
     let closeMobileBtn = createButton('Cancel').parent(searchWrapper);
-    closeMobileBtn.class("hidden px-3 h-full text-xs font-bold text-black-600 hover:underline shrink-0");
+    closeMobileBtn.class("hidden px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0");
 
     searchIconDiv.mousePressed(() => {
         if (windowWidth < 768) {
-            searchWrapper.class("absolute inset-0 z-20 flex items-center transition-all duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm px-3 w-full");
+            searchWrapper.class("absolute inset-0 z-20 flex items-center transition-[width,inset,padding] duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm w-full");
             input.removeClass("hidden");
             closeMobileBtn.removeClass("hidden");
             input.elt.focus();
@@ -49,7 +51,7 @@ function createHomeLayout() {
     });
 
     closeMobileBtn.mousePressed(() => {
-        searchWrapper.class("relative flex items-center transition-all duration-300 border-2 border-neutral-900 rounded-lg bg-white shadow-sm overflow-hidden px-0 md:px-3 w-12 md:w-64");
+        searchWrapper.class(searchWrapperStyle);
         input.addClass("hidden");
         closeMobileBtn.addClass("hidden");
         input.value('');
@@ -121,7 +123,7 @@ function createHomeLayout() {
 
     continents.forEach((cont, i) => {
         let btn = createDiv(cont).parent(contFilterContainer);
-        btn.class(`px-2 flex-1 flex items-center justify-center h-full text-sm text-white rounded-lg shadow text-center transition-all duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
+        btn.class(`px-6 flex-1 flex items-center justify-center h-full text-sm text-white rounded-lg shadow text-center transition-opacity duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
         btn.mousePressed(() => setHomeFilter('continent', cont));
         homeState.uiElements.continentBtns[cont] = btn;
     });

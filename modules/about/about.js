@@ -82,14 +82,14 @@ function createTopInfoBox(parent, title, htmlContent, isWhoAreWe = false) {
 function createProfileBox(parent, member) {
     let posClass = member.side === 'left' ? "md:mr-[58%] md:ml-auto" : "md:ml-[58%] md:mr-auto";
     
-    let card = createDiv().parent(parent).class(`w-[90%] max-w-[400px] border-[4px] border-black rounded-2xl bg-white relative cursor-pointer transition-all duration-300 hover:-translate-y-2 group/card overflow-hidden z-20 ${posClass}`);
+    let card = createDiv().parent(parent).class(`w-[90%] max-w-[400px] border-[4px] border-black rounded-2xl bg-white relative cursor-pointer transition-transform duration-300 hover:-translate-y-2 group/card overflow-hidden z-20 ${posClass}`);
     
     card.mouseClicked(() => card.toggleClass('flipped'));
 
     // Container interno flessibile
     let inner = createDiv().parent(card).class("relative w-full flex flex-col");
 
-    let front = createDiv().parent(inner).class("flex flex-col p-4 transition-all duration-500 group-[.flipped]/card:opacity-0");
+    let front = createDiv().parent(inner).class("flex flex-col p-4 transition-opacity duration-500 group-[.flipped]/card:opacity-0");
     
     // Altezza fissa proporzionale per le immagini
     let imgContainer = createDiv().parent(front).class("w-full aspect-[4/3] overflow-hidden rounded-lg mb-3");
@@ -97,7 +97,7 @@ function createProfileBox(parent, member) {
     
     createElement('h3', `${member.surname} ${member.name}`).parent(front).class("text-base font-bold text-center whitespace-nowrap overflow-hidden text-ellipsis uppercase");
 
-    let back = createDiv().parent(inner).class("absolute inset-0 bg-white flex flex-col items-center justify-center p-6 opacity-0 transition-all duration-500 group-[.flipped]/card:opacity-100 group-[.flipped]/card:z-30");
+    let back = createDiv().parent(inner).class("absolute inset-0 bg-white flex flex-col items-center justify-center p-6 opacity-0 transition-opacity duration-500 group-[.flipped]/card:opacity-100 group-[.flipped]/card:z-30");
     createElement('h3', "CONTACT").parent(back).class("text-base font-bold mb-4");
     
     // Uso diretto del campo member.email x gestire nomi/cognomi composti

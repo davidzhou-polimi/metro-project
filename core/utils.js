@@ -149,7 +149,7 @@ const Tooltip = {
         // 1. Container Tooltip
         let el = document.createElement('div');
         el.id = 'global-tooltip';
-        el.className = 'fixed pointer-events-none z-[9999] opacity-0 invisible transition-opacity duration-150 px-3 py-2 bg-neutral-900 text-white text-[11px] leading-tight rounded-md shadow-xl text-center border border-neutral-700 whitespace-nowrap';
+        el.className = 'fixed pointer-events-none z-[9999] opacity-0 invisible transition-opacity duration-150 px-3 py-2 bg-neutral-800 text-white text-[11px] leading-tight rounded-md shadow-xl text-center whitespace-nowrap backdrop-blur-sm';
         
         // 2. Elemento Freccia
         let arrow = document.createElement('div');
@@ -238,12 +238,16 @@ const Tooltip = {
         this.arrow.style.display = 'block';
         this.arrow.className = 'absolute w-0 h-0 border-[6px] border-transparent';
         
-        // Reset completo stili inline per evitare conflitti
+        // Reset completo stili inline per evitare conflitti e leak di stili precedenti
         this.arrow.style.top = ''; 
         this.arrow.style.bottom = ''; 
         this.arrow.style.left = ''; 
         this.arrow.style.right = ''; 
         this.arrow.style.transform = '';
+        this.arrow.style.borderTopColor = '';
+        this.arrow.style.borderBottomColor = '';
+        this.arrow.style.borderLeftColor = '';
+        this.arrow.style.borderRightColor = '';
 
         const color = '#171717'; 
         const arrowSize = 6; // dimensione bordo in px

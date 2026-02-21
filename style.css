@@ -141,7 +141,7 @@ canvas {
 .metro-slider::-webkit-slider-thumb:hover {
     transform: scale(1.2);
     border-color: #171717;
-    cursor: ew-resize;
+    cursor: grab;
 }
 .metro-slider::-moz-range-progress {
     background-color: #171717;

@@ -174,7 +174,7 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-all duration-500 ease-in-out sidebar-mobile-container",
+        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-[max-height] duration-500 ease-in-out sidebar-mobile-container",
     );
 
     let sbHeader = createDiv()
@@ -237,7 +237,20 @@ function creaSidebar(parentWrapper, city) {
     btnReset.class(
         "rounded-full bg-neutral-700 text-neutral-500 cursor-not-allowed p-2",
     );
-    btnReset.mousePressed(() => resetFiltriMappa());
+    
+    btnReset.elt.addEventListener("mouseenter", () => {
+        Tooltip.show(
+            `<span class="font-bold block">Reset map view</span>`,
+            btnReset.elt,
+            { placement: 'bottom' }
+        );
+    });
+    btnReset.elt.addEventListener("mouseleave", () => Tooltip.hide());
+
+    btnReset.mousePressed(() => {
+        Tooltip.hide();
+        resetFiltriMappa();
+    });
 
     let sbContent = createDiv()
         .parent(sidebar)
@@ -355,7 +368,7 @@ function costruisciLineaUI(line, container) {
     lineSummary.id(`line-summary-${line.id}`);
 
     // Classi Base
-    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-all duration-300 shadow";
+    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-colors transition-opacity transition-shadow duration-300 shadow";
 
     lineSummary.class(`${baseClasses} ${isHidden ? "opacity-50 hover:opacity-60" : ""}`)
         .style("background-color", hexColor)
@@ -409,39 +422,62 @@ function costruisciLineaUI(line, container) {
         .parent(leftSideGroup)
         .class("font-semibold opacity-100");
 
-    // --- ICONA OCCHIO ---
+    // --- ICONE DI AZIONE ---
     let currentIcon = isHidden ? icons.showLine : icons.hideLine;
 
-    let lineToggleBtn = createSpan(currentIcon)
+    let buttonGroup = createDiv()
         .parent(headerLine)
-        .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors z-10 relative");
+        .class("flex items-center z-10");
+
+    // --- ICONA OCCHIO ---
+    let lineToggleBtn = createSpan(currentIcon)
+        .parent(buttonGroup)
+        .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors relative");
     
     lineToggleBtn.id(`line-toggle-btn-${line.id}`);
 
-    // --- NUOVI EVENTI TOOLTIP GLOBALE ---
+    // --- ICONA ISOLA ---
+    let lineIsolateBtn = createSpan(icons.isolate)
+        .parent(buttonGroup)
+        .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors relative");
+    
+    lineIsolateBtn.id(`line-isolate-btn-${line.id}`);
+
+    // --- TOOLTIP ---
     lineToggleBtn.elt.addEventListener("mouseenter", () => {
         Tooltip.show(
-            `<span class="font-bold block">Click to toggle</span>
-            <span class="text-neutral-400 font-normal">Alt + Click to isolate</span>`,
-            lineToggleBtn.elt, // Usa direttamente il riferimento esistente
+            `<span class="font-bold block">Hide/Show line</span>
+            <span class="text-neutral-400 font-normal">Toggle line visibility</span>`,
+            lineToggleBtn.elt,
             { placement: 'left' }
         );
     });
     
-    lineToggleBtn.elt.addEventListener("mouseleave", () => {
-        Tooltip.hide();
+    lineToggleBtn.elt.addEventListener("mouseleave", () => Tooltip.hide());
+
+    lineIsolateBtn.elt.addEventListener("mouseenter", () => {
+        Tooltip.show(
+            `<span class="font-bold block">Isolate line</span>
+            <span class="text-neutral-400 font-normal">Hide all other lines</span>`,
+            lineIsolateBtn.elt,
+            { placement: 'left' }
+        );
     });
+    
+    lineIsolateBtn.elt.addEventListener("mouseleave", () => Tooltip.hide());
 
     lineToggleBtn.elt.addEventListener("click", (e) => {
         e.preventDefault();
         e.stopPropagation();
-        Tooltip.hide(); // Nascondi subito al click
+        Tooltip.hide();
+        toggleVisibilitaLinea(line.id);
+    });
 
-        if (e.altKey) {
-            isolaSoloQuestaLinea(line.id);
-        } else {
-            toggleVisibilitaLinea(line.id);
-        }
+    lineIsolateBtn.elt.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        Tooltip.hide();
+        isolaSoloQuestaLinea(line.id);
     });
 
     let statsContainer = createDiv().parent(lineSummary);
@@ -450,7 +486,7 @@ function costruisciLineaUI(line, container) {
 
     let stationsDiv = createDiv().parent(lineDetail);
     stationsDiv.id(`stations-list-${line.id}`);
-    stationsDiv.class("pl-6 border-l-2 border-neutral-200 ml-3 mt-2 space-y-1");
+    stationsDiv.class("pl-6 border-l-2 border-neutral-200 ml-5 mt-2 space-y-1");
 }
 
 // Funzione 1: Toggle semplice (Click)
