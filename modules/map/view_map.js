@@ -368,7 +368,7 @@ function costruisciLineaUI(line, container) {
     lineSummary.id(`line-summary-${line.id}`);
 
     // Classi Base
-    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-colors transition-opacity transition-shadow duration-300 shadow";
+    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-all duration-300 shadow";
 
     lineSummary.class(`${baseClasses} ${isHidden ? "opacity-50 hover:opacity-60" : ""}`)
         .style("background-color", hexColor)

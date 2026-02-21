@@ -228,7 +228,7 @@ function updateContinentButtonsUI(selectedValues) {
             if (key === selectedValues) {
                 btns[key].style('opacity', '1');
             } else {
-                btns[key].style('opacity', '0.4'); // Più trasparenza per evidenziare meglio
+                btns[key].style('opacity', '0.5'); // Più trasparenza per evidenziare meglio
             }
         }
     }
@@ -295,7 +295,7 @@ function drawHomeNodes(nodes) {
                 strokeWeight(3);
             } else {
                 // NO MATCH: Colore sbiadito + Nessun bordo
-                nodeColor.setAlpha(90); // Molto trasparente per far risaltare gli altri
+                nodeColor.setAlpha(127); // Molto trasparente per far risaltare gli altri
                 fill(nodeColor);
                 noStroke();
             }
