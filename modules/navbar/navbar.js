@@ -10,8 +10,12 @@ function setupNavbar() {
     
     btnBack = createButton(icons.back);
     btnBack.parent(content).class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2");
-    btnBack.mouseClicked(() => {
-        if (mouseButton === LEFT) changeState('HOME');
+    btnBack.mouseClicked((e) => {
+        if (mouseButton === LEFT) {
+            e.preventDefault();
+            e.stopPropagation();
+            changeState('HOME');
+        }
     });
 
     // Logo / Home Link

@@ -81,58 +81,11 @@ function calcolaRangeAnni(cityId) {
 }
 
 function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
-    let targetSectionIds = new Set();
-
-    // Fallback data finale per coerenza con la logica mappa
-    let endOfTime = appState.maxYear || 2025;
-
-    if (systemLineIds) {
-        let rels = db.section_lines.filter((sl) =>
-            systemLineIds.includes(sl.line_id),
-        );
-        rels.forEach((r) => targetSectionIds.add(r.section_id));
-    } else {
-        let cityLines = db.lines.filter((l) => l.city_id === cityId);
-        let lineIds = cityLines.map((l) => l.id);
-        let rels = db.section_lines.filter((sl) =>
-            lineIds.includes(sl.line_id),
-        );
-        rels.forEach((r) => targetSectionIds.add(r.section_id));
-    }
-
-    let totalMeters = 0;
-    targetSectionIds.forEach((id) => {
-        let section = db.sections.find((s) => s.id === id);
-        if (section && section.length) {
-            let meters = parseFloat(section.length);
-
-            // FILTRO DINAMICO PER ANNO
-            if (year !== null) {
-                let b = parseYear(section.buildstart);
-                let o = parseYear(section.opening);
-
-                if (b && b < 1800) b = null;
-                if (o && o < 1800) o = null;
-
-                if (!o) o = endOfTime;
-                if (!b) {
-                    if (o === endOfTime) b = endOfTime;
-                    else b = o;
-                }
-
-                let closure = parseYear(section.closure) || 9999;
-
-                // Contiamo la sezione se esiste nell'anno corrente (In Costruzione O Operativa)
-                let isActive = b <= year && closure > year;
-
-                if (!isActive) meters = 0;
-            }
-
-            totalMeters += meters;
-        }
+    return calculateNetworkLength(cityId, {
+        lineIds: systemLineIds,
+        year: year,
+        formatted: true
     });
-
-    return (totalMeters / 1000).toFixed(1).replace(".", ",");
 }
 
 // --- MODULO 2: UI BUILDING BLOCKS ---
@@ -370,9 +323,9 @@ function costruisciLineaUI(line, container) {
     lineSummary.id(`line-summary-${line.id}`);
 
     // Classi Base
-    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-90 flex flex-col items-start gap-1 select-none transition-all duration-300 shadow";
+    let baseClasses = "cursor-pointer p-1.5 rounded-xl hover:opacity-80 flex flex-col items-start gap-1 select-none transition-all duration-300 shadow";
 
-    lineSummary.class(`${baseClasses} ${isHidden ? "opacity-50 hover:opacity-60" : ""}`)
+    lineSummary.class(`${baseClasses} ${isHidden ? "opacity-50 hover:opacity-70" : ""}`)
         .style("background-color", hexColor)
         .style("color", useBlack ? "#000000" : "#ffffff");
 
@@ -588,9 +541,9 @@ function applicaCambiamentiVisibilita() {
         let summaryBlock = document.getElementById(`line-summary-${line.id}`);
         if (summaryBlock) {
             if (isHidden) {
-                summaryBlock.classList.add("opacity-50", "hover:opacity-60");
+                summaryBlock.classList.add("opacity-50", "hover:opacity-70");
             } else {
-                summaryBlock.classList.remove("opacity-50", "hover:opacity-60");
+                summaryBlock.classList.remove("opacity-50", "hover:opacity-70");
             }
         }
     }

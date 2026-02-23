@@ -5,7 +5,7 @@ const isMobile = () => {
 };
 
 // Costanti grafiche
-const CORNER_RADIUS = 5;
+const CORNER_RADIUS = 6;
 const PADDING = 2;
 
 /**
@@ -21,7 +21,7 @@ function createHomeLayout() {
 
     // Barra di ricerca
     let searchWrapper = createDiv().parent(mainControlRow);
-    let searchWrapperStyle = "relative flex items-center justify-start gap-0 md:gap-2 w-12 md:w-64 min-w-12 shrink-0 md:px-3 border-[3px] border-neutral-700 rounded-lg bg-white shadow-sm overflow-hidden home-search-wrapper [.search-active_&]:flex-1 [.search-active_&]:gap-2";
+    let searchWrapperStyle = "relative flex items-center justify-start gap-0 md:gap-2 w-12 md:w-64 min-w-12 shrink-0 md:pl-3 border-[3px] border-neutral-700 rounded-lg bg-white shadow-sm overflow-hidden home-search-wrapper [.search-active_&]:w-full [.search-active_&]:min-w-0";
     searchWrapper.class(searchWrapperStyle);
 
     let searchIconDiv = createDiv().parent(searchWrapper).class("flex items-center justify-center text-neutral-900 cursor-pointer md:cursor-default shrink-0 w-[42px] md:w-5 h-full pb-[1px]");
@@ -30,16 +30,13 @@ function createHomeLayout() {
     let input = createElement('input').parent(searchWrapper);
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.attribute('name', 'search');
-    input.class("flex-1 h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 invisible md:visible opacity-0 md:opacity-100 transition-opacity duration-300 pt-[1px]");
+    input.class("flex-1 h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 invisible md:visible opacity-0 md:opacity-100 transition-opacity duration-300 pt-[1px] w-full min-w-0");
     input.input((e) => setHomeFilter('search', e.target.value));
     homeState.uiElements.searchInput = input;
 
-    let clearBtn = createButton('').parent(searchWrapper);
-    clearBtn.class("absolute right-20 md:right-2 flex items-center justify-center p-1 text-gray-400 hover:text-black cursor-pointer hidden rounded-full");
-    clearBtn.html('<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>');
-
-    let closeMobileBtn = createButton('Cancel').parent(searchWrapper);
-    closeMobileBtn.class("hidden px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0");
+    let cancelBtn = createButton('Cancel').parent(searchWrapper);
+    cancelBtn.class("flex items-center justify-center px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0 pt-[1px] cursor-pointer md:text-transparent md:hover:no-underline md:w-10 md:flex transition-all duration-200 [.search-active_&]:flex hidden");
+    homeState.uiElements.cancelBtn = cancelBtn;
 
     searchIconDiv.mouseClicked(() => {
         if (mouseButton !== LEFT) return;
@@ -47,10 +44,11 @@ function createHomeLayout() {
             mainControlRow.addClass("search-active");
             mainControlRow.removeClass("gap-2");
             input.removeClass("invisible");
-            // Delay opacity to ensure visibility transition is ready, or just set it
-            setTimeout(() => input.removeClass("opacity-0"), 10); 
-            closeMobileBtn.removeClass("hidden");
-            input.elt.focus();
+            setTimeout(() => {
+                input.removeClass("opacity-0");
+                input.elt.focus();
+            }, 50); 
+            cancelBtn.removeClass("hidden");
         }
     });
 
@@ -59,31 +57,63 @@ function createHomeLayout() {
         mainControlRow.addClass("gap-2");
         input.addClass("opacity-0");
         setTimeout(() => input.addClass("invisible"), 300);
-        closeMobileBtn.addClass("hidden");
+        cancelBtn.addClass("hidden");
     };
 
-    closeMobileBtn.mouseClicked(() => {
+    cancelBtn.mouseClicked(() => {
         if (mouseButton !== LEFT) return;
-        closeHomeMobileSearch();
-        input.value('');
-        setHomeFilter('search', ''); // Pulisce il filtro alla chiusura manuale
-        clearBtn.addClass('hidden');
+        
+        if (input.value().length > 0) {
+            // Se c'è testo, pulisce l'input
+            input.value('');
+            setHomeFilter('search', '');
+            updateCancelBtnState();
+            input.elt.focus();
+        } else {
+            // Se è vuoto, chiude la ricerca (solo mobile)
+            if (windowWidth < 768) {
+                closeHomeMobileSearch();
+            }
+        }
     });
     
     // Esponiamo la funzione di chiusura per permetterne l'uso esterno (es. resize)
     homeState.uiElements.closeMobileSearch = closeHomeMobileSearch;
 
-    clearBtn.mouseClicked(() => {
-        if (mouseButton !== LEFT) return;
-        input.value('');
-        setHomeFilter('search', '');
-        clearBtn.addClass('hidden');
-        input.elt.focus();
-    });
+    // Funzione per aggiornare lo stato del bottone Cancel/X
+    const updateCancelBtnState = () => {
+        const hasText = input.value().length > 0;
+        const isDesktop = windowWidth >= 768;
+
+        if (hasText) {
+            cancelBtn.html(icons.close);
+            cancelBtn.addClass('md:text-neutral-600'); // Forza colore icona su desktop
+            cancelBtn.removeClass('md:text-transparent');
+            cancelBtn.removeClass('hidden'); // Sempre visibile se c'è testo
+        } else {
+            // Su desktop, usiamo stringa vuota per evitare che 'Cancel' appaia durante la transizione
+            cancelBtn.html(isDesktop ? '' : 'Cancel');
+            
+            cancelBtn.addClass('md:text-transparent');
+            cancelBtn.removeClass('md:text-neutral-600');
+            
+            // Su mobile nascondiamo se non attivo, su desktop lo teniamo "disattivato" (trasparente)
+            if (windowWidth < 768 && !mainControlRow.hasClass("search-active")) {
+                cancelBtn.addClass('hidden');
+            } else {
+                cancelBtn.removeClass('hidden');
+            }
+        }
+    };
+
+    // Esponiamo la funzione di aggiornamento per permetterne l'uso esterno (es. resize)
+    homeState.uiElements.updateCancelBtnState = updateCancelBtnState;
+
+    // Imposta lo stato iniziale
+    updateCancelBtnState();
 
     input.elt.addEventListener('input', () => {
-        if (input.value().length > 0) clearBtn.removeClass('hidden');
-        else clearBtn.addClass('hidden');
+        updateCancelBtnState();
     });
 
     input.elt.addEventListener('keydown', (e) => {
@@ -102,7 +132,7 @@ function createHomeLayout() {
                     
                     // Se su mobile, chiude la barra dopo l'invio
                     if (windowWidth < 768) {
-                        closeMobileBtn.elt.click(); 
+                        cancelBtn.elt.click(); 
                     }
                 }
             }
@@ -131,7 +161,7 @@ function createHomeLayout() {
     };
 
     // Filtri Continenti
-    let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar home-cont-filter-container [.search-active_&]:flex-none [.search-active_&]:w-0 [.search-active_&]:pointer-events-none [.search-active_&]:overflow-hidden opacity-100 [.search-active_&]:opacity-0");
+    let contFilterContainer = createDiv().parent(mainControlRow).class("flex flex-1 gap-2 w-full font-semibold cursor-pointer select-none overflow-x-auto no-scrollbar home-cont-filter-container [.search-active_&]:flex-none [.search-active_&]:w-0 [.search-active_&]:pointer-events-none [.search-active_&]:overflow-hidden opacity-100 [.search-active_&]:opacity-0 rounded-lg");
     const continents = ['Europe', 'North America', 'South America', 'Asia', 'Oceania', 'Africa'];
     const contColors = ['bg-blue-600', 'bg-red-700', 'bg-orange-500', 'bg-yellow-500', 'bg-green-600', 'bg-purple-600'];
     homeState.uiElements.continentBtns = {};
@@ -149,7 +179,7 @@ function createHomeLayout() {
     let canvasContainer = createDiv().parent(wrapper);
     canvasContainer.id('home-canvas-container');
     // flex-1 permette al canvas di occupare tutto lo spazio centrale
-    canvasContainer.class("mt-4 w-full shadow-lg rounded-xl overflow-hidden bg-white relative flex-1 min-h-0");
+    canvasContainer.class("mt-4 w-full rounded-lg overflow-hidden bg-white relative flex-1 min-h-0");
 
     // --- SEZIONE 3: TIMELINE (Sempre visibile in basso) ---
     let timelineWrapper = createDiv().parent(wrapper).class(
@@ -158,7 +188,7 @@ function createHomeLayout() {
 
     let tlInfo = createDiv().parent(timelineWrapper).class("flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start w-full md:w-auto gap-1");
     createSpan("CITIES EXPANSION").parent(tlInfo).class("block text-[10px] font-semibold text-neutral-400 uppercase tracking-widest");
-    let yearDisplay = createElement("h3", "2025").parent(tlInfo).class("text-2xl md:text-3xl font-black text-neutral-700 tabular-nums");
+    let yearDisplay = createElement("h3", homeState.filters.year).parent(tlInfo).class("text-2xl md:text-3xl font-black text-neutral-700 tabular-nums");
     homeState.uiElements.yearDisplay = yearDisplay;
 
     let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-4");
@@ -175,7 +205,7 @@ function createHomeLayout() {
     slider.attribute("type", "range");
     slider.attribute("min", "1863");
     slider.attribute("max", "2025");
-    slider.attribute("value", "2025");
+    slider.attribute("value", homeState.filters.year);
     slider.class("w-full metro-slider cursor-pointer");
     slider.input(() => updateHomeTimelineBackground(slider));
     homeState.uiElements.slider = slider;
@@ -189,7 +219,7 @@ function createHomeLayout() {
     // Abilita le transizioni solo dopo il mount per evitare animazioni al page load
     setTimeout(() => {
         searchWrapper.addClass("transition-[flex-grow,width,margin,padding] duration-300 ease-in-out");
-        contFilterContainer.addClass("transition-[flex-grow,width,opacity] duration-300 ease-in-out");
+        contFilterContainer.addClass("transition-[width,opacity] duration-300 ease-in-out");
     }, 100);
 }
 
@@ -230,12 +260,15 @@ function updateContinentButtonsUI(selectedValues) {
     let btns = homeState.uiElements.continentBtns;
     for (let key in btns) {
         if (selectedValues === null) {
-            btns[key].style('opacity', '1');
+            btns[key].removeClass('opacity-50');
+            btns[key].addClass('opacity-100');
         } else {
             if (key === selectedValues) {
-                btns[key].style('opacity', '1');
+                btns[key].removeClass('opacity-50');
+                btns[key].addClass('opacity-100');
             } else {
-                btns[key].style('opacity', '0.5'); // Più trasparenza per evidenziare meglio
+                btns[key].removeClass('opacity-100');
+                btns[key].addClass('opacity-50'); // Più trasparenza per evidenziare meglio
             }
         }
     }
@@ -299,7 +332,7 @@ function drawHomeNodes(nodes) {
                 // MATCH: Colore pieno + Bordo Spesso
                 fill(nodeColor);
                 stroke(0); 
-                strokeWeight(3);
+                strokeWeight(2.5);
             } else {
                 // NO MATCH: Colore sbiadito + Nessun bordo
                 nodeColor.setAlpha(127); // Molto trasparente per far risaltare gli altri
@@ -373,8 +406,13 @@ function drawHomeNodes(nodes) {
     }
 }
 
-function mouseClicked() {
+function mouseClicked(event) {
     if (mouseButton !== LEFT) return;
+    
+    // Sicurezza: se il click non è sul canvas, ignoriamo il click per la navigazione treemap.
+    // Questo evita "click-through" quando clicchi bottoni della navbar che poi caricano la home.
+    if (event && event.target && event.target.tagName !== 'CANVAS') return;
+
     if (pageState === 'HOME') {
         let targetNode = null;
 
@@ -404,7 +442,7 @@ function updateAndShowHomeTooltip(node) {
     
     // 1. Aggiorna i testi
     select('#tt-title').html(node.name.toUpperCase());
-    select('#tt-len').html(Math.round(node.length) + " km");
+    select('#tt-len').html(node.length.toFixed(1).replace(".", ",") + " km");
     select('#tt-country').html(node.country);
 
     // 2. Rendi visibile per calcolare le dimensioni

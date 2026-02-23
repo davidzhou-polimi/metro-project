@@ -130,6 +130,56 @@ function isColorLight(hex) {
     return brightness > 180;  // >160 = colore chiaro
 }
 
+/**
+ * Calcola la lunghezza della rete per una città o un set di linee, opzionalmente ad un anno specifico.
+ * @param {number} cityId ID della città
+ * @param {object} options { lineIds, year, formatted }
+ */
+function calculateNetworkLength(cityId, options = {}) {
+    let { lineIds = null, year = null, formatted = false } = options;
+    let targetSectionIds = new Set();
+    let endOfTime = 2025; // Fallback
+
+    if (lineIds) {
+        let rels = db.section_lines.filter((sl) => lineIds.includes(sl.line_id));
+        rels.forEach((r) => targetSectionIds.add(r.section_id));
+    } else {
+        let cityLines = db.lines.filter((l) => l.city_id === cityId);
+        let ids = cityLines.map((l) => l.id);
+        let rels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
+        rels.forEach((r) => targetSectionIds.add(r.section_id));
+    }
+
+    let totalMeters = 0;
+    targetSectionIds.forEach((id) => {
+        let section = db.sections.find((s) => s.id === id);
+        if (section && section.length) {
+            let meters = parseFloat(section.length);
+
+            if (year !== null) {
+                let b = parseYear(section.buildstart);
+                let o = parseYear(section.opening);
+                if (b && b < 1800) b = null;
+                if (o && o < 1800) o = null;
+
+                if (!o) o = endOfTime;
+                if (!b) b = (o === endOfTime) ? endOfTime : o;
+
+                let closure = parseYear(section.closure) || 9999;
+                let isActive = b <= year && closure > year;
+                if (!isActive) meters = 0;
+            }
+            totalMeters += meters;
+        }
+    });
+
+    let km = totalMeters / 1000;
+    if (formatted) {
+        return km.toFixed(1).replace(".", ",");
+    }
+    return km;
+}
+
 // --- GLOBAL TOOLTIP MANAGER ---
 
 const Tooltip = {

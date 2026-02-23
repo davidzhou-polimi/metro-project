@@ -101,9 +101,14 @@ function windowResized() {
         }
     } else {
         // Logica standard per altre pagine se necessario
-        if (windowWidth >= 768 && pageState === 'HOME') {
-            if (homeState && homeState.uiElements && homeState.uiElements.closeMobileSearch) {
+        if (pageState === 'HOME' && homeState && homeState.uiElements) {
+            // Se passiamo a desktop, chiudiamo la ricerca mobile
+            if (windowWidth >= 768 && homeState.uiElements.closeMobileSearch) {
                 homeState.uiElements.closeMobileSearch();
+            }
+            // Aggiorniamo sempre lo stato del bottone (X vs Cancel) in base alla larghezza
+            if (homeState.uiElements.updateCancelBtnState) {
+                homeState.uiElements.updateCancelBtnState();
             }
         }
     }

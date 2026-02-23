@@ -24,7 +24,7 @@ function processHomeData(database) {
     let lineToCity = {};
     database.lines.forEach(l => lineToCity[l.id] = l.city_id);
 
-    // 2. Calcolo lunghezze e anni per ogni città
+    // 2. Trova l'anno di inizio per ogni città
     database.sections.forEach(sec => {
         let rel = database.section_lines.find(sl => sl.section_id === sec.id);
         if (!rel) return;
@@ -34,14 +34,12 @@ function processHomeData(database) {
 
         if (!cityMap.has(cityId)) {
             cityMap.set(cityId, { 
-                length: 0, 
                 start_year: 9999, 
                 raw_city: database.cities.find(c => c.id === cityId) 
             });
         }
 
         let cityData = cityMap.get(cityId);
-        cityData.length += (parseFloat(sec.length) || 0);
 
         let b = parseYear(sec.buildstart);
         let o = parseYear(sec.opening);
@@ -74,10 +72,10 @@ function processHomeData(database) {
             name: data.raw_city.name,
             country: countryName,
             continent: continent,
-            length: data.length / 1000, 
             start_year: data.start_year === 9999 ? 2025 : data.start_year,
             color: CONTINENT_COLORS_MAP[continent] || CONTINENT_COLORS_MAP['default'],
-            size: 0
+            size: 0,
+            length: 0 // Verrà calcolato dinamicamente
         });
     });
 
@@ -104,9 +102,11 @@ function filterHomeData(data, filters) {
         return true;
     });
 
-    // Imposta la dimensione per la TreeMap
+    // Imposta la dimensione per la TreeMap calcolando i km reali all'anno selezionato
     filtered.forEach(item => {
-        item.size = Math.max(item.length, 2); 
+        let currentKM = calculateNetworkLength(item.id, { year: year });
+        item.length = currentKM;
+        item.size = Math.max(currentKM, 0.1); // Minimo 0.1 per evitar errori nel layout se == 0
     });
 
     // Ordina per dimensione (necessario per Squarify)

@@ -4,7 +4,7 @@ let homeState = {
     processedData: [],      
     activeNodes: [],        
     filters: {
-        year: 2025,
+        year: 1863,
         continent: null,
         search: ""
     },
@@ -13,6 +13,7 @@ let homeState = {
     uiElements: {},
     animationInterval: null,
     isPlaying: false,
+    hasInitialPlaybackRun: false,
     resizeObserver: null
 };
 
@@ -31,8 +32,7 @@ function setupHome() {
     container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
     document.title = "Home – World Metro";
     
-    // Reset Variabili
-    homeState.filters.year = 1863;
+    // Reset Variabili (non resettiamo l'anno per permettere persistenza)
     homeState.filters.continent = null;
     homeState.filters.search = "";
     homeState.hoveredNode = null;
@@ -99,15 +99,15 @@ let sliderElement = select("#home-timeline-slider");
     
     // 1. Forziamo visivamente lo slider all'anno di partenza
     if(sliderElement) {
-        sliderElement.value(1863);
+        sliderElement.value(homeState.filters.year);
         updateHomeTimelineBackground(sliderElement);
     }
 
-    // 2. AVVIO AUTOMATICO
-    // Se non sta già suonando, premiamo "Play" in automatico
-    if (typeof toggleHomePlayback === 'function' && !homeState.isPlaying) {
+    // 2. AVVIO AUTOMATICO (Solo al primo caricamento del sito/sessione)
+    if (typeof toggleHomePlayback === 'function' && !homeState.isPlaying && !homeState.hasInitialPlaybackRun) {
         setTimeout(() => {
             toggleHomePlayback();
+            homeState.hasInitialPlaybackRun = true;
         }, 500); // Un piccolo ritardo di mezzo secondo rende l'animazione più fluida all'ingresso
     }
 }
