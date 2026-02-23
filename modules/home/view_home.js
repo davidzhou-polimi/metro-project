@@ -41,7 +41,8 @@ function createHomeLayout() {
     let closeMobileBtn = createButton('Cancel').parent(searchWrapper);
     closeMobileBtn.class("hidden px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0");
 
-    searchIconDiv.mousePressed(() => {
+    searchIconDiv.mouseClicked(() => {
+        if (mouseButton !== LEFT) return;
         if (windowWidth < 768) {
             mainControlRow.addClass("search-active");
             mainControlRow.removeClass("gap-2");
@@ -61,7 +62,8 @@ function createHomeLayout() {
         closeMobileBtn.addClass("hidden");
     };
 
-    closeMobileBtn.mousePressed(() => {
+    closeMobileBtn.mouseClicked(() => {
+        if (mouseButton !== LEFT) return;
         closeHomeMobileSearch();
         input.value('');
         setHomeFilter('search', ''); // Pulisce il filtro alla chiusura manuale
@@ -71,7 +73,8 @@ function createHomeLayout() {
     // Esponiamo la funzione di chiusura per permetterne l'uso esterno (es. resize)
     homeState.uiElements.closeMobileSearch = closeHomeMobileSearch;
 
-    clearBtn.mousePressed(() => {
+    clearBtn.mouseClicked(() => {
+        if (mouseButton !== LEFT) return;
         input.value('');
         setHomeFilter('search', '');
         clearBtn.addClass('hidden');
@@ -136,7 +139,9 @@ function createHomeLayout() {
     continents.forEach((cont, i) => {
         let btn = createDiv(cont).parent(contFilterContainer);
         btn.class(`px-6 flex-1 flex items-center justify-center h-full text-sm text-white rounded-lg shadow text-center transition-opacity duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
-        btn.mousePressed(() => setHomeFilter('continent', cont));
+        btn.mouseClicked(() => {
+            if (mouseButton === LEFT) setHomeFilter('continent', cont);
+        });
         homeState.uiElements.continentBtns[cont] = btn;
     });
 
@@ -159,7 +164,9 @@ function createHomeLayout() {
     let sliderContainer = createDiv().parent(timelineWrapper).class("flex-1 w-full md:w-auto flex items-center gap-4");
     let btnPlay = createButton(icons.play).parent(sliderContainer);
     btnPlay.class("rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2 shrink-0");
-    btnPlay.mousePressed(() => toggleHomePlayback());
+    btnPlay.mouseClicked(() => {
+        if (mouseButton === LEFT) toggleHomePlayback();
+    });
     homeState.uiElements.playBtn = btnPlay;
 
     let sliderWrapper = createDiv().parent(sliderContainer).class("flex-grow relative");
@@ -366,8 +373,9 @@ function drawHomeNodes(nodes) {
     }
 }
 
-function mousePressed() {
-if (pageState === 'HOME') {
+function mouseClicked() {
+    if (mouseButton !== LEFT) return;
+    if (pageState === 'HOME') {
         let targetNode = null;
 
         // Su mobile cerchiamo manualmente il nodo cliccato

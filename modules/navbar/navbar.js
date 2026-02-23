@@ -10,12 +10,15 @@ function setupNavbar() {
     
     btnBack = createButton(icons.back);
     btnBack.parent(content).class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2");
-    btnBack.mousePressed(() => changeState('HOME'));
+    btnBack.mouseClicked(() => {
+        if (mouseButton === LEFT) changeState('HOME');
+    });
 
     // Logo / Home Link
     let logo = createButton("WORLD METRO").parent(content);
     logo.class("mt-1 absolute left-1/2 -translate-x-1/2 z-20 text-3xl sm:text-4xl font-black tracking-tight text-neutral-900 hover:text-neutral-600 transition-colors no-underline cursor-pointer outline-none leading-[0.9] md:leading-[0.8]");
-    logo.mousePressed((e) => {
+    logo.mouseClicked((e) => {
+        if (mouseButton !== LEFT) return;
         e.preventDefault(); 
         changeState('SPLASH'); 
     });
@@ -25,14 +28,16 @@ function setupNavbar() {
     
     let btnHome = createButton(icons.home).parent(menu);
     btnHome.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2");
-    btnHome.mousePressed((e) => {
+    btnHome.mouseClicked((e) => {
+        if (mouseButton !== LEFT) return;
         e.preventDefault();
         changeState('HOME');
     });
 
     let btnAbout = createButton(icons.about).parent(menu);
     btnAbout.class("relative z-10 rounded-full bg-neutral-900 hover:bg-neutral-700 text-white transition-colors cursor-pointer p-2");
-    btnAbout.mousePressed((e) => {
+    btnAbout.mouseClicked((e) => {
+        if (mouseButton !== LEFT) return;
         e.preventDefault();
         changeState('ABOUT');
     });

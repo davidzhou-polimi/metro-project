@@ -84,7 +84,9 @@ function createProfileBox(parent, member) {
     
     let card = createDiv().parent(parent).class(`w-[90%] max-w-[400px] border-[4px] border-black rounded-2xl bg-white relative cursor-pointer transition-transform duration-300 hover:-translate-y-2 group/card overflow-hidden z-20 ${posClass}`);
     
-    card.mouseClicked(() => card.toggleClass('flipped'));
+    card.mouseClicked(() => {
+        if (mouseButton === LEFT) card.toggleClass('flipped');
+    });
 
     // Container interno flessibile
     let inner = createDiv().parent(card).class("relative w-full flex flex-col");
@@ -105,7 +107,10 @@ function createProfileBox(parent, member) {
     let mailLink = createA(`mailto:${member.email}`, emailDisplay, "_blank").parent(back);
     mailLink.class("text-base text-black underline underline-offset-4 hover:text-gray-500 transition-colors text-center break-all font-medium");
     
-    mailLink.mouseClicked((e) => e.stopPropagation());
+    mailLink.mouseClicked((e) => {
+        if (mouseButton !== LEFT) return;
+        e.stopPropagation();
+    });
 }
 
 function removeAbout() {

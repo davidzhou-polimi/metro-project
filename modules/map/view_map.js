@@ -205,7 +205,8 @@ function creaSidebar(parentWrapper, city) {
             "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1 lg:ml-0 ml-7",
         );
 
-    sbHeader.mousePressed(() => {
+    sbHeader.mouseClicked(() => {
+        if (mouseButton !== LEFT) return;
         if (window.innerWidth < 1024) {
             sidebar.toggleClass("mobile-expanded");
             mobileChevron.toggleClass("rotate-0");
@@ -247,7 +248,8 @@ function creaSidebar(parentWrapper, city) {
     });
     btnReset.elt.addEventListener("mouseleave", () => Tooltip.hide());
 
-    btnReset.mousePressed(() => {
+    btnReset.mouseClicked(() => {
+        if (mouseButton !== LEFT) return;
         Tooltip.hide();
         resetFiltriMappa();
     });
@@ -642,7 +644,9 @@ function creaTimeline(container) {
     btnPlay.class(
         "rounded-full bg-neutral-200 text-neutral-400 cursor-not-allowed p-2",
     );
-    btnPlay.mousePressed(() => togglePlayback());
+    btnPlay.mouseClicked(() => {
+        if (mouseButton === LEFT) togglePlayback();
+    });
 
     let sliderWrapper = createDiv()
         .parent(sliderContainer)
@@ -936,7 +940,9 @@ function updateSidebarStats() {
                             stElem.class(
                                 "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate",
                             );
-                            stElem.mousePressed(() => zoomSuStazione(station));
+                            stElem.mouseClicked(() => {
+                                if (mouseButton === LEFT) zoomSuStazione(station);
+                            });
                         }
                     } else {
                         createDiv("No stations found")

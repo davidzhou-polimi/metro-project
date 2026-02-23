@@ -254,8 +254,8 @@ function createSplashUI(container) {
     `;
   exploreBtn.html(btnContent);
 
-  exploreBtn.mousePressed(() => {
-    if (btnVisible) changeState("HOME");
+  exploreBtn.mouseClicked(() => {
+    if (mouseButton === LEFT && btnVisible) changeState("HOME");
   });
 }
 
@@ -302,7 +302,7 @@ function drawSplash() {
   // BOTTONE (SOLO QUANDO FERMO)
   if (linesStopped && !btnVisible) {
     if (exploreBtn) {
-      exploreBtn.addClass("transition-opacity duration-500");
+      exploreBtn.addClass("transition duration-500");
       exploreBtn.style("visibility", "visible");
       exploreBtn.style("opacity", "1");
     }
