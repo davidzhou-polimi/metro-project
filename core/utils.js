@@ -159,14 +159,14 @@ function calculateNetworkLength(cityId, options = {}) {
             if (year !== null) {
                 let b = parseYear(section.buildstart);
                 let o = parseYear(section.opening);
-                if (b && b < 1800) b = null;
-                if (o && o < 1800) o = null;
+                if (b && b < 1860) b = null;
+                if (o && o < 1860) o = null;
 
                 if (!o) o = endOfTime;
                 if (!b) b = (o === endOfTime) ? endOfTime : o;
 
                 let closure = parseYear(section.closure) || 9999;
-                let isActive = b <= year && closure > year;
+                let isActive = o <= year && closure > year;
                 if (!isActive) meters = 0;
             }
             totalMeters += meters;

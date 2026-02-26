@@ -45,8 +45,8 @@ function disegnaElementiMappa(cityId, cityName) {
                 let opening = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
                 
-                if (buildstart && buildstart < 1800) buildstart = null;
-                if (opening && opening < 1800) opening = null;
+                if (buildstart && buildstart < 1860) buildstart = null;
+                if (opening && opening < 1860) opening = null;
                 if (!opening) {
                     if (buildstart) opening = 9999;
                     else opening = endOfTime;
@@ -106,8 +106,8 @@ function disegnaElementiMappa(cityId, cityName) {
         let opening = parseYear(station.opening);
         let closure = parseYear(station.closure) || 9999;
 
-        if (buildstart && buildstart < 1800) buildstart = null;
-        if (opening && opening < 1800) opening = null;
+        if (buildstart && buildstart < 1860) buildstart = null;
+        if (opening && opening < 1860) opening = null;
 
         if (!opening) {
             let servingLineIds = stationLines.map((sl) => sl.line_id);
@@ -125,6 +125,54 @@ function disegnaElementiMappa(cityId, cityName) {
         if (!buildstart) {
             if (opening !== endOfTime) buildstart = opening;
             else buildstart = endOfTime;
+        }
+
+        // --- GESTIONE CHIUSURA STAZIONE (EREDITÀ LINEE) ---
+        // Se la stazione NON ha una data di chiusura propria o la sua chiusura è > anno corrente,
+        // ma tutte le linee che la servono (le sezioni che passano per essa) sono chiuse,
+        // allora anche la stazione deve considerarsi chiusa nello stesso anno dell'ultima linea.
+        if (closure === 9999) {
+            let servingLineIds = stationLines.map((sl) => sl.line_id);
+            let candidateSections = allPhysicalSections.filter((sect) => servingLineIds.includes(sect.lineId));
+            
+            // Troviamo le sezioni vicine alla stazione (che effettivamente la servono)
+            let validSectionsNear = [];
+            for (let section of candidateSections) {
+                let dist = getDistanceFromLine(coords, section.coords);
+                if (dist < MAX_DISTANCE_THRESHOLD) {
+                    // Andiamo a recuperare dal db l'oggetto originale della sezione
+                    // perché in allPhysicalSections non ci siamo portati dietro la closure
+                    let originalSection = db.sections.find(s => {
+                        let parsedCoords = parseGeometry(s.geometry);
+                        return parsedCoords && parsedCoords.length === section.coords.length && parsedCoords[0][0] === section.coords[0][0];
+                    });
+                    if (originalSection) validSectionsNear.push(originalSection);
+                }
+            }
+
+            if (validSectionsNear.length > 0) {
+                // Calcoliano il MASSIMO anno di chiusura tra le sezioni che passano per la stazione.
+                // Se ALMENO UNA sezione è ancora aperta (closure assente o > endOfTime), 
+                // allora la stazione resta aperta.
+                let maxClosure = 0;
+                let isAnyLineStillOpen = false;
+                
+                for(let vs of validSectionsNear) {
+                    let secClosure = parseYear(vs.closure);
+                    if(!secClosure || secClosure >= endOfTime || secClosure === 9999) {
+                        isAnyLineStillOpen = true;
+                        break; // Se c'è almeno una linea aperta, la stazione vive.
+                    }
+                    if(secClosure > maxClosure) {
+                        maxClosure = secClosure;
+                    }
+                }
+
+                // Se NESSUNA linea pertinente è aperta, la stazione chiude insieme all'ultima linea.
+                if(!isAnyLineStillOpen && maxClosure > 0) {
+                    closure = maxClosure;
+                }
+            }
         }
 
         if (shouldShow) {
@@ -619,18 +667,19 @@ function formatDateRange(start, end, isOperational) {
     let e = parseInt(end);
     let endOfTime = appState.maxYear || CURRENT_YEAR; 
 
-    if (!s || isNaN(s) || s > 2050) s = "?";
+    if (!s || isNaN(s) || s > 2050) s = "N/A";
     
     if (isOperational) {
         // Se è operativo e la chiusura non c'è o è futura
         if (!e || isNaN(e) || e >= endOfTime || e === 9999) {
-            return `Since ${s}`;
+            return s === "N/A" ? "N/A" : `Since ${s}`;
         }
         return `${s} – ${e}`;
     } else {
         // Costruzione
+        // e qui è l'anno di apertura (o presunto tale)
         if (!e || isNaN(e) || e >= endOfTime || e === 9999) {
-            return `${s} – ...`;
+            return s === "N/A" ? "N/A" : `Since ${s}`;
         }
         return `${s} – ${e}`;
     }

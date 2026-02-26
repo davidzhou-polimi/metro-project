@@ -58,11 +58,11 @@ function calcolaRangeAnni(cityId) {
     for (let s of citySections) {
         let b = parseYear(s.buildstart);
         let o = parseYear(s.opening);
-        if (b && b > 1800 && b < firstEventYear) {
+        if (b && b >= 1860 && b < firstEventYear) {
             firstEventYear = b;
             hasValidYears = true;
         }
-        if (o && o > 1800 && o < firstEventYear) {
+        if (o && o >= 1860 && o < firstEventYear) {
             firstEventYear = o;
             hasValidYears = true;
         }
@@ -774,8 +774,8 @@ function updateSidebarStats() {
                 let b = parseYear(s.buildstart);
                 let o = parseYear(s.opening);
 
-                if (b && b < 1800) b = null;
-                if (o && o < 1800) o = null;
+                if (b && b < 1860) b = null;
+                if (o && o < 1860) o = null;
 
                 if (!o) o = endOfTime;
                 if (!b) {

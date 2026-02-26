@@ -44,8 +44,8 @@ function processHomeData(database) {
         let b = parseYear(sec.buildstart);
         let o = parseYear(sec.opening);
         let y = 9999;
-        if (o && o > 1800) y = o;
-        else if (b && b > 1800) y = b;
+        if (o && o >= 1860) y = o;
+        else if (b && b >= 1860) y = b;
 
         if (y < cityData.start_year) cityData.start_year = y;
     });
