@@ -99,7 +99,7 @@ function creaContenitoreMappa(parentWrapper) {
     let loaderDiv = createDiv().parent(wrapper);
     loaderDiv.id("map-loader");
     loaderDiv.class(
-        "absolute inset-0 flex flex-col items-center justify-center z-10 bg-white transition-opacity duration-500",
+        "absolute inset-0 flex flex-col items-center justify-center z-10 bg-white transition-opacity duration-500",      
     );
 
     let spinner = createDiv().parent(loaderDiv);
@@ -133,7 +133,7 @@ function creaSidebar(parentWrapper, city) {
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default",
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default",  
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
 
@@ -191,7 +191,7 @@ function creaSidebar(parentWrapper, city) {
     btnReset.class(
         "rounded-full bg-neutral-700 text-neutral-500 cursor-not-allowed p-2",
     );
-    
+
     btnReset.elt.addEventListener("mouseenter", () => {
         Tooltip.show(
             `<span class="font-bold block">Reset map view</span>`,
@@ -209,6 +209,7 @@ function creaSidebar(parentWrapper, city) {
 
     let sbContent = createDiv()
         .parent(sidebar)
+        .id("sidebar-systems-list")
         .class("flex-1 overflow-y-auto px-1.5 py-1 custom-scrollbar");
 
     let datiCitta = getDatiCitta(city.id);
@@ -318,7 +319,7 @@ function costruisciLineaUI(line, container) {
     let isHidden = appState.hiddenLineIds && appState.hiddenLineIds.includes(line.id);
 
     let lineSummary = createElement("summary").parent(lineDetail);
-    
+
     // IMPORTANTE: Assegniamo un ID nativo per trovarlo dopo con document.getElementById
     lineSummary.id(`line-summary-${line.id}`);
 
@@ -351,7 +352,7 @@ function costruisciLineaUI(line, container) {
                 Tooltip.show(
                     `<span class="font-bold text-red-400 block">Line disabled</span>
                     <span class="text-neutral-400 font-normal">Unhide to view stations</span>`,
-                    elToggle, 
+                    elToggle,
                     {
                         placement: 'left',
                         duration: 1500,
@@ -388,14 +389,14 @@ function costruisciLineaUI(line, container) {
     let lineToggleBtn = createSpan(currentIcon)
         .parent(buttonGroup)
         .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors relative");
-    
+
     lineToggleBtn.id(`line-toggle-btn-${line.id}`);
 
     // --- ICONA ISOLA ---
     let lineIsolateBtn = createSpan(icons.isolate)
         .parent(buttonGroup)
         .class("cursor-pointer p-1 rounded-full hover:bg-black/10 transition-colors relative");
-    
+
     lineIsolateBtn.id(`line-isolate-btn-${line.id}`);
 
     // --- TOOLTIP ---
@@ -407,7 +408,7 @@ function costruisciLineaUI(line, container) {
             { placement: 'left' }
         );
     });
-    
+
     lineToggleBtn.elt.addEventListener("mouseleave", () => Tooltip.hide());
 
     lineIsolateBtn.elt.addEventListener("mouseenter", () => {
@@ -418,7 +419,7 @@ function costruisciLineaUI(line, container) {
             { placement: 'left' }
         );
     });
-    
+
     lineIsolateBtn.elt.addEventListener("mouseleave", () => Tooltip.hide());
 
     lineToggleBtn.elt.addEventListener("click", (e) => {
@@ -449,7 +450,7 @@ function toggleVisibilitaLinea(lineId) {
     if (!appState.hiddenLineIds) appState.hiddenLineIds = [];
 
     const index = appState.hiddenLineIds.indexOf(lineId);
-    
+
     if (index > -1) {
         // Era nascosto -> MOSTRA (Rimuovi da blacklist)
         appState.hiddenLineIds.splice(index, 1);
@@ -474,7 +475,7 @@ function toggleVisibilitaLinea(lineId) {
 
     const index = appState.hiddenLineIds.indexOf(lineId);
     let isNowHidden = false;
-    
+
     if (index > -1) {
         // Era nascosto -> MOSTRA
         appState.hiddenLineIds.splice(index, 1);
@@ -502,7 +503,7 @@ function isolaSoloQuestaLinea(targetLineId) {
 
     // Recupera TUTTE le linee della città corrente
     let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
-    
+
     // La nuova blacklist deve contenere TUTTI gli ID tranne quello target
     appState.hiddenLineIds = cityLines
         .map(l => l.id)
@@ -526,7 +527,7 @@ function applicaCambiamentiVisibilita() {
 
     // 2. Aggiorna UI Sidebar
     let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
-    
+
     for (let line of cityLines) {
         let isHidden = appState.hiddenLineIds.includes(line.id);
 
@@ -742,6 +743,7 @@ function updateSidebarStats() {
     }
 
     let datiCitta = getDatiCitta(appState.activeCityId);
+    let activeCityLinesCount = 0;
 
     for (let system of datiCitta) {
         // Selezione sicura tramite attributo dati (NO p5 select per evitare errori)
@@ -798,6 +800,7 @@ function updateSidebarStats() {
             if (isLineActiveInYear) {
                 lineWrapper.style("display", "block");
                 activeLinesCount++;
+                activeCityLinesCount++;
                 systemLineIds.push(line.id);
             } else {
                 lineWrapper.style("display", "none");
@@ -891,7 +894,7 @@ function updateSidebarStats() {
                                 stationsDiv,
                             );
                             stElem.class(
-                                "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate",
+                                "text-xs text-neutral-600 hover:underline hover:font-bold cursor-pointer py-1 truncate", 
                             );
                             stElem.mouseClicked(() => {
                                 if (mouseButton === LEFT) zoomSuStazione(station);
@@ -926,6 +929,36 @@ function updateSidebarStats() {
             }
         } else {
             sysDetailNative.style.display = "none";
+        }
+    }
+
+    // --- GESTIONE SIDEBAR VUOTA ---
+    let systemsList = select("#sidebar-systems-list");
+    if (systemsList) {
+        let emptyMsgId = "sidebar-empty-placeholder";
+        let existingMsg = select("#" + emptyMsgId);
+        
+        if (activeCityLinesCount === 0 && !appState.isPlaying) {
+            if (!existingMsg) {
+                let msg = createDiv()
+                    .parent(systemsList)
+                    .id(emptyMsgId)
+                    .class("flex flex-col items-center justify-center py-12 px-6 text-center gap-3 opacity-60");
+                
+                createSpan(icons.construction)
+                    .parent(msg)
+                    .class("scale-150 mb-2");
+                
+                createP("No active infrastructure found for this year.")
+                    .parent(msg)
+                    .class("text-sm font-medium text-neutral-600");
+                
+                createP("Try scrolling the timeline or clearing filters.")
+                    .parent(msg)
+                    .class("text-xs text-neutral-400 max-w-[180px]");
+            }
+        } else {
+            if (existingMsg) existingMsg.remove();
         }
     }
 }
