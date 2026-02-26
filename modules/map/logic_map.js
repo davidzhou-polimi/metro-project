@@ -25,28 +25,46 @@ function disegnaElementiMappa(cityId, cityName) {
                 let coords = parseGeometry(section.geometry);
                 
                 // --- FIX CRITICO: VALIDAZIONE COORDINATE ---
-                // Se parseGeometry fallisce o restituisce roba strana, saltiamo per evitare crash
                 if (!coords || !Array.isArray(coords) || coords.length === 0) {
                     console.warn(`Geometria invalida per sezione ${section.id}`, section.geometry);
                     continue;
                 }
                 
-                // Controllo extra: ogni punto deve essere [num, num]
                 let isValidGeo = coords.every(pt => Array.isArray(pt) && pt.length >= 2 && !isNaN(pt[0]) && !isNaN(pt[1]));
                 if (!isValidGeo) {
                     console.warn(`Coordinate corrotte per sezione ${section.id}`);
                     continue;
                 }
-                // -------------------------------------------
 
                 totalSectionsFound++;
                 
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
+
+                // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
+                if (!opening) {
+                    let inheritedOp = getInheritedLineOpening(line.id);
+                    if (inheritedOp) opening = inheritedOp;
+                }
+
+                // --- POINT 2: LIMITI RELAZIONALI (section_lines) ---
+                let relFrom = parseYear(rel.fromyear);
+                let relTo = parseYear(rel.toyear);
+
+                if (relFrom) {
+                    // Se la linea usa la sezione da un certo anno, l'apertura per QUELLA linea 
+                    // non può essere precedente a relFrom.
+                    if (!opening || opening < relFrom) opening = relFrom;
+                }
+                if (relTo) {
+                    // Se la linea smette di usare la sezione in un certo anno
+                    if (closure > relTo) closure = relTo;
+                }
                 
                 if (buildstart && buildstart < 1860) buildstart = null;
                 if (opening && opening < 1860) opening = null;
+
                 if (!opening) {
                     if (buildstart) opening = 9999;
                     else opening = endOfTime;
@@ -56,7 +74,14 @@ function disegnaElementiMappa(cityId, cityName) {
                     else buildstart = endOfTime;
                 }
 
-                allPhysicalSections.push({ lineId: line.id, coords: coords, opening: opening });
+                allPhysicalSections.push({ 
+                    lineId: line.id, 
+                    coords: coords, 
+                    opening: opening, 
+                    closure: closure,
+                    sectionId: section.id 
+                });
+                
                 for (let pt of coords) currentLinePoints.push(pt);
                 
                 featuresLinee.push({
@@ -86,7 +111,6 @@ function disegnaElementiMappa(cityId, cityName) {
 
     for (let station of cityStations) {
         let coords = parseGeometry(station.geometry);
-        // Validazione coordinate stazione
         if (!coords || isNaN(coords[0]) || isNaN(coords[1])) continue;
 
         let shouldShow = false;
@@ -109,13 +133,22 @@ function disegnaElementiMappa(cityId, cityName) {
         if (buildstart && buildstart < 1860) buildstart = null;
         if (opening && opening < 1860) opening = null;
 
+        // --- GESTIONE DATE STAZIONE (Inclusi Limiti Relazionali) ---
         if (!opening) {
             let servingLineIds = stationLines.map((sl) => sl.line_id);
-            let candidateSections = allPhysicalSections.filter((sect) => servingLineIds.includes(sect.lineId));
+            // Consideriamo solo le sezioni delle linee che passano effettivamente per la stazione
             let validDates = [];
-            for (let section of candidateSections) {
-                let dist = getDistanceFromLine(coords, section.coords);
-                if (dist < MAX_DISTANCE_THRESHOLD) validDates.push(section.opening);
+            for (let sect of allPhysicalSections) {
+                if (servingLineIds.includes(sect.lineId)) {
+                    let dist = getDistanceFromLine(coords, sect.coords);
+                    if (dist < MAX_DISTANCE_THRESHOLD) {
+                        // Verifichiamo se la station_line specifica ha un fromyear
+                        let slRel = stationLines.find(sl => sl.line_id === sect.lineId);
+                        let slFrom = slRel ? parseYear(slRel.fromyear) : null;
+                        let effectiveOp = slFrom ? Math.max(sect.opening, slFrom) : sect.opening;
+                        validDates.push(effectiveOp);
+                    }
+                }
             }
             if (validDates.length > 0) opening = Math.min(...validDates);
             else opening = endOfTime;
@@ -128,50 +161,35 @@ function disegnaElementiMappa(cityId, cityName) {
         }
 
         // --- GESTIONE CHIUSURA STAZIONE (EREDITÀ LINEE) ---
-        // Se la stazione NON ha una data di chiusura propria o la sua chiusura è > anno corrente,
-        // ma tutte le linee che la servono (le sezioni che passano per essa) sono chiuse,
-        // allora anche la stazione deve considerarsi chiusa nello stesso anno dell'ultima linea.
         if (closure === 9999) {
             let servingLineIds = stationLines.map((sl) => sl.line_id);
-            let candidateSections = allPhysicalSections.filter((sect) => servingLineIds.includes(sect.lineId));
-            
-            // Troviamo le sezioni vicine alla stazione (che effettivamente la servono)
-            let validSectionsNear = [];
-            for (let section of candidateSections) {
-                let dist = getDistanceFromLine(coords, section.coords);
-                if (dist < MAX_DISTANCE_THRESHOLD) {
-                    // Andiamo a recuperare dal db l'oggetto originale della sezione
-                    // perché in allPhysicalSections non ci siamo portati dietro la closure
-                    let originalSection = db.sections.find(s => {
-                        let parsedCoords = parseGeometry(s.geometry);
-                        return parsedCoords && parsedCoords.length === section.coords.length && parsedCoords[0][0] === section.coords[0][0];
-                    });
-                    if (originalSection) validSectionsNear.push(originalSection);
+            let isAnyLineStillOpen = false;
+            let maxClosureDetected = 0;
+            let sectionsNearCount = 0;
+
+            for (let sect of allPhysicalSections) {
+                if (servingLineIds.includes(sect.lineId)) {
+                    let dist = getDistanceFromLine(coords, sect.coords);
+                    if (dist < MAX_DISTANCE_THRESHOLD) {
+                        sectionsNearCount++;
+                        // Controlliamo il toyear della station_line
+                        let slRel = stationLines.find(sl => sl.line_id === sect.lineId);
+                        let slTo = slRel ? parseYear(slRel.toyear) : null;
+                        
+                        let effectiveClosure = sect.closure;
+                        if (slTo && slTo < effectiveClosure) effectiveClosure = slTo;
+
+                        if (!effectiveClosure || effectiveClosure >= endOfTime || effectiveClosure === 9999) {
+                            isAnyLineStillOpen = true;
+                            break;
+                        }
+                        if (effectiveClosure > maxClosureDetected) maxClosureDetected = effectiveClosure;
+                    }
                 }
             }
 
-            if (validSectionsNear.length > 0) {
-                // Calcoliano il MASSIMO anno di chiusura tra le sezioni che passano per la stazione.
-                // Se ALMENO UNA sezione è ancora aperta (closure assente o > endOfTime), 
-                // allora la stazione resta aperta.
-                let maxClosure = 0;
-                let isAnyLineStillOpen = false;
-                
-                for(let vs of validSectionsNear) {
-                    let secClosure = parseYear(vs.closure);
-                    if(!secClosure || secClosure >= endOfTime || secClosure === 9999) {
-                        isAnyLineStillOpen = true;
-                        break; // Se c'è almeno una linea aperta, la stazione vive.
-                    }
-                    if(secClosure > maxClosure) {
-                        maxClosure = secClosure;
-                    }
-                }
-
-                // Se NESSUNA linea pertinente è aperta, la stazione chiude insieme all'ultima linea.
-                if(!isAnyLineStillOpen && maxClosure > 0) {
-                    closure = maxClosure;
-                }
+            if (sectionsNearCount > 0 && !isAnyLineStillOpen && maxClosureDetected > 0) {
+                closure = maxClosureDetected;
             }
         }
 
@@ -193,6 +211,9 @@ function disegnaElementiMappa(cityId, cityName) {
     }
 
     // 3. RENDERING
+    // Salviamo globalmente per i popup:
+    appState.cityFeaturesStazioni = featuresStazioni;
+
     if (mappa.getSource("metro-lines")) mappa.removeSource("metro-lines");
     if (mappa.getSource("metro-stations")) mappa.removeSource("metro-stations");
 
@@ -580,11 +601,14 @@ function getDistanceFromLine(point, linePoints) {
 }
 
 function getStationPopupHTML(station) {
+    let currentYear = appState.currentYear || new Date().getFullYear();
+
     // 1. DATE: Usiamo ESCLUSIVAMENTE i dati della stazione cliccata (specifica della linea)
-    // Se clicco Loreto M2, voglio vedere 1969, non 1964.
-    let bStart = parseYear(station.buildstart);
-    let open = parseYear(station.opening);
-    let close = parseYear(station.closure);
+    // Cerchiamo la feature appena salvata per usare le date vere (calcolate)
+    let feature = (appState.cityFeaturesStazioni || []).find(f => f.properties.id === station.id);
+    let bStart = feature ? feature.properties.buildstart : parseYear(station.buildstart);
+    let open = feature ? feature.properties.opening : parseYear(station.opening);
+    let close = feature ? feature.properties.closure : parseYear(station.closure);
 
     // 2. SERVING LINES: Qui invece aggreghiamo per mostrare il contesto (Interscambio)
     let targetName = station.name.trim().toLowerCase();
@@ -597,8 +621,38 @@ function getStationPopupHTML(station) {
 
     let lineIds = new Set();
     for (let sib of siblingStations) {
+        // Troviamo la corrispettiva feature calcolata
+        let sibFeature = (appState.cityFeaturesStazioni || []).find(f => f.properties.id === sib.id);
+        
+        let sibB = sibFeature ? sibFeature.properties.buildstart : parseYear(sib.buildstart);
+        let sibOp = sibFeature ? sibFeature.properties.opening : parseYear(sib.opening);
+        let sibCl = sibFeature ? sibFeature.properties.closure : parseYear(sib.closure) || 9999;
+
+        // Se l'apertura effettiva non è stata calcolata o è indefinita (es: endOfTime=9999), 
+        // fallback alle date del DB.
+        let baseStart = sibOp || sibB || 0;
+        let baseEnd = sibCl;
+
         let rels = db.station_lines.filter(sl => sl.station_id === sib.id);
-        rels.forEach(r => lineIds.add(r.line_id));
+        for (let r of rels) {
+            let relFrom = parseYear(r.fromyear);
+            let relTo = parseYear(r.toyear);
+            
+            // Applichiamo i limiti di relazione line_station
+            let effectiveStart = relFrom ? Math.max(baseStart, relFrom) : baseStart;
+            let effectiveEnd = relTo ? Math.min(baseEnd, relTo) : baseEnd;
+
+            // Una linea passa dalla stazione se:
+            // 1. La stazione è aperta E la relazione è attiva in questo anno (uso effettivo)
+            // 2. OPPURE la stazione è in costruzione E stiamo per aprirla (baseStart > currentYear >= sibB se sibB c'è)
+            // Per includerla anche in fase di cantiere:
+            let isOperating = currentYear >= effectiveStart && currentYear < effectiveEnd;
+            let isConstructing = sibB && currentYear >= sibB && currentYear < effectiveStart;
+            
+            if (isOperating || isConstructing) {
+                lineIds.add(r.line_id);
+            }
+        }
     }
 
     let servingLines = [];

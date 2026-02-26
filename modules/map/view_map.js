@@ -68,6 +68,20 @@ function calcolaRangeAnni(cityId) {
         }
     }
 
+    let cityStations = db.stations.filter((s) => s.city_id === cityId);
+    for (let st of cityStations) {
+        let b = parseYear(st.buildstart);
+        let o = parseYear(st.opening);
+        if (b && b >= 1860 && b < firstEventYear) {
+            firstEventYear = b;
+            hasValidYears = true;
+        }
+        if (o && o >= 1860 && o < firstEventYear) {
+            firstEventYear = o;
+            hasValidYears = true;
+        }
+    }
+
     appState.maxYear = CURRENT_YEAR;
     appState.hasValidHistory = hasValidYears;
 
@@ -760,21 +774,37 @@ function updateSidebarStats() {
             let lineWrapper = select(`#line-wrapper-${line.id}`);
             if (!lineWrapper) continue;
 
-            let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
-            let sections = rels
-                .map((r) => db.sections.find((s) => s.id === r.section_id))
-                .filter((s) => s);
-
+            let sectionRels = db.section_lines.filter((sl) => sl.line_id === line.id);
             let kmOp = 0;
             let kmCons = 0;
             let isLineActiveInYear = false;
 
-            for (let s of sections) {
+            for (let rel of sectionRels) {
+                let s = db.sections.find((sec) => sec.id === rel.section_id);
+                if (!s) continue;
+
                 let len = s.length || 0;
                 if (len > 100) len = len / 1000;
 
                 let b = parseYear(s.buildstart);
                 let o = parseYear(s.opening);
+                let closure = parseYear(s.closure) || 9999;
+
+                // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
+                if (!o) {
+                    let inheritedOp = getInheritedLineOpening(line.id);
+                    if (inheritedOp) o = inheritedOp;
+                }
+
+                // --- POINT 2: LIMITI RELAZIONALI (section_lines) ---
+                let relFrom = parseYear(rel.fromyear);
+                let relTo = parseYear(rel.toyear);
+                if (relFrom) {
+                    if (!o || o < relFrom) o = relFrom;
+                }
+                if (relTo) {
+                    if (closure > relTo) closure = relTo;
+                }
 
                 if (b && b < 1860) b = null;
                 if (o && o < 1860) o = null;
@@ -785,9 +815,8 @@ function updateSidebarStats() {
                     else b = o;
                 }
 
-                let closure = parseYear(s.closure) || 9999;
-                let isOp = o < year && closure > year;
-                let isCons = b <= year && o >= year;
+                let isOp = o <= year && closure > year;
+                let isCons = b <= year && o > year;
 
                 if (isOp) kmOp += len;
                 if (isCons) kmCons += len;
@@ -811,9 +840,7 @@ function updateSidebarStats() {
             let statsContainer = select(`#line-stats-${line.id}`);
             if (statsContainer) {
                 let htmlParts = [];
-                // Qui dovremmo calcolare le stazioni VISIBILI per il badge (semplificato: se linea attiva, controlla stazioni)
 
-                // Ricostruiamo lista stazioni per contare quelle attive
                 let stationRels = db.station_lines.filter(
                     (sl) => sl.line_id === line.id,
                 );
@@ -826,14 +853,25 @@ function updateSidebarStats() {
                         let b = parseYear(station.buildstart);
                         let o = parseYear(station.opening);
                         let c = parseYear(station.closure) || 9999;
-                        if (b && b < 1800) b = null;
-                        if (o && o < 1800) o = null;
+
+                        // --- POINT 2: LIMITI RELAZIONALI (station_lines) ---
+                        let relFrom = parseYear(rel.fromyear);
+                        let relTo = parseYear(rel.toyear);
+                        if (relFrom) {
+                            if (!o || o < relFrom) o = relFrom;
+                        }
+                        if (relTo) {
+                            if (c > relTo) c = relTo;
+                        }
+
+                        if (b && b < 1860) b = null;
+                        if (o && o < 1860) o = null;
                         if (!o) o = endOfTime;
                         if (!b) {
                             if (o === endOfTime) b = endOfTime;
                             else b = o;
                         }
-                        if (b <= year && c > year) activeStations.push(station);
+                        if (o <= year && c > year) activeStations.push(station);
                     }
                 }
 
@@ -873,7 +911,7 @@ function updateSidebarStats() {
                 );
 
                 // In assenza di dati
-                if (sections.length === 0 && stationRels.length === 0) {
+                if (sectionRels.length === 0 && stationRels.length === 0) {
                     htmlParts.push(
                         `<span class="${commonBadgeClasses}">MISSING DATA</span>`,
                     );
@@ -943,17 +981,17 @@ function updateSidebarStats() {
                 let msg = createDiv()
                     .parent(systemsList)
                     .id(emptyMsgId)
-                    .class("flex flex-col items-center justify-center py-12 px-6 text-center gap-3 opacity-60");
+                    .class("flex flex-col items-center justify-center py-12 px-6 text-center opacity-60");
                 
-                createSpan(icons.construction)
+                createSpan(icons.info)
                     .parent(msg)
-                    .class("scale-150 mb-2");
+                    .class("scale-150 mb-5");
                 
-                createP("No active infrastructure found for this year.")
+                createP("No active systems found for this year")
                     .parent(msg)
-                    .class("text-sm font-medium text-neutral-600");
+                    .class("text-sm font-medium text-neutral-600 mb-1");
                 
-                createP("Try scrolling the timeline or clearing filters.")
+                createP("Try navigating the timeline.")
                     .parent(msg)
                     .class("text-xs text-neutral-400 max-w-[180px]");
             }
@@ -1068,6 +1106,11 @@ function ordinaStazioniNaturalmente(stations) {
 
 // --- EVENTO TASTIERA GLOBALE (SPAZIO = PLAY/PAUSE) ---
 document.addEventListener("keydown", (e) => {
+    // Non intercettare se l'utente sta digitando in un input o textarea
+    if (document.activeElement && (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "TEXTAREA")) {
+        return;
+    }
+
     // 1. Controlla se c'è una città attiva (siamo nella mappa)
     // Usiamo una verifica generica sullo stato o sulla variabile mappa
     let isMapActive = typeof appState !== "undefined" && appState.activeCityId;
@@ -1075,7 +1118,11 @@ document.addEventListener("keydown", (e) => {
     if (isMapActive && e.code === "Space") {
         e.preventDefault(); // Blocca lo scroll della pagina ("salto")
 
-        if (typeof togglePlayback === "function") {
+        // 2. Controlla che la timeline esista e sia abilitata
+        let btnPlay = document.getElementById("btn-play");
+        let isTimelineReady = btnPlay && !btnPlay.hasAttribute("disabled");
+
+        if (isTimelineReady && typeof togglePlayback === "function") {
             togglePlayback();
         }
     }

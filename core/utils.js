@@ -130,6 +130,35 @@ function isColorLight(hex) {
     return brightness > 180;  // >160 = colore chiaro
 }
 
+let _inheritedLineOpenings = null;
+function getInheritedLineOpening(lineId) {
+    if (!_inheritedLineOpenings) {
+        _inheritedLineOpenings = new Map();
+        let stationLineCount = new Map();
+        for (let rel of db.station_lines) {
+            let count = stationLineCount.get(rel.station_id) || 0;
+            stationLineCount.set(rel.station_id, count + 1);
+        }
+        for (let line of db.lines) {
+            let stRelsForLine = db.station_lines.filter(sl => sl.line_id === line.id);
+            let validStationOpenings = [];
+            for (let rel of stRelsForLine) {
+                if (stationLineCount.get(rel.station_id) === 1) {
+                    let st = db.stations.find(s => s.id === rel.station_id);
+                    if (st) {
+                        let stOp = parseYear(st.opening);
+                        if (stOp && stOp >= 1860) validStationOpenings.push(stOp);
+                    }
+                }
+            }
+            if (validStationOpenings.length > 0) {
+                _inheritedLineOpenings.set(line.id, Math.min(...validStationOpenings));
+            }
+        }
+    }
+    return _inheritedLineOpenings.get(lineId) || null;
+}
+
 /**
  * Calcola la lunghezza della rete per una città o un set di linee, opzionalmente ad un anno specifico.
  * @param {number} cityId ID della città
@@ -138,16 +167,17 @@ function isColorLight(hex) {
 function calculateNetworkLength(cityId, options = {}) {
     let { lineIds = null, year = null, formatted = false } = options;
     let targetSectionIds = new Set();
+    let relevantRels = [];
     let endOfTime = CURRENT_YEAR; // Fallback
 
     if (lineIds) {
-        let rels = db.section_lines.filter((sl) => lineIds.includes(sl.line_id));
-        rels.forEach((r) => targetSectionIds.add(r.section_id));
+        relevantRels = db.section_lines.filter((sl) => lineIds.includes(sl.line_id));
+        relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
     } else {
         let cityLines = db.lines.filter((l) => l.city_id === cityId);
         let ids = cityLines.map((l) => l.id);
-        let rels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
-        rels.forEach((r) => targetSectionIds.add(r.section_id));
+        relevantRels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
+        relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
     }
 
     let totalMeters = 0;
@@ -159,13 +189,51 @@ function calculateNetworkLength(cityId, options = {}) {
             if (year !== null) {
                 let b = parseYear(section.buildstart);
                 let o = parseYear(section.opening);
+                let closure = parseYear(section.closure) || 9999;
+
+                // Estrai le relazioni associate a QUESTA specifica sezione, limitate a quelle passate come filtro
+                let relsForThisSection = relevantRels.filter(r => r.section_id === id);
+                
+                // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
+                if (!o) {
+                    let validStationOpenings = [];
+                    for (let rel of relsForThisSection) {
+                        let inheritedOp = getInheritedLineOpening(rel.line_id);
+                        if (inheritedOp) validStationOpenings.push(inheritedOp);
+                    }
+                    if (validStationOpenings.length > 0) {
+                        o = Math.min(...validStationOpenings);
+                    }
+                }
+
+                // Se la tratta ha relazioni temporali, usiamo quelle come limiti d'intersezione minimi/massimi vitali usati dalle linee considerate
+                let minEffectiveOp = Infinity;
+                let maxEffectiveClosure = 0;
+
+                if (relsForThisSection.length > 0) {
+                    for (let rel of relsForThisSection) {
+                        let relFrom = parseYear(rel.fromyear);
+                        let relTo = parseYear(rel.toyear);
+                        
+                        let effectiveOp = o;
+                        let effectiveClosure = closure;
+
+                        if (relFrom && (!effectiveOp || effectiveOp < relFrom)) effectiveOp = relFrom;
+                        if (relTo && effectiveClosure > relTo) effectiveClosure = relTo;
+
+                        if (effectiveOp && effectiveOp < minEffectiveOp) minEffectiveOp = effectiveOp;
+                        if (effectiveClosure > maxEffectiveClosure) maxEffectiveClosure = effectiveClosure;
+                    }
+                    if (minEffectiveOp !== Infinity) o = minEffectiveOp;
+                    if (maxEffectiveClosure > 0) closure = maxEffectiveClosure;
+                }
+
                 if (b && b < 1860) b = null;
                 if (o && o < 1860) o = null;
 
                 if (!o) o = endOfTime;
                 if (!b) b = (o === endOfTime) ? endOfTime : o;
 
-                let closure = parseYear(section.closure) || 9999;
                 let isActive = o <= year && closure > year;
                 if (!isActive) meters = 0;
             }
