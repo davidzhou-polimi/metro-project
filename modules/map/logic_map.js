@@ -6,7 +6,7 @@ function disegnaElementiMappa(cityId, cityName) {
     let bounds = new mapboxgl.LngLatBounds();
     let hasData = false;
 
-    let endOfTime = appState.maxYear || 2025;
+    let endOfTime = appState.maxYear || CURRENT_YEAR;
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
     let lineCoordinatesMap = new Map();
     let allPhysicalSections = [];
@@ -617,7 +617,7 @@ function chiudiPopupCorrente() {
 function formatDateRange(start, end, isOperational) {
     let s = parseInt(start);
     let e = parseInt(end);
-    let endOfTime = appState.maxYear || 2025; 
+    let endOfTime = appState.maxYear || CURRENT_YEAR; 
 
     if (!s || isNaN(s) || s > 2050) s = "?";
     

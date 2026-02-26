@@ -204,7 +204,7 @@ function createHomeLayout() {
     slider.id("home-timeline-slider");
     slider.attribute("type", "range");
     slider.attribute("min", "1863");
-    slider.attribute("max", "2025");
+    slider.attribute("max", CURRENT_YEAR);
     slider.attribute("value", homeState.filters.year);
     slider.class("w-full metro-slider cursor-pointer");
     slider.input(() => updateHomeTimelineBackground(slider));
@@ -212,7 +212,7 @@ function createHomeLayout() {
 
     let labels = createDiv().parent(sliderWrapper).class("flex justify-between text-xs text-neutral-400 font-bold mt-1 uppercase");
     createSpan("1863").parent(labels);
-    createSpan("2025").parent(labels);
+    createSpan(CURRENT_YEAR.toString()).parent(labels);
 
     createHomeTooltip(wrapper);
 
@@ -227,7 +227,7 @@ function updateHomeTimelineBackground(slider) {
     let val = parseInt(slider.value());
     if (homeState.isPlaying) toggleHomePlayback(false); 
     
-    const min = 1863; const max = 2025;
+    const min = 1863; const max = CURRENT_YEAR;
     const perc = ((val - min) / (max - min)) * 100;
     slider.style("background", `linear-gradient(to right, #171717 ${perc}%, #D4D4D4 ${perc}%)`);
     

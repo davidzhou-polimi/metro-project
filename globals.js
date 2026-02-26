@@ -16,9 +16,10 @@ let btnBack;
 let fonts = {};
 
 // --- STATO DELL'APP ---
+const CURRENT_YEAR = new Date().getFullYear();
 let appState = {
-    currentYear: 2025,
-    maxYear: 2025,
+    currentYear: CURRENT_YEAR,
+    maxYear: CURRENT_YEAR,
     minYear: 1900,
     hiddenLineIds: [],
     activeCityId: null,

@@ -1,7 +1,7 @@
 // modules/home/logic_home_animation.js
 
 const HOME_MIN_YEAR = 1863;
-const HOME_MAX_YEAR = 2025;
+const HOME_MAX_YEAR = CURRENT_YEAR;
 
 function toggleHomePlayback(forceState) {
     let shouldPlay = forceState !== undefined ? forceState : !homeState.isPlaying;

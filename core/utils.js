@@ -138,7 +138,7 @@ function isColorLight(hex) {
 function calculateNetworkLength(cityId, options = {}) {
     let { lineIds = null, year = null, formatted = false } = options;
     let targetSectionIds = new Set();
-    let endOfTime = 2025; // Fallback
+    let endOfTime = CURRENT_YEAR; // Fallback
 
     if (lineIds) {
         let rels = db.section_lines.filter((sl) => lineIds.includes(sl.line_id));

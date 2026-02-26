@@ -72,7 +72,7 @@ function processHomeData(database) {
             name: data.raw_city.name,
             country: countryName,
             continent: continent,
-            start_year: data.start_year === 9999 ? 2025 : data.start_year,
+            start_year: data.start_year === 9999 ? CURRENT_YEAR : data.start_year,
             color: CONTINENT_COLORS_MAP[continent] || CONTINENT_COLORS_MAP['default'],
             size: 0,
             length: 0 // Verrà calcolato dinamicamente

@@ -95,7 +95,7 @@ function initializeLayout() {
 
             <div class="text-sm text-neutral-500 mt-auto">
                 <p>
-                    &copy; 2025 World Metro. Licensed under
+                    &copy; ${CURRENT_YEAR} World Metro. Licensed under
                     <a
                         href="https://creativecommons.org/licenses/by/4.0/"
                         target="_blank"

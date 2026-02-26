@@ -43,7 +43,7 @@ function inizializzaMappa(city) {
 // --- MODULO 1: UTILITY & CALCOLI ---
 function calcolaRangeAnni(cityId) {
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
-    let firstEventYear = 2025;
+    let firstEventYear = CURRENT_YEAR;
     let hasValidYears = false;
     let lineIds = new Set(cityLines.map((l) => l.id));
 
@@ -68,7 +68,7 @@ function calcolaRangeAnni(cityId) {
         }
     }
 
-    appState.maxYear = 2025;
+    appState.maxYear = CURRENT_YEAR;
     appState.hasValidHistory = hasValidYears;
 
     if (!hasValidYears) {
@@ -728,7 +728,7 @@ function updateSidebarStats() {
     if (!appState.activeCityId) return;
 
     let year = appState.currentYear;
-    let endOfTime = appState.maxYear || 2025;
+    let endOfTime = appState.maxYear || CURRENT_YEAR;
 
     // 1. HEADER DINAMICO
     let headerKm = select("#header-total-km");
