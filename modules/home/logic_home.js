@@ -106,8 +106,11 @@ function filterHomeData(data, filters) {
     filtered.forEach(item => {
         let currentKM = calculateNetworkLength(item.id, { year: year });
         item.length = currentKM;
-        item.size = Math.max(currentKM, 0.1); // Minimo 0.1 per evitar errori nel layout se == 0
+        item.size = currentKM; 
     });
+
+    // Rimuoviamo le città con 0 km operativi
+    filtered = filtered.filter(item => item.length > 0);
 
     // Ordina per dimensione (necessario per Squarify)
     filtered.sort((a, b) => b.size - a.size);

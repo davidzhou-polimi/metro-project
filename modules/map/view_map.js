@@ -58,11 +58,11 @@ function calcolaRangeAnni(cityId) {
     for (let s of citySections) {
         let b = parseYear(s.buildstart);
         let o = parseYear(s.opening);
-        if (b && b >= 1860 && b < firstEventYear) {
+        if (b && b < firstEventYear) {
             firstEventYear = b;
             hasValidYears = true;
         }
-        if (o && o >= 1860 && o < firstEventYear) {
+        if (o && o < firstEventYear) {
             firstEventYear = o;
             hasValidYears = true;
         }
@@ -72,11 +72,11 @@ function calcolaRangeAnni(cityId) {
     for (let st of cityStations) {
         let b = parseYear(st.buildstart);
         let o = parseYear(st.opening);
-        if (b && b >= 1860 && b < firstEventYear) {
+        if (b && b < firstEventYear) {
             firstEventYear = b;
             hasValidYears = true;
         }
-        if (o && o >= 1860 && o < firstEventYear) {
+        if (o && o < firstEventYear) {
             firstEventYear = o;
             hasValidYears = true;
         }

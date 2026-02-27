@@ -228,8 +228,7 @@ function calculateNetworkLength(cityId, options = {}) {
                     if (maxEffectiveClosure > 0) closure = maxEffectiveClosure;
                 }
 
-                if (b && b < 1860) b = null;
-                if (o && o < 1860) o = null;
+                // removed < 1860 check
 
                 if (!o) o = endOfTime;
                 if (!b) b = (o === endOfTime) ? endOfTime : o;

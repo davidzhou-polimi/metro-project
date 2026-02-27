@@ -62,8 +62,7 @@ function disegnaElementiMappa(cityId, cityName) {
                     if (closure > relTo) closure = relTo;
                 }
                 
-                if (buildstart && buildstart < 1860) buildstart = null;
-                if (opening && opening < 1860) opening = null;
+                // removed < 1860 checks
 
                 if (!opening) {
                     if (buildstart) opening = 9999;
@@ -130,8 +129,7 @@ function disegnaElementiMappa(cityId, cityName) {
         let opening = parseYear(station.opening);
         let closure = parseYear(station.closure) || 9999;
 
-        if (buildstart && buildstart < 1860) buildstart = null;
-        if (opening && opening < 1860) opening = null;
+        // removed < 1860 checks
 
         // --- GESTIONE DATE STAZIONE (Inclusi Limiti Relazionali) ---
         if (!opening) {
