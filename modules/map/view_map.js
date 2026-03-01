@@ -68,7 +68,14 @@ function calcolaRangeAnni(cityId) {
         }
     }
 
-    let cityStations = db.stations.filter((s) => s.city_id === cityId);
+    let filteredStationLines = db.station_lines.filter(
+        (sl) => sl.city_id === cityId && lineIds.has(sl.line_id),
+    );
+    let validStationIds = new Set(
+        filteredStationLines.map((sl) => sl.station_id),
+    );
+    let cityStations = db.stations.filter((s) => validStationIds.has(s.id));
+
     for (let st of cityStations) {
         let b = parseYear(st.buildstart);
         let o = parseYear(st.opening);
@@ -791,7 +798,7 @@ function updateSidebarStats() {
                 let closure = parseYear(s.closure) || 9999;
 
                 // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
-                if (!o) {
+                if (!o && !b) {
                     let inheritedOp = getInheritedLineOpening(line.id);
                     if (inheritedOp) o = inheritedOp;
                 }

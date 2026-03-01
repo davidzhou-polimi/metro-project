@@ -43,7 +43,7 @@ function disegnaElementiMappa(cityId, cityName) {
                 let closure = parseYear(section.closure) || 9999;
 
                 // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
-                if (!opening) {
+                if (!opening && !buildstart) {
                     let inheritedOp = getInheritedLineOpening(line.id);
                     if (inheritedOp) opening = inheritedOp;
                 }
