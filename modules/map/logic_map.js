@@ -8,15 +8,12 @@ function disegnaElementiMappa(cityId, cityName) {
 
     let endOfTime = appState.maxYear || CURRENT_YEAR;
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
-    let lineCoordinatesMap = new Map();
-    let allPhysicalSections = [];
-    let totalSectionsFound = 0;
+    // Mappa line.id -> line object per lookup rapido
+    let lineMap = new Map(cityLines.map(l => [l.id, l]));
 
     // 1. CICLO LINEE
     for (let line of cityLines) {
         let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
-        if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
-        let currentLinePoints = lineCoordinatesMap.get(line.id);
 
         for (let rel of rels) {
             let section = db.sections.find((s) => s.id === rel.section_id);
@@ -35,8 +32,6 @@ function disegnaElementiMappa(cityId, cityName) {
                     console.warn(`Coordinate corrotte per sezione ${section.id}`);
                     continue;
                 }
-
-                totalSectionsFound++;
                 
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
@@ -73,15 +68,7 @@ function disegnaElementiMappa(cityId, cityName) {
                     else buildstart = endOfTime;
                 }
 
-                allPhysicalSections.push({ 
-                    lineId: line.id, 
-                    coords: coords, 
-                    opening: opening, 
-                    closure: closure,
-                    sectionId: section.id 
-                });
-                
-                for (let pt of coords) currentLinePoints.push(pt);
+
                 
                 featuresLinee.push({
                     type: "Feature",
@@ -103,109 +90,66 @@ function disegnaElementiMappa(cityId, cityName) {
         }
     }
 
-    // 2. CICLO STAZIONI
+    // 2. CICLO STAZIONI (BINDING RELAZIONALE)
     let cityStations = db.stations.filter((s) => s.city_id === cityId);
-    let disableProximityCheck = totalSectionsFound === 0;
-    const MAX_DISTANCE_THRESHOLD = 0.02;
 
     for (let station of cityStations) {
         let coords = parseGeometry(station.geometry);
         if (!coords || isNaN(coords[0]) || isNaN(coords[1])) continue;
 
-        let shouldShow = false;
-        let stationLines = db.station_lines.filter((sl) => sl.station_id === station.id);
+        // Binding diretto: ogni stazione è già duplicata nel DB per ogni linea
+        let stationLineRel = db.station_lines.find((sl) => sl.station_id === station.id);
+        if (!stationLineRel) continue; // Stazione orfana, saltiamo
 
-        if (disableProximityCheck) {
-            shouldShow = true;
-        } else {
-            shouldShow = stationLines.some((sl) => {
-                let linePoints = lineCoordinatesMap.get(sl.line_id);
-                if (!linePoints || linePoints.length === 0) return false;
-                return getDistanceFromLine(coords, linePoints) < MAX_DISTANCE_THRESHOLD;
-            });
-        }
+        let boundLine = lineMap.get(stationLineRel.line_id);
+        if (!boundLine) continue; // Linea non presente in questa città
 
         let buildstart = parseYear(station.buildstart);
         let opening = parseYear(station.opening);
         let closure = parseYear(station.closure) || 9999;
 
-        // removed < 1860 checks
+        // --- LIMITI RELAZIONALI (station_lines) ---
+        let relFrom = parseYear(stationLineRel.fromyear);
+        let relTo = parseYear(stationLineRel.toyear);
 
-        // --- GESTIONE DATE STAZIONE (Inclusi Limiti Relazionali) ---
-        if (!opening) {
-            let servingLineIds = stationLines.map((sl) => sl.line_id);
-            // Consideriamo solo le sezioni delle linee che passano effettivamente per la stazione
-            let validDates = [];
-            for (let sect of allPhysicalSections) {
-                if (servingLineIds.includes(sect.lineId)) {
-                    let dist = getDistanceFromLine(coords, sect.coords);
-                    if (dist < MAX_DISTANCE_THRESHOLD) {
-                        // Verifichiamo se la station_line specifica ha un fromyear
-                        let slRel = stationLines.find(sl => sl.line_id === sect.lineId);
-                        let slFrom = slRel ? parseYear(slRel.fromyear) : null;
-                        let effectiveOp = slFrom ? Math.max(sect.opening, slFrom) : sect.opening;
-                        validDates.push(effectiveOp);
-                    }
-                }
-            }
-            if (validDates.length > 0) opening = Math.min(...validDates);
-            else opening = endOfTime;
+        if (relFrom) {
+            if (!opening || opening < relFrom) opening = relFrom;
+        }
+        if (relTo) {
+            if (closure > relTo) closure = relTo;
         }
 
-        if (opening === endOfTime && buildstart) opening = 9999;
+        // --- EREDITARIETÀ (solo se mancano ENTRAMBE le date) ---
+        if (!opening && !buildstart) {
+            let inheritedOp = getInheritedLineOpening(boundLine.id);
+            if (inheritedOp) opening = inheritedOp;
+        }
+
+        // --- FALLBACK DATE ---
+        if (!opening) {
+            if (buildstart) opening = 9999;
+            else opening = endOfTime;
+        }
         if (!buildstart) {
             if (opening !== endOfTime) buildstart = opening;
             else buildstart = endOfTime;
         }
 
-        // --- GESTIONE CHIUSURA STAZIONE (EREDITÀ LINEE) ---
-        if (closure === 9999) {
-            let servingLineIds = stationLines.map((sl) => sl.line_id);
-            let isAnyLineStillOpen = false;
-            let maxClosureDetected = 0;
-            let sectionsNearCount = 0;
-
-            for (let sect of allPhysicalSections) {
-                if (servingLineIds.includes(sect.lineId)) {
-                    let dist = getDistanceFromLine(coords, sect.coords);
-                    if (dist < MAX_DISTANCE_THRESHOLD) {
-                        sectionsNearCount++;
-                        // Controlliamo il toyear della station_line
-                        let slRel = stationLines.find(sl => sl.line_id === sect.lineId);
-                        let slTo = slRel ? parseYear(slRel.toyear) : null;
-                        
-                        let effectiveClosure = sect.closure;
-                        if (slTo && slTo < effectiveClosure) effectiveClosure = slTo;
-
-                        if (!effectiveClosure || effectiveClosure >= endOfTime || effectiveClosure === 9999) {
-                            isAnyLineStillOpen = true;
-                            break;
-                        }
-                        if (effectiveClosure > maxClosureDetected) maxClosureDetected = effectiveClosure;
-                    }
-                }
-            }
-
-            if (sectionsNearCount > 0 && !isAnyLineStillOpen && maxClosureDetected > 0) {
-                closure = maxClosureDetected;
-            }
-        }
-
-        if (shouldShow) {
-            featuresStazioni.push({
-                type: "Feature",
-                properties: {
-                    name: station.name,
-                    id: station.id,
-                    buildstart: buildstart,
-                    opening: opening,
-                    closure: closure,
-                },
-                geometry: { type: "Point", coordinates: coords },
-            });
-            bounds.extend(coords);
-            hasData = true;
-        }
+        featuresStazioni.push({
+            type: "Feature",
+            properties: {
+                name: station.name,
+                id: station.id,
+                lineId: boundLine.id,
+                color: fixColor(boundLine.color),
+                buildstart: buildstart,
+                opening: opening,
+                closure: closure,
+            },
+            geometry: { type: "Point", coordinates: coords },
+        });
+        bounds.extend(coords);
+        hasData = true;
     }
 
     // 3. RENDERING
@@ -218,7 +162,7 @@ function disegnaElementiMappa(cityId, cityName) {
     mappa.addSource("metro-lines", { type: "geojson", data: { type: "FeatureCollection", features: featuresLinee } });
     mappa.addSource("metro-stations", { type: "geojson", data: { type: "FeatureCollection", features: featuresStazioni } });
 
-    ["lines-construction", "lines-operational", "lines-layer-hitbox", "stations-layer"].forEach((id) => {
+    ["lines-construction", "lines-operational", "lines-layer-hitbox", "stations-construction", "stations-operational"].forEach((id) => {
         if (mappa.getLayer(id)) mappa.removeLayer(id);
     });
 
@@ -245,12 +189,46 @@ function disegnaElementiMappa(cityId, cityName) {
         layout: { visibility: initialVisibility },
         paint: { "line-width": 15, "line-opacity": 0 },
     });
+    // --- STAZIONI: Due layer separati per stato visivo ---
     mappa.addLayer({
-        id: "stations-layer",
+        id: "stations-construction",
         type: "circle",
         source: "metro-stations",
         layout: { visibility: initialVisibility },
-        paint: { "circle-radius": 4, "circle-color": "#ffffff", "circle-stroke-width": 1.5, "circle-stroke-color": "#334155" },
+        paint: { 
+            "circle-radius": [
+                "interpolate", ["linear"], ["zoom"],
+                10, 3,  // zoom out: smaller radius
+                15, 4   // zoom in: larger radius
+            ], 
+            "circle-color": "#ffffff", 
+            "circle-stroke-width": [
+                "interpolate", ["linear"], ["zoom"],
+                10, 1.5,
+                15, 2
+            ], 
+            "circle-stroke-color": "#6e7b8d" 
+        },
+    });
+    mappa.addLayer({
+        id: "stations-operational",
+        type: "circle",
+        source: "metro-stations",
+        layout: { visibility: initialVisibility },
+        paint: { 
+            "circle-radius": [
+                "interpolate", ["linear"], ["zoom"],
+                10, 3,  // zoom out: smaller radius
+                15, 4   // zoom in: larger radius
+            ], 
+            "circle-color": "#ffffff", 
+            "circle-stroke-width": [
+                "interpolate", ["linear"], ["zoom"],
+                10, 1.5,
+                15, 2
+            ], 
+            "circle-stroke-color": ["get", "color"] 
+        },
     });
 
     aggiornaFiltriCombinati();
@@ -268,7 +246,8 @@ function disegnaElementiMappa(cityId, cityName) {
                 mappa.setLayoutProperty("lines-construction", "visibility", "visible");
                 mappa.setLayoutProperty("lines-operational", "visibility", "visible");
                 mappa.setLayoutProperty("lines-layer-hitbox", "visibility", "visible");
-                mappa.setLayoutProperty("stations-layer", "visibility", "visible");
+                mappa.setLayoutProperty("stations-construction", "visibility", "visible");
+                mappa.setLayoutProperty("stations-operational", "visibility", "visible");
 
                 // Blocco vista
                 bloccaVistaConBuffer();
@@ -369,34 +348,13 @@ function aggiornaFiltriCombinati() {
         console.error("Errore update filtri linee:", e);
     }
 
-    // --- FILTRO STAZIONI (Smart) ---
-    // Nascondiamo le stazioni che non sono servite da nessuna linea visibile
-    let filterSt = ["all", condBuildStarted, condNotClosed];
-
-    if (appState.activeCityId) {
-        let cityLines = db.lines.filter(l => l.city_id === appState.activeCityId);
-        
-        // Calcola quali linee sono visibili ORA
-        let visibleLineIds = cityLines
-            .map(l => l.id)
-            .filter(id => !hiddenIds.includes(id));
-
-        // Troviamo le relazioni per queste linee
-        let visibleRelations = db.station_lines.filter(sl => visibleLineIds.includes(sl.line_id));
-        
-        // Estraiamo gli ID stazioni univoci
-        let visibleStationIds = [...new Set(visibleRelations.map(r => r.station_id))];
-
-        if (visibleStationIds.length > 0) {
-            filterSt.push(["in", ["get", "id"], ["literal", visibleStationIds]]);
-        } else {
-            // Se tutte le linee sono nascoste, nascondi tutte le stazioni
-            filterSt.push(["==", ["get", "id"], -1]);
-        }
-    }
+    // --- FILTRO STAZIONI (Semplificato via lineId binding) ---
+    const filterStOp = ["all", condIsOpened, condNotClosed, condNotHidden];
+    const filterStCons = ["all", condBuildStarted, condNotYetOpen, condNotHidden];
 
     try {
-        mappa.setFilter("stations-layer", filterSt);
+        mappa.setFilter("stations-operational", filterStOp);
+        mappa.setFilter("stations-construction", filterStCons);
     } catch (e) {}
 
     updateSidebarStats();
@@ -448,7 +406,7 @@ function aggiungiInterazioniMappa() {
     // 1. GESTIONE CLICK
     mappa.on("click", (e) => {
         let features = mappa.queryRenderedFeatures(e.point, {
-            layers: ["stations-layer", "lines-layer-hitbox"],
+            layers: ["stations-operational", "stations-construction", "lines-layer-hitbox"],
         });
 
         if (!features.length) return;
@@ -457,7 +415,7 @@ function aggiungiInterazioniMappa() {
         chiudiPopupCorrente();
 
         // --- A. CLICK SU STAZIONE ---
-        if (topFeature.layer.id === "stations-layer") {
+        if (topFeature.layer.id === "stations-operational" || topFeature.layer.id === "stations-construction") {
             let props = topFeature.properties;
             // Recuperiamo l'oggetto stazione completo dal DB usando l'ID
             let stationData = db.stations.find(s => s.id === props.id);
@@ -508,7 +466,7 @@ function aggiungiInterazioniMappa() {
     // 2. GESTIONE CURSORE (HOVER)
     mappa.on("mousemove", (e) => {
         let features = mappa.queryRenderedFeatures(e.point, {
-            layers: ["stations-layer", "lines-layer-hitbox"],
+            layers: ["stations-operational", "stations-construction", "lines-layer-hitbox"],
         });
         mappa.getCanvas().style.cursor = features.length ? "pointer" : "";
     });
@@ -585,18 +543,7 @@ function calcolaBoundsCitta(cityId) {
     return hasData ? bounds : null;
 }
 
-function getDistanceFromLine(point, linePoints) {
-    let minDistSq = Infinity;
-    let px = point[0];
-    let py = point[1];
-    for (let i = 0; i < linePoints.length; i++) {
-        let dx = px - linePoints[i][0];
-        let dy = py - linePoints[i][1];
-        let distSq = dx * dx + dy * dy;
-        if (distSq < minDistSq) minDistSq = distSq;
-    }
-    return Math.sqrt(minDistSq);
-}
+
 
 function getStationPopupHTML(station) {
     let currentYear = appState.currentYear || new Date().getFullYear();
