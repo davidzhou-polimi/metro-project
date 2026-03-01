@@ -13,6 +13,7 @@ function disegnaElementiMappa(cityId, cityName) {
     
     // Mappa per salvare le coordinate di ogni linea (per il calcolo della distanza)
     let lineCoordinatesMap = new Map();
+    let lineSectionsDataMap = new Map();
     let totalSectionsFound = 0;
 
     // 1. CICLO LINEE
@@ -21,6 +22,9 @@ function disegnaElementiMappa(cityId, cityName) {
         
         if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
         let currentLinePoints = lineCoordinatesMap.get(line.id);
+
+        if (!lineSectionsDataMap.has(line.id)) lineSectionsDataMap.set(line.id, []);
+        let currentLineSections = lineSectionsDataMap.get(line.id);
 
         for (let rel of rels) {
             let section = db.sections.find((s) => s.id === rel.section_id);
@@ -43,6 +47,9 @@ function disegnaElementiMappa(cityId, cityName) {
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
+
+                let isInstant = false;
+                if (buildstart === opening || !buildstart) isInstant = true;
 
                 // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
                 if (!opening && !buildstart) {
@@ -75,7 +82,14 @@ function disegnaElementiMappa(cityId, cityName) {
                     else buildstart = endOfTime;
                 }
 
+                if (isInstant) buildstart = opening;
 
+                currentLineSections.push({
+                    coords: coords,
+                    buildstart: buildstart,
+                    opening: opening,
+                    closure: closure
+                });
                 
                 featuresLinee.push({
                     type: "Feature",
@@ -127,6 +141,40 @@ function disegnaElementiMappa(cityId, cityName) {
         let opening = parseYear(station.opening);
         let closure = parseYear(station.closure) || 9999;
 
+        // --- NEW: Trova la sezione più vicina della linea per ereditare i limiti ---
+        let nearestSection = null;
+        let lineSections = lineSectionsDataMap.get(boundLine.id);
+        if (lineSections && lineSections.length > 0) {
+            let minDist = Infinity;
+            for (let secData of lineSections) {
+                let dist = getDistanceFromLine(coords, secData.coords);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestSection = secData;
+                }
+            }
+        }
+
+        if (nearestSection) {
+            // Se la stazione "finge" di essere costruita decenni prima (es. perché parte di un'altra linea non mostrata)
+            // forziamola a comparire solo quando iniziano i lavori sulla tratta a cui l'abbiamo legata 
+            // (oppure direttamente all'apertura se la tratta non ha cantiere)
+            if (nearestSection.buildstart && (!buildstart || buildstart < nearestSection.buildstart)) {
+                buildstart = nearestSection.buildstart;
+            }
+
+            // La stazione non può essere operativa prima o dopo la sua tratta fisica
+            if (nearestSection.opening && (!opening || opening < nearestSection.opening)) {
+                opening = nearestSection.opening;
+            }
+            if (nearestSection.closure && closure > nearestSection.closure) {
+                closure = nearestSection.closure;
+            }
+        }
+
+        let isInstant = false;
+        if (buildstart === opening || !buildstart) isInstant = true;
+
         // --- LIMITI RELAZIONALI (station_lines) ---
         let relFrom = parseYear(stationLineRel.fromyear);
         let relTo = parseYear(stationLineRel.toyear);
@@ -153,6 +201,8 @@ function disegnaElementiMappa(cityId, cityName) {
             if (opening !== endOfTime) buildstart = opening;
             else buildstart = endOfTime;
         }
+
+        if (isInstant) buildstart = opening;
 
         featuresStazioni.push({
             type: "Feature",
@@ -628,6 +678,14 @@ function getStationPopupHTML(station) {
     servingLines.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
 
     // 3. Costruzione HTML
+    let constrText = formatDateRange(bStart, open, false);
+    let operText = formatDateRange(open, close, true);
+    
+    let hasConstr = constrText !== 'N/A' && bStart !== open;
+    let hasOper = operText !== 'N/A';
+    
+    let gridCols = (hasConstr && hasOper) ? 'grid-cols-2' : 'grid-cols-1';
+
     return `
         <div class="bg-white border-4 border-neutral-900 rounded-xl min-w-[220px]">
             <!-- Header -->
@@ -653,20 +711,25 @@ function getStationPopupHTML(station) {
             </div>
 
             <!-- Date (Specifiche del record cliccato) -->
-            <div class="px-3 my-3 grid grid-cols-2 gap-3 text-sm">
+            ${(hasConstr || hasOper) ? `
+            <div class="px-3 my-3 grid ${gridCols} gap-3 text-sm">
+                ${hasConstr ? `
                 <div>
-                    <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block">CONSTR.</span>
+                    <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block">${hasOper ? 'CONSTR.' : 'CONSTRUCTION'}</span>
                     <span class="font-bold text-neutral-700 tabular-nums">
-                        ${formatDateRange(bStart, open, false)}
+                        ${constrText}
                     </span>
                 </div>
+                ` : ''}
+                ${hasOper ? `
                 <div>
                     <span class="text-[10px] font-medium text-neutral-500 uppercase tracking-widest block">OPERATIONAL</span>
                     <span class="font-bold text-neutral-700 tabular-nums">
-                        ${formatDateRange(open, close, true)}
+                        ${operText}
                     </span>
                 </div>
-            </div>
+                ` : ''}
+            </div>` : ''}
         </div>
     `;
 }
