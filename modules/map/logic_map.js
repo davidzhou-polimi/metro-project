@@ -10,10 +10,17 @@ function disegnaElementiMappa(cityId, cityName) {
     let cityLines = db.lines.filter((l) => l.city_id === cityId);
     // Mappa line.id -> line object per lookup rapido
     let lineMap = new Map(cityLines.map(l => [l.id, l]));
+    
+    // Mappa per salvare le coordinate di ogni linea (per il calcolo della distanza)
+    let lineCoordinatesMap = new Map();
+    let totalSectionsFound = 0;
 
     // 1. CICLO LINEE
     for (let line of cityLines) {
         let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
+        
+        if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
+        let currentLinePoints = lineCoordinatesMap.get(line.id);
 
         for (let rel of rels) {
             let section = db.sections.find((s) => s.id === rel.section_id);
@@ -83,26 +90,38 @@ function disegnaElementiMappa(cityId, cityName) {
                     },
                     geometry: { type: "LineString", coordinates: coords },
                 });
-                
-                coords.forEach((c) => bounds.extend(c));
+                coords.forEach((c) => {
+                    bounds.extend(c);
+                    currentLinePoints.push(c);
+                });
+                totalSectionsFound++;
                 hasData = true;
             }
         }
     }
 
-    // 2. CICLO STAZIONI (BINDING RELAZIONALE)
+    // 2. CICLO STAZIONI (BINDING RELAZIONALE + CONTROLLO SPAZIALE)
     let cityStations = db.stations.filter((s) => s.city_id === cityId);
+    let disableProximityCheck = totalSectionsFound === 0;
+    const MAX_DISTANCE_THRESHOLD = 0.02;
 
     for (let station of cityStations) {
         let coords = parseGeometry(station.geometry);
         if (!coords || isNaN(coords[0]) || isNaN(coords[1])) continue;
 
-        // Binding diretto: ogni stazione è già duplicata nel DB per ogni linea
         let stationLineRel = db.station_lines.find((sl) => sl.station_id === station.id);
         if (!stationLineRel) continue; // Stazione orfana, saltiamo
 
         let boundLine = lineMap.get(stationLineRel.line_id);
         if (!boundLine) continue; // Linea non presente in questa città
+        
+        // Verifichiamo anche che la stazione non sia un outlier (troppo distante dalla sua linea)
+        if (!disableProximityCheck) {
+            let linePoints = lineCoordinatesMap.get(boundLine.id);
+            if (!linePoints || linePoints.length === 0 || getDistanceFromLine(coords, linePoints) > MAX_DISTANCE_THRESHOLD) {
+                continue; // Stazione troppo lontana dalla sua linea fisica, considerata "fantasma" e scartata
+            }
+        }
 
         let buildstart = parseYear(station.buildstart);
         let opening = parseYear(station.opening);
@@ -148,6 +167,7 @@ function disegnaElementiMappa(cityId, cityName) {
             },
             geometry: { type: "Point", coordinates: coords },
         });
+        
         bounds.extend(coords);
         hasData = true;
     }
@@ -279,38 +299,57 @@ function disegnaElementiMappa(cityId, cityName) {
 function bloccaVistaConBuffer() {
     if (!mappa) return;
 
-    // --- FIX: Usa i bounds della città invece della vista corrente ---
-    // Se usassimo mappa.getBounds() mentre siamo zoomati, bloccheremmo la vista
-    // in quella piccola area. Usando boundsCittaCorrente ripristiniamo i limiti globali.
-    let boundsRiferimento = (typeof boundsCittaCorrente !== 'undefined' && boundsCittaCorrente && !boundsCittaCorrente.isEmpty()) 
-        ? boundsCittaCorrente 
-        : mappa.getBounds();
+    // 1. Prendiamo i bounds ATTUALI della telecamera.
+    // Siccome siamo nel "moveend" riga 264 (subito dopo fitBounds), mappa.getBounds()
+    // rappresenta la vista ESATTA (16:9 o simili) che contiene la città più i 50px di padding.
+    // Questo è il VERO box minimo proporzionale allo schermo che non fa "impazzire" Mapbox.
+    let currentViewBounds = mappa.getBounds();
 
-    // 1. Dimensioni contenitore in pixel
-    const container = mappa.getContainer();
-    const wPixel = container.clientWidth;
-    const hPixel = container.clientHeight;
-
-    // 2. Dimensioni mappa in gradi (basate sulla città intera)
-    let spanLng = boundsRiferimento.getEast() - boundsRiferimento.getWest(); 
-    let spanLat = boundsRiferimento.getNorth() - boundsRiferimento.getSouth(); 
-
-    // 3. PIXEL DI MARGINE (Buffer): 400px per lato
+    // 2. Troviamo lo span della vista in gradi
+    let viewLng = currentViewBounds.getEast() - currentViewBounds.getWest(); 
+    let viewLat = currentViewBounds.getNorth() - currentViewBounds.getSouth(); 
+    
+    // 3. PIXEL DI MARGINE ESATTI (es. 400px per lato)
     const PIXEL_BUFFER = 400; 
+    
+    // Calcoliamo quanti gradi rappresenta un pixel.
+    const container = mappa.getContainer();
+    const wPixel = container.clientWidth || window.innerWidth;
+    const hPixel = container.clientHeight || window.innerHeight;
 
-    // 4. Conversione Pixel -> Gradi (proporzionata alla città intera)
-    let bufferX = (spanLng / wPixel) * PIXEL_BUFFER;
-    let bufferY = (spanLat / hPixel) * PIXEL_BUFFER;
+    let degreesPerPixelX = viewLng / wPixel;
+    let degreesPerPixelY = viewLat / hPixel;
 
-    // 5. Creazione MaxBounds
+    // --- PADDING PROPORZIONATO (Nuova Logica) ---
+    // Invece di dare 400px slegati su X e Y (che su uno schermo largo gonfia
+    // artificialmente l'asse Y percepito in gradi), proporzioniamo il buffer 
+    // al lato maggiore dello schermo:
+    let isLandscape = wPixel > hPixel;
+    
+    // Il lato MAGGIORE riceve esattamente i 400px di buffer desiderati.
+    // Il lato MINORE riceve un buffer ridotto in proporzione all'aspect ratio.
+    let bufferPixelsX = isLandscape ? PIXEL_BUFFER : (PIXEL_BUFFER * (wPixel / hPixel));
+    let bufferPixelsY = isLandscape ? (PIXEL_BUFFER * (hPixel / wPixel)) : PIXEL_BUFFER;
+
+    let bufferX = degreesPerPixelX * bufferPixelsX;
+    let bufferY = degreesPerPixelY * bufferPixelsY;
+
+    // 4. Creazione MaxBounds espandendo la vista esatta
     let maxBounds = new mapboxgl.LngLatBounds(
-        [boundsRiferimento.getWest() - bufferX, boundsRiferimento.getSouth() - bufferY],
-        [boundsRiferimento.getEast() + bufferX, boundsRiferimento.getNorth() + bufferY]
+        [currentViewBounds.getWest() - bufferX, currentViewBounds.getSouth() - bufferY],
+        [currentViewBounds.getEast() + bufferX, currentViewBounds.getNorth() + bufferY]
     );
 
-    // 6. Applicazione Limiti
-    mappa.setMinZoom(1.5); 
+    // 5. Configurazione Limiti e riavvolgimento
+    // Il minZoom è calcolato dinamicamente per permettere un leggero margine e 
+    // far combaciare la vista massima esatta senza lo scivolamento (wiggle room).
     mappa.setMaxBounds(maxBounds);
+    
+    // Impostiamo il minZoom un po' più lontano dello zoom target di fitBounds,
+    // così l'utente può fare zoom-out fino al limite del maxBounds, ma non oltre.
+    let currentZoom = mappa.getZoom();
+    // Calcoliamo un margine ragionevole (ad es. -0.5 o basato sul PIXEL_BUFFER)
+    mappa.setMinZoom(Math.max(1.5, currentZoom - 1)); 
 }
 
 function aggiornaFiltriCombinati() {
@@ -509,41 +548,20 @@ function zoomSuStazione(station) {
     });
 }
 
-function calcolaBoundsCitta(cityId) {
-    let bounds = new mapboxgl.LngLatBounds();
-    let hasData = false;
 
-    let cityLines = db.lines.filter((l) => l.city_id === cityId);
-    let lineIds = new Set(cityLines.map((l) => l.id));
 
-    let rels = db.section_lines.filter(
-        (sl) => sl.city_id === cityId && lineIds.has(sl.line_id)
-    );
-
-    for (let rel of rels) {
-        let section = db.sections.find((s) => s.id === rel.section_id);
-        if (section && section.geometry) {
-            let coords = parseGeometry(section.geometry);
-            if (coords) {
-                coords.forEach((c) => bounds.extend(c));
-                hasData = true;
-            }
-        }
+function getDistanceFromLine(point, linePoints) {
+    let minDistSq = Infinity;
+    let px = point[0];
+    let py = point[1];
+    for (let i = 0; i < linePoints.length; i++) {
+        let dx = px - linePoints[i][0];
+        let dy = py - linePoints[i][1];
+        let distSq = dx * dx + dy * dy;
+        if (distSq < minDistSq) minDistSq = distSq;
     }
-
-    let cityStations = db.stations.filter((s) => s.city_id === cityId);
-    for (let station of cityStations) {
-        let coords = parseGeometry(station.geometry);
-        if (coords) {
-            bounds.extend(coords);
-            hasData = true;
-        }
-    }
-
-    return hasData ? bounds : null;
+    return Math.sqrt(minDistSq);
 }
-
-
 
 function getStationPopupHTML(station) {
     let currentYear = appState.currentYear || new Date().getFullYear();
