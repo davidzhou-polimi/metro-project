@@ -55,9 +55,29 @@ function calcolaRangeAnni(cityId) {
     );
     let citySections = db.sections.filter((s) => validSectionIds.has(s.id));
 
-    for (let s of citySections) {
+    // Il primo metro del mondo aprì a Londra nel 1863. Date precedenti a questa soglia
+    // sono quasi certamente dati storici non pertinenti al metro (es. tramvie, ferrovie storiche).
+    // Le scartiamo per evitare di allungare inutilmente la timeline.
+    const MIN_VALID_METRO_YEAR = 1863;
+
+    for (let sl of filteredSectionLines) {
+        let s = db.sections.find(sec => sec.id === sl.section_id);
+        if (!s) continue;
         let b = parseYear(s.buildstart);
         let o = parseYear(s.opening);
+        
+        // --- LIMITI RELAZIONALI ---
+        let relFrom = parseYear(sl.fromyear);
+        if (relFrom) {
+            if (!o || o < relFrom) {
+                o = relFrom;
+                b = relFrom;
+            }
+        }
+
+        if (b && b < MIN_VALID_METRO_YEAR) b = null;
+        if (o && o < MIN_VALID_METRO_YEAR) o = null;
+
         if (b && b < firstEventYear) {
             firstEventYear = b;
             hasValidYears = true;
@@ -71,14 +91,25 @@ function calcolaRangeAnni(cityId) {
     let filteredStationLines = db.station_lines.filter(
         (sl) => sl.city_id === cityId && lineIds.has(sl.line_id),
     );
-    let validStationIds = new Set(
-        filteredStationLines.map((sl) => sl.station_id),
-    );
-    let cityStations = db.stations.filter((s) => validStationIds.has(s.id));
 
-    for (let st of cityStations) {
+    for (let sl of filteredStationLines) {
+        let st = db.stations.find(station => station.id === sl.station_id);
+        if (!st) continue;
         let b = parseYear(st.buildstart);
         let o = parseYear(st.opening);
+        
+        // --- LIMITI RELAZIONALI ---
+        let relFrom = parseYear(sl.fromyear);
+        if (relFrom) {
+            if (!o || o < relFrom) {
+                o = relFrom;
+                b = relFrom;
+            }
+        }
+
+        if (b && b < MIN_VALID_METRO_YEAR) b = null;
+        if (o && o < MIN_VALID_METRO_YEAR) o = null;
+
         if (b && b < firstEventYear) {
             firstEventYear = b;
             hasValidYears = true;
@@ -88,6 +119,7 @@ function calcolaRangeAnni(cityId) {
             hasValidYears = true;
         }
     }
+
 
     appState.maxYear = CURRENT_YEAR;
     appState.hasValidHistory = hasValidYears;
@@ -797,6 +829,9 @@ function updateSidebarStats() {
                 let o = parseYear(s.opening);
                 let closure = parseYear(s.closure) || 9999;
 
+                let isInstant = false;
+                if (b === o || !b) isInstant = true;
+
                 // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
                 if (!o && !b) {
                     let inheritedOp = getInheritedLineOpening(line.id);
@@ -807,20 +842,27 @@ function updateSidebarStats() {
                 let relFrom = parseYear(rel.fromyear);
                 let relTo = parseYear(rel.toyear);
                 if (relFrom) {
-                    if (!o || o < relFrom) o = relFrom;
+                    if (!o || o < relFrom) {
+                        o = relFrom;
+                        // Se la linea adotta una sezione già esistente, per questa linea
+                        // non mostriamo un periodo di costruzione storico.
+                        b = relFrom;
+                    }
                 }
                 if (relTo) {
                     if (closure > relTo) closure = relTo;
                 }
 
-                if (b && b < 1860) b = null;
-                if (o && o < 1860) o = null;
+                if (b && b < 1863) b = null;
+                if (o && o < 1863) o = null;
 
                 if (!o) o = endOfTime;
                 if (!b) {
                     if (o === endOfTime) b = endOfTime;
                     else b = o;
                 }
+
+                if (isInstant) b = o;
 
                 let isOp = o <= year && closure > year;
                 let isCons = b <= year && o > year;
@@ -861,23 +903,32 @@ function updateSidebarStats() {
                         let o = parseYear(station.opening);
                         let c = parseYear(station.closure) || 9999;
 
+                        let isInstant = false;
+                        if (b === o || !b) isInstant = true;
+
                         // --- POINT 2: LIMITI RELAZIONALI (station_lines) ---
                         let relFrom = parseYear(rel.fromyear);
                         let relTo = parseYear(rel.toyear);
                         if (relFrom) {
-                            if (!o || o < relFrom) o = relFrom;
+                            if (!o || o < relFrom) {
+                                o = relFrom;
+                                b = relFrom;
+                            }
                         }
                         if (relTo) {
                             if (c > relTo) c = relTo;
                         }
 
-                        if (b && b < 1860) b = null;
-                        if (o && o < 1860) o = null;
+                        if (b && b < 1863) b = null;
+                        if (o && o < 1863) o = null;
                         if (!o) o = endOfTime;
                         if (!b) {
                             if (o === endOfTime) b = endOfTime;
                             else b = o;
                         }
+
+                        if (isInstant) b = o;
+
                         if (o <= year && c > year) activeStations.push(station);
                     }
                 }

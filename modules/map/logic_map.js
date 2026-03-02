@@ -1,6 +1,4 @@
 function disegnaElementiMappa(cityId, cityName) {
-    console.log(`--- DEBUG MAPPA: ${cityName} ---`);
-    
     let featuresLinee = [];
     let featuresStazioni = [];
     let bounds = new mapboxgl.LngLatBounds();
@@ -19,7 +17,7 @@ function disegnaElementiMappa(cityId, cityName) {
     // 1. CICLO LINEE
     for (let line of cityLines) {
         let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
-        
+
         if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
         let currentLinePoints = lineCoordinatesMap.get(line.id);
 
@@ -28,21 +26,17 @@ function disegnaElementiMappa(cityId, cityName) {
 
         for (let rel of rels) {
             let section = db.sections.find((s) => s.id === rel.section_id);
-            
+
+            if (!section) continue;
+
             if (section && section.geometry) {
                 let coords = parseGeometry(section.geometry);
                 
                 // --- FIX CRITICO: VALIDAZIONE COORDINATE ---
-                if (!coords || !Array.isArray(coords) || coords.length === 0) {
-                    console.warn(`Geometria invalida per sezione ${section.id}`, section.geometry);
-                    continue;
-                }
+                if (!coords || !Array.isArray(coords) || coords.length === 0) continue;
                 
                 let isValidGeo = coords.every(pt => Array.isArray(pt) && pt.length >= 2 && !isNaN(pt[0]) && !isNaN(pt[1]));
-                if (!isValidGeo) {
-                    console.warn(`Coordinate corrotte per sezione ${section.id}`);
-                    continue;
-                }
+                if (!isValidGeo) continue;
                 
                 let buildstart = parseYear(section.buildstart);
                 let opening = parseYear(section.opening);
@@ -64,14 +58,18 @@ function disegnaElementiMappa(cityId, cityName) {
                 if (relFrom) {
                     // Se la linea usa la sezione da un certo anno, l'apertura per QUELLA linea 
                     // non può essere precedente a relFrom.
-                    if (!opening || opening < relFrom) opening = relFrom;
+                    if (!opening || opening < relFrom) {
+                         opening = relFrom;
+                         buildstart = relFrom;
+                    }
                 }
                 if (relTo) {
                     // Se la linea smette di usare la sezione in un certo anno
                     if (closure > relTo) closure = relTo;
                 }
                 
-                // removed < 1860 checks
+                if (buildstart && buildstart < 1863) buildstart = null;
+                if (opening && opening < 1863) opening = null;
 
                 if (!opening) {
                     if (buildstart) opening = 9999;
@@ -113,6 +111,7 @@ function disegnaElementiMappa(cityId, cityName) {
             }
         }
     }
+
 
     // 2. CICLO STAZIONI (BINDING RELAZIONALE + CONTROLLO SPAZIALE)
     let cityStations = db.stations.filter((s) => s.city_id === cityId);
@@ -405,7 +404,23 @@ function bloccaVistaConBuffer() {
 function aggiornaFiltriCombinati() {
     if (!mappa) return;
     let year = appState.currentYear;
-    
+
+    // --- DIAGNOSTICA TEMPORANEA ---
+    if (mappa.getSource("metro-lines")) {
+        let features = mappa.querySourceFeatures("metro-lines");
+        if (features.length > 0 && (year === appState.minYear || year === appState.minYear + 1)) {
+            console.group(`[filtri] Anno: ${year} | minYear=${appState.minYear} | maxYear=${appState.maxYear} | hasValidHistory=${appState.hasValidHistory}`);
+            features.forEach(f => {
+                let p = f.properties;
+                let passCons = p.buildstart <= year && p.opening > year;
+                let passOp = p.opening <= year && p.closure > year;
+                console.log(`  Linea "${p.name}" sezione: buildstart=${p.buildstart}, opening=${p.opening}, closure=${p.closure} → cons=${passCons}, op=${passOp}`);
+            });
+            console.groupEnd();
+        }
+    }
+    // --- FINE DIAGNOSTICA ---
+
     // Recuperiamo la blacklist (assicurandoci che sia un array)
     let hiddenIds = appState.hiddenLineIds || [];
 

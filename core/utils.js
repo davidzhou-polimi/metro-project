@@ -224,11 +224,17 @@ function calculateNetworkLength(cityId, options = {}) {
                         if (effectiveOp && effectiveOp < minEffectiveOp) minEffectiveOp = effectiveOp;
                         if (effectiveClosure > maxEffectiveClosure) maxEffectiveClosure = effectiveClosure;
                     }
-                    if (minEffectiveOp !== Infinity) o = minEffectiveOp;
+                    if (minEffectiveOp !== Infinity) {
+                        o = minEffectiveOp;
+                        // Stessa logica: se una linea adotta una sezione storicamente esistente,
+                        // non la consideriamo in costruzione per il periodo precedente
+                        b = minEffectiveOp;
+                    }
                     if (maxEffectiveClosure > 0) closure = maxEffectiveClosure;
                 }
 
-                // removed < 1860 check
+                if (b && b < 1863) b = null;
+                if (o && o < 1863) o = null;
 
                 if (!o) o = endOfTime;
                 if (!b) b = (o === endOfTime) ? endOfTime : o;
