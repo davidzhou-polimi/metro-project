@@ -269,7 +269,7 @@ function disegnaElementiMappa(cityId, cityName) {
     mappa.addSource("metro-lines", { type: "geojson", data: { type: "FeatureCollection", features: featuresLinee } });
     mappa.addSource("metro-stations", { type: "geojson", data: { type: "FeatureCollection", features: featuresStazioni } });
 
-    ["lines-construction", "lines-operational", "lines-layer-hitbox", "stations-construction", "stations-operational"].forEach((id) => {
+    ["lines-construction", "lines-operational", "lines-layer-hitbox", "stations-construction", "stations-operational", "stations-labels"].forEach((id) => {
         if (mappa.getLayer(id)) mappa.removeLayer(id);
     });
 
@@ -337,6 +337,32 @@ function disegnaElementiMappa(cityId, cityName) {
             "circle-stroke-color": ["get", "color"] 
         },
     });
+    mappa.addLayer({
+        id: "stations-labels",
+        type: "symbol",
+        source: "metro-stations",
+        layout: {
+            visibility: initialVisibility,
+            "text-field": ["get", "name"],
+            "text-font": ["P22 Underground Book"],
+            "text-size": [
+                "interpolate", ["linear"], ["zoom"],
+                12, 14,
+                15, 16
+            ],
+            "text-offset": [
+                "interpolate", ["linear"], ["zoom"],
+                10, ["literal", [0, 0.6]], // Vicino quando la mappa è "piccola" (zoom out)
+                15, ["literal", [0, 1.0]]  // Normale quando facciamo zoom in
+            ],
+            "text-anchor": "top"
+        },
+        paint: {
+            "text-color": "#000000",
+            "text-halo-color": "#ffffff",
+            "text-halo-width": 2
+        }
+    });
 
     aggiornaFiltriCombinati();
 
@@ -355,6 +381,7 @@ function disegnaElementiMappa(cityId, cityName) {
                 mappa.setLayoutProperty("lines-layer-hitbox", "visibility", "visible");
                 mappa.setLayoutProperty("stations-construction", "visibility", "visible");
                 mappa.setLayoutProperty("stations-operational", "visibility", "visible");
+                mappa.setLayoutProperty("stations-labels", "visibility", "visible");
 
                 // Blocco vista
                 bloccaVistaConBuffer();
@@ -502,6 +529,7 @@ function aggiornaFiltriCombinati() {
     try {
         mappa.setFilter("stations-operational", filterStOp);
         mappa.setFilter("stations-construction", filterStCons);
+        mappa.setFilter("stations-labels", filterStOp);
     } catch (e) {}
 
     updateSidebarStats();
