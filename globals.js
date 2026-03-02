@@ -12,6 +12,8 @@ let layout = {
 let mappa;
 let mappaContainer;
 let boundsCittaCorrente = null;
+let maxBoundsCitta = null;   // Max bounds della città calcolati da bloccaVistaConBuffer()
+let minZoomCitta = null;     // Min zoom associato, da ripristinare dopo zoomSuStazione()
 let btnBack;
 let fonts = {};
 

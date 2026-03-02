@@ -272,7 +272,7 @@ function disegnaElementiMappa(cityId, cityName) {
         type: "line",
         source: "metro-lines",
         layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
-        paint: { "line-color": "#6e7b8d", "line-width": 5, "line-dasharray": [2, 2], "line-opacity": 0.8 },
+        paint: { "line-color": "#6e7b8d", "line-width": 5, "line-dasharray": [1, 1], "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-operational",
@@ -427,8 +427,13 @@ function bloccaVistaConBuffer() {
     // Impostiamo il minZoom un po' più lontano dello zoom target di fitBounds,
     // così l'utente può fare zoom-out fino al limite del maxBounds, ma non oltre.
     let currentZoom = mappa.getZoom();
-    // Calcoliamo un margine ragionevole (ad es. -0.5 o basato sul PIXEL_BUFFER)
-    mappa.setMinZoom(Math.max(1.5, currentZoom - 1)); 
+    let minZoom = Math.max(1.5, currentZoom - 1);
+    mappa.setMinZoom(minZoom);
+
+    // Salviamo i bounds della CITTÀ calcolati qui, così zoomSuStazione
+    // può ripristinarli senza dover ricalcolare dalla vista zoomed-in.
+    maxBoundsCitta = maxBounds;
+    minZoomCitta = minZoom;
 }
 
 function aggiornaFiltriCombinati() {
@@ -614,10 +619,8 @@ function zoomSuStazione(station) {
     // Chiudiamo eventuali popup aperti PRIMA di muoverci
     chiudiPopupCorrente();
 
-    // Sblocchiamo SOLO i confini di movimento per permettere il volo,
-    // ma MANTENIAMO il limite di zoom minimo (1.5) così non si vede il mondo minuscolo.
+    // Sblocchiamo i confini di movimento per permettere il volo verso la stazione.
     mappa.setMaxBounds(null);
-    // mappa.setMinZoom(null); <--- RIMOSSO: Questo causava il bug "dezoom infinito"
 
     toggleMapInteractions(false);
     mappa.flyTo({ center: coords, zoom: 15 });
@@ -625,9 +628,13 @@ function zoomSuStazione(station) {
     mappa.once("moveend", () => {
         toggleMapInteractions(true);
         
-        // Ri-applichiamo i limiti di movimento dopo lo zoom
-        // così l'utente non può scappare via dalla città
-        bloccaVistaConBuffer();
+        // Ripristiniamo i bounds della CITTÀ (salvati durante il caricamento iniziale),
+        // NON richiamiamo bloccaVistaConBuffer() che ricalcolerebbe dalla vista zoomed-in
+        // sulla stazione, producendo limiti errati e strettissimi.
+        if (maxBoundsCitta) {
+            mappa.setMaxBounds(maxBoundsCitta);
+            mappa.setMinZoom(minZoomCitta || 1.5);
+        }
 
         let htmlContent = getStationPopupHTML(station);
 
