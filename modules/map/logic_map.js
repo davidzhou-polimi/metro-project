@@ -149,32 +149,38 @@ function disegnaElementiMappa(cityId, cityName) {
         if (lineSections && lineSections.length > 0) {
             let stOpening = parseYear(station.opening);
 
-            let minDistCompatible = Infinity;
-            let minDistFallback = Infinity;
-            let nearestFallback = null;
-
+            let minDist = Infinity;
+            // 1. Trova la distanza minima assoluta
             for (let secData of lineSections) {
                 let dist = getDistanceFromLine(coords, secData.coords);
-
-                // Teniamo traccia della sezione più vicina in assoluto (fallback)
-                if (dist < minDistFallback) {
-                    minDistFallback = dist;
-                    nearestFallback = secData;
-                }
-
-                // Se la stazione ha un opening nel DB, escludiamo sezioni che aprono DOPO la stazione.
-                // Questo evita che una stazione terminale erediti le date dell'estensione successiva.
-                let secOp = secData.opening || 9999;
-                if (stOpening && secOp > stOpening) continue;
-
-                if (dist < minDistCompatible) {
-                    minDistCompatible = dist;
-                    nearestSection = secData;
-                }
+                if (dist < minDist) minDist = dist;
             }
 
-            // Fallback: nessuna sezione compatibile trovata → usiamo la più vicina in assoluto
-            if (!nearestSection) nearestSection = nearestFallback;
+            // 2. Raccogli tutte le sezioni entro 1e-3 gradi (~111 metri) dalla distanza minima
+            let candidates = lineSections.filter(secData => {
+                let dist = getDistanceFromLine(coords, secData.coords);
+                return dist <= minDist + 1e-3;
+            });
+
+            if (candidates.length === 1) {
+                nearestSection = candidates[0];
+            } else if (candidates.length > 1) {
+                // 3. Tra i candidati equidistanti (es. stazione di termine/scambio tra due tratte),
+                // cerchiamo quelli "compatibili" (che aprono prima o in contemporanea alla stazione)
+                let compatibleCandidates = candidates.filter(c => {
+                    let cOp = c.opening || 9999;
+                    return stOpening ? cOp <= stOpening : true; 
+                });
+
+                let setToReduce = compatibleCandidates.length > 0 ? compatibleCandidates : candidates;
+                
+                // Seleziona la più vecchia (o quella con data valida) per essere sicuri
+                nearestSection = setToReduce.reduce((prev, curr) => {
+                    let pOp = prev.opening || 9999;
+                    let cOp = curr.opening || 9999;
+                    return pOp < cOp ? prev : curr;
+                });
+            }
         }
 
         if (nearestSection) {
@@ -186,8 +192,10 @@ function disegnaElementiMappa(cityId, cityName) {
             }
 
             // La stazione non può essere operativa come metro prima della sua tratta fisica.
-            if (nearestSection.opening && (!opening || opening < nearestSection.opening)) {
-                opening = nearestSection.opening;
+            // Se la tratta non è ancora aperta (opening = 0 o undefined), consideriamola 9999
+            let secOp = nearestSection.opening || 9999;
+            if (!opening || opening < secOp) {
+                opening = secOp;
             }
 
             // La chiusura viene sempre rispettata: se la sezione fisica chiude, la stazione chiude.
@@ -272,7 +280,7 @@ function disegnaElementiMappa(cityId, cityName) {
         type: "line",
         source: "metro-lines",
         layout: { "line-join": "round", "line-cap": "round", visibility: initialVisibility },
-        paint: { "line-color": "#6e7b8d", "line-width": 5, "line-dasharray": [1, 1], "line-opacity": 0.8 },
+        paint: { "line-color": "#6e7b8d", "line-width": 5, "line-dasharray": [2, 2], "line-opacity": 0.8 },
     });
     mappa.addLayer({
         id: "lines-operational",
