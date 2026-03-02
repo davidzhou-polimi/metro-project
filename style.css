@@ -120,11 +120,13 @@ canvas {
 /* Timeline custom style */
 .metro-slider {
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 8px;
     border-radius: 8px;
     background: #D4D4D4;
     outline: none;
+    transition: background 0.3s ease-in-out;
 }
 .metro-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -136,13 +138,20 @@ canvas {
     border: 4px solid #171717;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    transition: transform 0.1s;
+    transition: transform 0.1s, border-color 0.3s ease-in-out, background-color 0.3s ease-in-out;
 }
-.metro-slider::-webkit-slider-thumb:hover {
+.metro-slider:disabled::-webkit-slider-thumb {
+    border-color: #A3A3A3;
+    background-color: #F8F8F8;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+.metro-slider:not(:disabled)::-webkit-slider-thumb:hover {
     transform: scale(1.2);
     border-color: #171717;
     cursor: grab;
 }
+
 .metro-slider::-moz-range-progress {
     background-color: #171717;
     height: 8px;
@@ -200,7 +209,7 @@ canvas {
 
     .sidebar-mobile-container .custom-scrollbar {
         overflow-y: auto;
-        flex-1: 1 1 auto;
+        flex: 1 1 auto;
     }
 
     .mobile-chevron-icon {

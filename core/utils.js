@@ -176,11 +176,18 @@ function calculateNetworkLength(cityId, options = {}) {
     let endOfTime = CURRENT_YEAR; // Fallback
 
     if (lineIds) {
-        relevantRels = db.section_lines.filter((sl) => lineIds.includes(sl.line_id));
+        let activeLineIds = lineIds;
+        if (typeof appState !== 'undefined' && appState.hiddenLineIds && appState.hiddenLineIds.length > 0) {
+            activeLineIds = lineIds.filter(id => !appState.hiddenLineIds.includes(id));
+        }
+        relevantRels = db.section_lines.filter((sl) => activeLineIds.includes(sl.line_id));
         relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
     } else {
         let cityLines = db.lines.filter((l) => l.city_id === cityId);
         let ids = cityLines.map((l) => l.id);
+        if (typeof appState !== 'undefined' && appState.hiddenLineIds && appState.hiddenLineIds.length > 0) {
+            ids = ids.filter(id => !appState.hiddenLineIds.includes(id));
+        }
         relevantRels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
         relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
     }

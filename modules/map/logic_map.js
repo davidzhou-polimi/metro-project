@@ -511,6 +511,19 @@ function resetFiltriMappa() {
     appState.hiddenLineIds = [];
     appState.currentYear = appState.maxYear;
 
+    // Chiudi popup corrente se aperto
+    if (typeof chiudiPopupCorrente === "function") {
+        chiudiPopupCorrente();
+    }
+
+    // Chiudi solo i pannelli delle LINEE aperti nella sidebar (non i sistemi principali)
+    let openDetails = document.querySelectorAll("#sidebar-systems-list details[id^='line-wrapper-'][open]");
+    openDetails.forEach(d => d.removeAttribute("open"));
+
+    // Assicurati che i pannelli dei sistemi principali siano APERTI
+    let systemDetails = document.querySelectorAll("#sidebar-systems-list details:not([id^='line-wrapper-'])");
+    systemDetails.forEach(d => d.setAttribute("open", "open"));
+
     // Aggiorna le icone visivamente
     applicaCambiamentiVisibilita();
 
@@ -619,10 +632,16 @@ function aggiungiInterazioniMappa() {
     });
 }
 
+// Variabile flag per prevenire la sovrapposizione di popup se l'utente clicca velocemente
+let lastRequestedStationId = null;
+
 function zoomSuStazione(station) {
     if (!mappa) return;
     let coords = parseGeometry(station.geometry);
     if (!coords) return;
+
+    // Registriamo questa stazione come l'ultima richiesta per cui vogliamo aprire un popup
+    lastRequestedStationId = station.id;
 
     // Chiudiamo eventuali popup aperti PRIMA di muoverci
     chiudiPopupCorrente();
@@ -643,6 +662,17 @@ function zoomSuStazione(station) {
             mappa.setMaxBounds(maxBoundsCitta);
             mappa.setMinZoom(minZoomCitta || 1.5);
         }
+
+        // --- FIX POPUP MULTIPLI ---
+        // Verifichiamo se l'utente ha cliccato un'altra stazione mentre eravamo in volo.
+        // Se sì, interrompiamo qui: l'altro 'moveend' si occuperà di aprire il popup corretto.
+        if (lastRequestedStationId !== station.id) {
+            return;
+        }
+
+        // Prima di aprire il nuovo popup, ci assicuriamo ancora una volta che 
+        // non ce ne sia uno aperto (nel caso il click sia avvenuto quasi in simultanea alla fine del volo)
+        chiudiPopupCorrente();
 
         let htmlContent = getStationPopupHTML(station);
 

@@ -186,7 +186,7 @@ function creaSidebar(parentWrapper, city) {
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-default",  
+            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-auto",  
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
 
@@ -403,7 +403,7 @@ function costruisciLineaUI(line, container) {
             let elToggle = document.getElementById(`line-toggle-btn-${line.id}`);
             if(elToggle) {
                 Tooltip.show(
-                    `<span class="font-bold text-red-400 block">Line disabled</span>
+                    `<span class="font-bold text-red-300 block">Line disabled</span>
                     <span class="text-neutral-400 font-normal">Unhide to view stations</span>`,
                     elToggle,
                     {
@@ -667,7 +667,10 @@ function creaTimeline(container) {
     slider.attribute("value", appState.minYear);
     slider.attribute("step", "1");
     slider.attribute("disabled", "true");
-    slider.class("w-full metro-slider cursor-pointer");
+    slider.class("w-full metro-slider cursor-not-allowed");
+    
+    // Inizializza il colore del background come disabilitato
+    setTimeout(() => updateTimelineBackground(slider), 10);
 
     let labels = createDiv()
         .parent(sliderWrapper)
@@ -700,6 +703,7 @@ function sbloccaControlliTimeline() {
     if (slider) {
         slider.removeAttribute("disabled");
         slider.class("w-full metro-slider cursor-pointer");
+        updateTimelineBackground(slider);
     }
 }
 
