@@ -248,8 +248,14 @@ function calculateNetworkLength(cityId, options = {}) {
                 if (b && b < 1863) b = null;
                 if (o && o < 1863) o = null;
 
-                if (!o) o = endOfTime;
-                if (!b) b = (o === endOfTime) ? endOfTime : o;
+                if (!o) {
+                    if (b) o = 9999;
+                    else o = endOfTime;
+                }
+                if (!b) {
+                    if (o !== endOfTime) b = o;
+                    else b = endOfTime;
+                }
 
                 let isActive = o <= year && closure > year;
                 if (!isActive) meters = 0;

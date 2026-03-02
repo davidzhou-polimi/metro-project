@@ -845,12 +845,11 @@ function updateSidebarStats() {
                 // --- POINT 2: LIMITI RELAZIONALI (section_lines) ---
                 let relFrom = parseYear(rel.fromyear);
                 let relTo = parseYear(rel.toyear);
+
                 if (relFrom) {
                     if (!o || o < relFrom) {
-                        o = relFrom;
-                        // Se la linea adotta una sezione già esistente, per questa linea
-                        // non mostriamo un periodo di costruzione storico.
-                        b = relFrom;
+                         o = relFrom;
+                         b = relFrom;
                     }
                 }
                 if (relTo) {
@@ -860,10 +859,13 @@ function updateSidebarStats() {
                 if (b && b < 1863) b = null;
                 if (o && o < 1863) o = null;
 
-                if (!o) o = endOfTime;
+                if (!o) {
+                    if (b) o = 9999;
+                    else o = endOfTime;
+                }
                 if (!b) {
-                    if (o === endOfTime) b = endOfTime;
-                    else b = o;
+                    if (o !== endOfTime) b = o;
+                    else b = endOfTime;
                 }
 
                 if (isInstant) b = o;
