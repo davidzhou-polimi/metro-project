@@ -147,6 +147,11 @@ function getInheritedLineOpening(lineId) {
                     let st = db.stations.find(s => s.id === rel.station_id);
                     if (st) {
                         let stOp = parseYear(st.opening);
+                        // Se la linea inizia a servire questa stazione da un anno specifico (fromyear),
+                        // usiamo il massimo tra station.opening e fromyear per non retrodatare
+                        // erroneamente la linea a un'apertura storica (es. tram) precedente.
+                        let relFromYear = parseYear(rel.fromyear);
+                        if (relFromYear && (!stOp || stOp < relFromYear)) stOp = relFromYear;
                         if (stOp && stOp >= 1860) validStationOpenings.push(stOp);
                     }
                 }

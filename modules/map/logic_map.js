@@ -140,34 +140,64 @@ function disegnaElementiMappa(cityId, cityName) {
         let opening = parseYear(station.opening);
         let closure = parseYear(station.closure) || 9999;
 
-        // --- NEW: Trova la sezione più vicina della linea per ereditare i limiti ---
+        // --- Trova la sezione più vicina della linea per ereditare i limiti ---
+        // Strategia: preferiamo sezioni la cui opening sia <= quella della stazione nel DB
+        // (evita che una stazione terminale venga abbinata all'estensione successiva più giovane).
+        // Se nessuna sezione compatibile esiste, fallback alla più vicina in assoluto.
         let nearestSection = null;
         let lineSections = lineSectionsDataMap.get(boundLine.id);
         if (lineSections && lineSections.length > 0) {
-            let minDist = Infinity;
+            let stOpening = parseYear(station.opening);
+
+            let minDistCompatible = Infinity;
+            let minDistFallback = Infinity;
+            let nearestFallback = null;
+
             for (let secData of lineSections) {
                 let dist = getDistanceFromLine(coords, secData.coords);
-                if (dist < minDist) {
-                    minDist = dist;
+
+                // Teniamo traccia della sezione più vicina in assoluto (fallback)
+                if (dist < minDistFallback) {
+                    minDistFallback = dist;
+                    nearestFallback = secData;
+                }
+
+                // Se la stazione ha un opening nel DB, escludiamo sezioni che aprono DOPO la stazione.
+                // Questo evita che una stazione terminale erediti le date dell'estensione successiva.
+                let secOp = secData.opening || 9999;
+                if (stOpening && secOp > stOpening) continue;
+
+                if (dist < minDistCompatible) {
+                    minDistCompatible = dist;
                     nearestSection = secData;
                 }
             }
+
+            // Fallback: nessuna sezione compatibile trovata → usiamo la più vicina in assoluto
+            if (!nearestSection) nearestSection = nearestFallback;
         }
 
         if (nearestSection) {
-            // Se la stazione "finge" di essere costruita decenni prima (es. perché parte di un'altra linea non mostrata)
-            // forziamola a comparire solo quando iniziano i lavori sulla tratta a cui l'abbiamo legata 
-            // (oppure direttamente all'apertura se la tratta non ha cantiere)
+            // Se la stazione "finge" di essere costruita decenni prima (es. perché parte di un'altra linea
+            // non metro: tram, ferroviaria…), la forziamo a comparire solo quando inizia il cantiere
+            // della tratta metro a cui l'abbiamo legata.
             if (nearestSection.buildstart && (!buildstart || buildstart < nearestSection.buildstart)) {
                 buildstart = nearestSection.buildstart;
             }
 
-            // La stazione non può essere operativa prima o dopo la sua tratta fisica
+            // La stazione non può essere operativa come metro prima della sua tratta fisica.
             if (nearestSection.opening && (!opening || opening < nearestSection.opening)) {
                 opening = nearestSection.opening;
             }
+
+            // La chiusura viene sempre rispettata: se la sezione fisica chiude, la stazione chiude.
             if (nearestSection.closure && closure > nearestSection.closure) {
                 closure = nearestSection.closure;
+            }
+
+            // Salvaguardia: buildstart non dev'essere mai successiva all'opening operativo.
+            if (buildstart && opening && buildstart > opening) {
+                buildstart = opening;
             }
         }
 
