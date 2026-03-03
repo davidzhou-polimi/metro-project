@@ -370,8 +370,18 @@ const Tooltip = {
             this.timer = null;
         }
 
-        this.element.classList.remove('opacity-100', 'visible');
-        this.element.classList.add('opacity-0', 'invisible');
+        // Iniziamo la transizione di opacità
+        this.element.classList.remove('opacity-100');
+        this.element.classList.add('opacity-0');
+
+        // Aspettiamo che la transizione finisca (150ms come definito in init) 
+        // prima di rendere l'elemento 'invisible' per evitare che sparisca di colpo
+        setTimeout(() => {
+            if (this.element.classList.contains('opacity-0')) {
+                this.element.classList.remove('visible');
+                this.element.classList.add('invisible');
+            }
+        }, 150);
     },
 
     // Aggiornato per ricevere i dati di posizione e calcolare il centro reale

@@ -479,14 +479,14 @@ function aggiornaFiltriCombinati() {
     if (mappa.getSource("metro-lines")) {
         let features = mappa.querySourceFeatures("metro-lines");
         if (features.length > 0 && (year === appState.minYear || year === appState.minYear + 1)) {
-            console.group(`[filtri] Anno: ${year} | minYear=${appState.minYear} | maxYear=${appState.maxYear} | hasValidHistory=${appState.hasValidHistory}`);
+            // console.group(`[filtri] Anno: ${year} | minYear=${appState.minYear} | maxYear=${appState.maxYear} | hasValidHistory=${appState.hasValidHistory}`);
             features.forEach(f => {
                 let p = f.properties;
                 let passCons = p.buildstart <= year && p.opening > year;
                 let passOp = p.opening <= year && p.closure > year;
-                console.log(`  Linea "${p.name}" sezione: buildstart=${p.buildstart}, opening=${p.opening}, closure=${p.closure} → cons=${passCons}, op=${passOp}`);
+                // console.log(`  Linea "${p.name}" sezione: buildstart=${p.buildstart}, opening=${p.opening}, closure=${p.closure} → cons=${passCons}, op=${passOp}`);
             });
-            console.groupEnd();
+            // console.groupEnd();
         }
     }
     // --- FINE DIAGNOSTICA ---

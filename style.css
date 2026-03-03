@@ -185,54 +185,76 @@ canvas {
   display: none;             /* Chrome/Safari */
 }
 
-/* Nasconde la chevron su desktop */
-.lg\:hidden {
+/* Nasconde elementi solo su mobile */
+.md\:hidden {
     display: none;
 }
 
-@media (max-width: 1023px) {
-    .lg\:hidden {
+@media (max-width: 767px) {
+    .md\:hidden {
         display: block;
     }
+}
 
-    /* Altezza iniziale ridotta su mobile */
-    .sidebar-mobile-container {
-        height: auto;
-        max-height: 110px; /* Mostra solo l'header */
+/* --- MOBILE HORIZONTAL SLIDER --- */
+
+/* Lo slider è 200% largo su mobile: tiene [Map | List] affiancati */
+.mobile-slider {
+    width: 200%;
+}
+
+/* Ogni panel occupa il 50% dello slider = 100% del viewport */
+.mobile-panel-map,
+.mobile-panel-sidebar {
+    width: 50%;
+}
+
+/* Su desktop: slider torna a larghezza normale, layout flex-row affiancato */
+@media (min-width: 768px) {
+    .mobile-slider {
+        width: 100% !important;
+        transform: translateX(0) !important;
+        gap: 1rem;
+    }
+
+    .mobile-panel-map {
+        flex: 1;
+        min-width: 0;
+        width: auto !important;
+    }
+
+    .mobile-panel-sidebar {
+        width: 333px !important;
         flex-shrink: 0;
     }
-
-    .sidebar-mobile-container.mobile-expanded {
-        max-height: 42vh; /* Altezza fino a cui si espande la sidebar su mobile */
-        flex-grow:1
-    }
-
-    .sidebar-mobile-container .custom-scrollbar {
-        overflow-y: auto;
-        flex: 1 1 auto;
-    }
-
-    .mobile-chevron-icon {
-        display: inline-block;
-        transform: rotate(0deg);
-        transition: transform 0.3s ease;
-    }
-    .mobile-chevron-icon.rotate-180 {
-        transform: rotate(-180deg);
-    }
+}
+/* --- ACCORDION TRANSITIONS --- */
+.accordion-item {
+    display: flex;
+    flex-direction: column;
 }
 
-@media (max-width: 767px) {
-    /* Home Search Mobile Expansion - Logic now in Tailwind classes */
+.accordion-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-in-out;
+    overflow: hidden;
 }
-    
-/* Reset automatico se si allarga lo schermo */
-@media (min-width: 1024px) {
-    .sidebar-mobile-container {
-        max-height: 100% !important;
-        height: 100% !important;
-    }
-    .mobile-chevron-icon {
-        display: none !important;
-    }
+
+.accordion-item.is-open > .accordion-content {
+    grid-template-rows: 1fr;
+}
+
+.accordion-inner {
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Chevron: controllato da is-open invece di group-open: (open non viene rimosso) */
+.accordion-chevron {
+    transition: transform 0.28s ease-out !important;
+    transform: rotate(-90deg) !important;
+}
+.accordion-item.is-open > summary .accordion-chevron {
+    transform: rotate(0deg) !important;
 }

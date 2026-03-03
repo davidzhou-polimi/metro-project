@@ -23,17 +23,34 @@ function inizializzaMappa(city) {
     let container = getContentContainer();
     container.html("");
     container.class(
-        "min-h-[calc(100vh-4.5rem)] lg:h-[calc(100vh-4.5rem)] flex flex-col p-4 overflow-hidden",
+        "h-[calc(100dvh-4.5rem)] flex flex-col p-4 gap-2 overflow-hidden",
     );
 
-    let contentWrapper = createDiv()
+    // Viewport: contiene lo slider e fa da maschera (overflow hidden)
+    let viewport = createDiv()
         .parent(container)
-        .class(
-            "flex flex-col lg:flex-row flex-1 min-h-0 gap-4 overflow-hidden relative",
-        );
+        .class("flex-1 min-h-0 overflow-hidden");
 
-    let mapWrapper = creaContenitoreMappa(contentWrapper);
-    let sidebar = creaSidebar(contentWrapper, city);
+    // Slider: 200% largo su mobile (Map | List), full-width flex-row su desktop
+    let slider = createDiv()
+        .parent(viewport)
+        .class("mobile-slider flex flex-row h-full transition-transform duration-[350ms] ease-in-out");
+
+    // Panel sinistra: Mappa
+    let mapPanel = createDiv()
+        .parent(slider)
+        .class("mobile-panel-map h-full flex-shrink-0");
+
+    // Panel destra: Sidebar (inizialmente fuori schermo su mobile)
+    let sidebarPanel = createDiv()
+        .parent(slider)
+        .class("mobile-panel-sidebar h-full flex-shrink-0 overflow-hidden");
+
+    let mapWrapper = creaContenitoreMappa(mapPanel);
+    creaSidebar(sidebarPanel, city);
+
+    // Tab bar: visibile solo su mobile, tra viewport e timeline
+    creaTabBar(container, slider.elt);
     creaTimeline(container);
 
     lineCoordinatesMap = new Map();
@@ -146,7 +163,7 @@ function calcolaLunghezzaRete(cityId, systemLineIds = null, year = null) {
 function creaContenitoreMappa(parentWrapper) {
     let wrapper = createDiv().parent(parentWrapper);
     wrapper.class(
-        "w-full lg:w-3/4 h-[40vh] lg:h-full rounded-xl overflow-hidden relative bg-neutral-50 shadow-sm flex-shrink-0 lg:flex-shrink",
+        "w-full h-full rounded-xl overflow-hidden relative bg-neutral-50 shadow-sm",
     );
 
     let loaderDiv = createDiv().parent(wrapper);
@@ -180,24 +197,15 @@ function creaContenitoreMappa(parentWrapper) {
 function creaSidebar(parentWrapper, city) {
     let sidebar = createDiv().parent(parentWrapper);
     sidebar.class(
-        "w-full lg:w-1/4 lg:h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col flex-1 shadow-lg overflow-hidden transition-[max-height] duration-500 ease-in-out sidebar-mobile-container",
+        "w-full h-full bg-white rounded-2xl border-[6px] border-neutral-900 flex flex-col shadow-lg overflow-hidden",
     );
 
     let sbHeader = createDiv()
         .parent(sidebar)
         .class(
-            "px-3 pt-0 lg:pt-3 pb-4 bg-neutral-900 flex justify-between items-center cursor-pointer lg:cursor-auto",  
+            "px-3 pt-3 pb-4 bg-neutral-900 flex justify-between items-center",
         );
     let titleContainer = createDiv().parent(sbHeader).class("flex flex-col");
-
-    let titleRow = createDiv()
-        .parent(titleContainer)
-        .class("flex items-center gap-2");
-    let mobileChevron = createSpan(icons.chevron)
-        .parent(titleRow)
-        .class(
-            "text-neutral-50 transition-transform duration-300 lg:hidden mobile-chevron-icon -rotate-90",
-        );
 
     createElement("h2", city.name)
         .parent(titleContainer)
@@ -208,21 +216,13 @@ function creaSidebar(parentWrapper, city) {
     createElement("div", city.country)
         .parent(titleContainer)
         .class(
-            "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1 lg:ml-0 ml-7",
+            "text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1",
         );
-
-    sbHeader.mouseClicked(() => {
-        if (mouseButton !== LEFT) return;
-        if (window.innerWidth < 1024) {
-            sidebar.toggleClass("mobile-expanded");
-            mobileChevron.toggleClass("rotate-0");
-        }
-    });
 
     let kmTotali = calcolaLunghezzaRete(city.id);
     let statsDiv = createDiv()
         .parent(titleContainer)
-        .class("flex items-center gap-2 mt-2 lg:ml-0 ml-7");
+        .class("flex items-center gap-2 mt-2");
 
     createSpan("NETWORK LENGTH")
         .parent(statsDiv)
@@ -249,7 +249,7 @@ function creaSidebar(parentWrapper, city) {
         Tooltip.show(
             `<span class="font-bold block">Reset map view</span>`,
             btnReset.elt,
-            { placement: 'bottom' }
+            { placement: 'bottom', duration: 1500 }
         );
     });
     btnReset.elt.addEventListener("mouseleave", () => Tooltip.hide());
@@ -298,27 +298,84 @@ function creaSidebar(parentWrapper, city) {
     return sidebar;
 }
 
+// Reset slider su desktop se la finestra viene allargata
 window.addEventListener("resize", () => {
-    if (window.innerWidth >= 1024) {
-        let sidebar = select(".sidebar-mobile-container");
-        let chevron = select(".mobile-chevron-icon");
-        if (sidebar) sidebar.removeClass("mobile-expanded");
-        if (chevron) chevron.removeClass("rotate-0");
+    if (window.innerWidth >= 768) {
+        let slider = document.querySelector(".mobile-slider");
+        if (slider) slider.style.transform = "translateX(0)";
     }
 });
+
+// --- Tab Bar Mobile ---
+function creaTabBar(container, sliderEl) {
+    let tabBar = createDiv()
+        .parent(container)
+        .class("md:hidden flex items-center bg-neutral-900 rounded-xl mt-2 p-[6px] gap-1.5");
+
+    const BASE = "flex-1 py-2 px-4 rounded-lg text-sm font-bold transition-[background-color] duration-200 border-none cursor-pointer";
+    const ACTIVE = `${BASE} bg-white text-neutral-900`;
+    const INACTIVE = `${BASE} bg-transparent text-neutral-100`;
+
+    let mapBtn = createButton("Map").parent(tabBar);
+    let listBtn = createButton("List").parent(tabBar);
+
+    function setTab(index) {
+        mapBtn.elt.className = index === 0 ? ACTIVE : INACTIVE;
+        listBtn.elt.className = index === 1 ? ACTIVE : INACTIVE;
+        sliderEl.style.transform = index === 0 ? "translateX(0)" : "translateX(-50%)";
+    }
+
+    setTab(0); // Map selezionata di default
+
+    mapBtn.mouseClicked(() => { if (mouseButton === LEFT) setTab(0); });
+    listBtn.mouseClicked(() => { if (mouseButton === LEFT) setTab(1); });
+
+    return tabBar;
+}
+
+// --- Animazione Accordion per <details> ---
+// Strategia: 'open' viene impostato alla prima apertura e NON rimosso mai.
+// La visibilità del contenuto è gestita solo da is-open + grid-template-rows.
+// La chevron usa la classe accordion-chevron, anch'essa legata a is-open via CSS.
+function animateDetails(detailsEl, forceOpen = null) {
+    const isCurrentlyOpen = detailsEl.classList.contains("is-open");
+    const shouldOpen = forceOpen !== null ? forceOpen : !isCurrentlyOpen;
+
+    if (shouldOpen && !isCurrentlyOpen) {
+        // Prima apertura: serve impostare open per rendere il contenuto disponibile nel DOM
+        if (!detailsEl.hasAttribute("open")) {
+            detailsEl.setAttribute("open", "");
+        }
+        // Prossimo frame: aggiunge is-open per triggare la transizione 0fr->1fr
+        requestAnimationFrame(() => {
+            detailsEl.classList.add("is-open");
+        });
+    } else if (!shouldOpen && isCurrentlyOpen) {
+        // Chiudi: rimuovi solo is-open. open rimane → il contenuto resta nel DOM.
+        // Cosi' transizioni future partono sempre da uno stato definito.
+        detailsEl.classList.remove("is-open");
+    }
+}
 
 function costruisciSistemaUI(system, container) {
     let sysDetail = createElement("details")
         .parent(container)
-        .class("group");
-    sysDetail.attribute("open", "true");
+        .class("group accordion-item");
+    sysDetail.attribute("open", "");
+    sysDetail.elt.classList.add("is-open"); // Parte aperto: inizializza subito la classe
 
     sysDetail.attribute("data-system-name", system.name);
 
     let sysSummary = createElement("summary").parent(sysDetail);
     sysSummary.class(
-        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 pt-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2",
+        "group/dropdown cursor-pointer font-bold text-neutral-900 px-1.5 pt-3 hover:text-neutral-700 transition-colors duration-300 select-none flex flex-row justify-between items-center gap-2",
     );
+
+    // Intercetta il click: previeni default browser e anima manualmente
+    sysSummary.elt.addEventListener("click", (e) => {
+        e.preventDefault();
+        animateDetails(sysDetail.elt);
+    });
 
     let leftSide = createDiv()
         .parent(sysSummary)
@@ -326,7 +383,7 @@ function costruisciSistemaUI(system, container) {
 
     createSpan(icons.chevron)
         .class(
-            "-rotate-90 group-open:rotate-0 transition duration-300 ease-out",
+            "accordion-chevron transition",
         )
         .parent(leftSide);
 
@@ -351,7 +408,9 @@ function costruisciSistemaUI(system, container) {
         .parent(rightSide)
         .class("text-xs font-normal text-neutral-400");
 
-    let linesDiv = createDiv().parent(sysDetail).class("flex flex-col gap-2 pt-3 pb-2");
+    let sysAccordion = createDiv().parent(sysDetail).class("accordion-content");
+    let sysAccordionInner = createDiv().parent(sysAccordion).class("accordion-inner");
+    let linesDiv = createDiv().parent(sysAccordionInner).class("flex flex-col gap-2 pt-3 pb-2");
 
     for (let line of system.lines) {
         costruisciLineaUI(line, linesDiv);
@@ -361,7 +420,7 @@ function costruisciSistemaUI(system, container) {
 function costruisciLineaUI(line, container) {
     let lineDetail = createElement("details")
         .parent(container)
-        .class("group/line relative");
+        .class("group/line relative accordion-item");
 
     lineDetail.id("line-wrapper-" + line.id);
 
@@ -384,11 +443,11 @@ function costruisciLineaUI(line, container) {
         .style("color", useBlack ? "#000000" : "#ffffff");
 
     lineSummary.elt.addEventListener("click", (e) => {
+        e.preventDefault(); // Blocca sempre il toggle nativo
         // Verifica stato corrente (non solo quello all'avvio)
         let currentHidden = appState.hiddenLineIds && appState.hiddenLineIds.includes(line.id);
 
         if (currentHidden) {
-            e.preventDefault(); // BLOCCA L'APERTURA
             e.stopPropagation();
 
             // 1. Aggiungi animazione shake
@@ -412,6 +471,9 @@ function costruisciLineaUI(line, container) {
                     }
                 );
             }
+        } else {
+            // Linea visibile: anima l'apertura/chiusura
+            animateDetails(lineDetail.elt);
         }
     });
 
@@ -425,7 +487,7 @@ function costruisciLineaUI(line, container) {
 
     createSpan(icons.chevron)
         .parent(leftSideGroup)
-        .class("-rotate-90 group-open/line:rotate-0 transition duration-300 ease-out");
+        .class("accordion-chevron transition");
 
     createSpan(line.name)
         .parent(leftSideGroup)
@@ -458,7 +520,7 @@ function costruisciLineaUI(line, container) {
             `<span class="font-bold block">Hide/Show line</span>
             <span class="text-neutral-400 font-normal">Toggle line visibility</span>`,
             lineToggleBtn.elt,
-            { placement: 'left' }
+            { placement: 'left', duration: 1500 }
         );
     });
 
@@ -469,7 +531,7 @@ function costruisciLineaUI(line, container) {
             `<span class="font-bold block">Isolate line</span>
             <span class="text-neutral-400 font-normal">Hide all other lines</span>`,
             lineIsolateBtn.elt,
-            { placement: 'left' }
+            { placement: 'left', duration: 1500 }
         );
     });
 
@@ -493,9 +555,11 @@ function costruisciLineaUI(line, container) {
     statsContainer.id(`line-stats-${line.id}`);
     statsContainer.class("w-full grid grid-cols-3 gap-1.5");
 
-    let stationsDiv = createDiv().parent(lineDetail);
+    let lineAccordion = createDiv().parent(lineDetail).class("accordion-content");
+    let lineAccordionInner = createDiv().parent(lineAccordion).class("accordion-inner");
+    let stationsDiv = createDiv().parent(lineAccordionInner);
     stationsDiv.id(`stations-list-${line.id}`);
-    stationsDiv.class("pl-6 border-l-2 border-neutral-200 ml-5 mt-2 space-y-1");
+    stationsDiv.class("pl-5 border-l-2 border-neutral-200 ml-5 mt-2 pt-1 space-y-1");
 }
 
 // Funzione 1: Toggle semplice (Click)
@@ -539,11 +603,11 @@ function toggleVisibilitaLinea(lineId) {
         isNowHidden = true;
     }
 
-    // --- LOGICA AUTO-CLOSE: Se nascondo, chiudo il dettaglio ---
+    // --- LOGICA AUTO-CLOSE: Se nascondo, chiudo il dettaglio con animazione ---
     if (isNowHidden) {
         let details = document.getElementById(`line-wrapper-${lineId}`);
         if (details && details.hasAttribute("open")) {
-            details.removeAttribute("open");
+            animateDetails(details, false);
         }
     }
 
@@ -562,11 +626,11 @@ function isolaSoloQuestaLinea(targetLineId) {
         .map(l => l.id)
         .filter(id => id !== targetLineId);
 
-    // Chiudi tutti i pannelli delle linee appena nascoste
+    // Chiudi tutti i pannelli delle linee appena nascoste (con animazione)
     for (let line of cityLines) {
         if (line.id !== targetLineId) {
             let details = document.getElementById(`line-wrapper-${line.id}`);
-            if (details) details.removeAttribute("open");
+            if (details) animateDetails(details, false);
         }
     }
 
@@ -616,7 +680,7 @@ function creaTimeline(container) {
     let timelineWrapper = createDiv()
         .parent(container)
         .class(
-            "w-full px-4 pb-4 md:pt-3 mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8",
+            "w-full px-4 pb-4 md:pt-3 mt-2 md:mt-6 bg-white/50 rounded-xl flex flex-col md:flex-row items-center shrink-0 md:gap-8",
         );
 
     if (!appState.hasValidHistory) {

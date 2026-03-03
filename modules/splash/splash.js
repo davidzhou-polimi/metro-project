@@ -217,7 +217,7 @@ function createSplashUI(container) {
   titleElem.parent(splashUIContainer);
   titleElem.style("opacity", "0");
   titleElem.class(
-    "font-underground font-semibold leading-tight text-4xl md:text-6xl lg:text-8xl select-none text-center text-neutral-900 mb-4 transition-opacity duration-1000 ease-out"
+    "font-underground font-semibold leading-tight text-4xl sm:text-6xl md:text-8xl select-none text-center text-neutral-900 mb-4 transition-opacity duration-1000 ease-out"
   );
 
   // DESCRIZIONE

@@ -29,7 +29,7 @@ function initHomeData() {
 function setupHome() {
     let container = getContentContainer();
     container.html("");
-    container.class("h-[calc(100vh-4.5rem)] max-h-screen flex flex-col p-4 overflow-hidden");
+    container.class("h-[calc(100dvh-4.5rem)] flex flex-col p-4 overflow-hidden");
     document.title = "Home – World Metro";
     
     // Reset Variabili (non resettiamo l'anno per permettere persistenza)
