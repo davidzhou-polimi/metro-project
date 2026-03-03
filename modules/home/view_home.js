@@ -47,7 +47,7 @@ function createHomeLayout() {
     homeState.uiElements.searchInput = input;
 
     let cancelBtn = createButton('Cancel').parent(searchWrapper);
-    cancelBtn.class("flex items-center justify-center px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0 pt-[1px] cursor-pointer md:text-transparent md:hover:no-underline md:w-10 md:flex transition-all duration-200 [.search-active_&]:flex hidden");
+    cancelBtn.class("items-center justify-center px-3 h-full text-xs font-bold text-neutral-600 hover:underline shrink-0 pt-[1px] cursor-pointer md:text-transparent md:hover:no-underline md:w-10 transition-all duration-200");
     homeState.uiElements.cancelBtn = cancelBtn;
 
     searchIconDiv.mouseClicked(() => {
@@ -60,7 +60,7 @@ function createHomeLayout() {
                 input.removeClass("opacity-0");
                 input.elt.focus();
             }, 50); 
-            cancelBtn.removeClass("hidden");
+            updateCancelBtnState();
         }
     });
 
@@ -69,7 +69,7 @@ function createHomeLayout() {
         mainControlRow.addClass("gap-2");
         input.addClass("opacity-0");
         setTimeout(() => input.addClass("invisible"), 300);
-        cancelBtn.addClass("hidden");
+        updateCancelBtnState();
     };
 
     cancelBtn.mouseClicked(() => {
@@ -99,21 +99,20 @@ function createHomeLayout() {
 
         if (hasText) {
             cancelBtn.html(icons.close);
-            cancelBtn.addClass('md:text-neutral-600'); // Forza colore icona su desktop
+            cancelBtn.addClass('md:text-neutral-600'); 
             cancelBtn.removeClass('md:text-transparent');
-            cancelBtn.removeClass('hidden'); // Sempre visibile se c'è testo
+            cancelBtn.style('display', 'flex');
         } else {
-            // Su desktop, usiamo stringa vuota per evitare che 'Cancel' appaia durante la transizione
             cancelBtn.html(isDesktop ? '' : 'Cancel');
-            
             cancelBtn.addClass('md:text-transparent');
             cancelBtn.removeClass('md:text-neutral-600');
             
-            // Su mobile nascondiamo se non attivo, su desktop lo teniamo "disattivato" (trasparente)
-            if (windowWidth < 768 && !mainControlRow.hasClass("search-active")) {
-                cancelBtn.addClass('hidden');
+            // Su mobile lo mostriamo se la ricerca è attiva (per il tasto Cancel)
+            // Su desktop lo nascondiamo SEMPRE se non c'è testo per liberare spazio nell'input
+            if (isDesktop || (windowWidth < 768 && !mainControlRow.hasClass("search-active"))) {
+                cancelBtn.style('display', 'none');
             } else {
-                cancelBtn.removeClass('hidden');
+                cancelBtn.style('display', 'flex');
             }
         }
     };
