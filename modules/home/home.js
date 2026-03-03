@@ -33,8 +33,8 @@ function setupHome() {
     document.title = "Home – World Metro";
     
     // Reset Variabili (non resettiamo l'anno per permettere persistenza)
-    homeState.filters.continent = null;
-    homeState.filters.search = "";
+    // homeState.filters.continent = null;
+    // homeState.filters.search = "";
     homeState.hoveredNode = null;
 
     if (homeState.processedData.length === 0) {

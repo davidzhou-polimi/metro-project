@@ -32,6 +32,12 @@ function createHomeLayout() {
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.attribute('name', 'search');
     input.class("flex-1 h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 invisible md:visible opacity-0 md:opacity-100 transition-opacity duration-300 pt-[1px] w-full min-w-0");
+    
+    // Inizializza con il valore esistente (se presente)
+    if (homeState.filters.search) {
+        input.value(homeState.filters.search);
+    }
+
     let searchDebounceTimer = null;
     input.input((e) => {
         // Opt-4: debounce 80ms — evita aggiornamenti ad ogni singolo carattere
@@ -209,6 +215,11 @@ function createHomeLayout() {
 
         homeState.uiElements.continentBtns[cont] = btn;
     });
+
+    // Inizializza la UI dei bottoni continente se c'è un filtro attivo
+    if (homeState.filters.continent) {
+        updateContinentButtonsUI(homeState.filters.continent);
+    }
 
     // --- SEZIONE 2: CANVAS CONTAINER (Flessibile) ---
     let canvasContainer = createDiv().parent(wrapper);
