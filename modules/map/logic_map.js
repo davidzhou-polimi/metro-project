@@ -865,7 +865,7 @@ function formatDateRange(start, end, isOperational) {
     let e = parseInt(end);
     let endOfTime = appState.maxYear || CURRENT_YEAR; 
 
-    if (!s || isNaN(s) || s > 2050) s = "N/A";
+    if (!s || isNaN(s) || s >= 9999) s = "N/A";
     
     if (isOperational) {
         // Se è operativo e la chiusura non c'è o è futura
