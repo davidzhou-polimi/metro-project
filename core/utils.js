@@ -71,10 +71,13 @@ function processaDati() {
  */
 function buildDbIndexes() {
     db._idx = {
-        sectionsById:       new Map(db.sections.map(s => [String(s.id), s])),
-        linesByCity:        new Map(),
-        sectionLinesBySec:  new Map(),
-        sectionLinesByLine: new Map(),
+        sectionsById:        new Map(db.sections.map(s => [String(s.id), s])),
+        stationsById:        new Map(db.stations.map(s => [String(s.id), s])),
+        linesByCity:         new Map(),
+        sectionLinesBySec:   new Map(),
+        sectionLinesByLine:  new Map(),
+        stationLinesBySt:    new Map(),
+        stationLinesByLine:  new Map(),
     };
     db.lines.forEach(l => {
         let key = String(l.city_id);
@@ -91,6 +94,18 @@ function buildDbIndexes() {
         let keyLine = String(sl.line_id);
         let byLine = db._idx.sectionLinesByLine.get(keyLine);
         if (!byLine) { byLine = []; db._idx.sectionLinesByLine.set(keyLine, byLine); }
+        byLine.push(sl);
+    });
+    // Indici per station_lines (usati dalla mappa e dalla sidebar)
+    db.station_lines.forEach(sl => {
+        let keySt = String(sl.station_id);
+        let bySt = db._idx.stationLinesBySt.get(keySt);
+        if (!bySt) { bySt = []; db._idx.stationLinesBySt.set(keySt, bySt); }
+        bySt.push(sl);
+
+        let keyLine = String(sl.line_id);
+        let byLine = db._idx.stationLinesByLine.get(keyLine);
+        if (!byLine) { byLine = []; db._idx.stationLinesByLine.set(keyLine, byLine); }
         byLine.push(sl);
     });
     console.log("DB indexes built.");
@@ -131,8 +146,12 @@ function parseYear(val) {
 }
 
 function getDatiCitta(cityId) {
+    // Opt-E: usa linesByCity index invece di .filter() su tutto db.lines
+    const idx = db._idx;
     let citySystems = db.systems.filter((s) => s.city_id === cityId);
-    let cityLines = db.lines.filter((l) => l.city_id === cityId);
+    let cityLines = idx
+        ? (idx.linesByCity.get(String(cityId)) || [])
+        : db.lines.filter((l) => l.city_id === cityId);
 
     let gerarchia = citySystems.map((system) => {
         let linesInSystem = cityLines.filter((l) => l.system_id === system.id);

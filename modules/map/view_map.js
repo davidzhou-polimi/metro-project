@@ -78,7 +78,9 @@ function calcolaRangeAnni(cityId) {
     const MIN_VALID_METRO_YEAR = 1863;
 
     for (let sl of filteredSectionLines) {
-        let s = db.sections.find(sec => sec.id === sl.section_id);
+        // Opt-B: usa sectionsById index O(1) invece di .find() su tutto db.sections
+        let s = db._idx ? db._idx.sectionsById.get(String(sl.section_id))
+                       : db.sections.find(sec => sec.id === sl.section_id);
         if (!s) continue;
         let b = parseYear(s.buildstart);
         let o = parseYear(s.opening);
@@ -110,7 +112,9 @@ function calcolaRangeAnni(cityId) {
     );
 
     for (let sl of filteredStationLines) {
-        let st = db.stations.find(station => station.id === sl.station_id);
+        // Opt-B: usa stationsById index O(1) invece di .find() su tutto db.stations
+        let st = db._idx ? db._idx.stationsById.get(String(sl.station_id))
+                        : db.stations.find(station => station.id === sl.station_id);
         if (!st) continue;
         let b = parseYear(st.buildstart);
         let o = parseYear(st.opening);
@@ -881,13 +885,19 @@ function updateSidebarStats() {
             let lineWrapper = select(`#line-wrapper-${line.id}`);
             if (!lineWrapper) continue;
 
-            let sectionRels = db.section_lines.filter((sl) => sl.line_id === line.id);
+            // Opt-D: usa sectionLinesByLine index O(1) invece di .filter() su tutto db.section_lines
+            let sectionRels = db._idx
+                ? (db._idx.sectionLinesByLine.get(String(line.id)) || [])
+                : db.section_lines.filter((sl) => sl.line_id === line.id);
             let kmOp = 0;
             let kmCons = 0;
             let isLineActiveInYear = false;
 
             for (let rel of sectionRels) {
-                let s = db.sections.find((sec) => sec.id === rel.section_id);
+                // Opt-D: usa sectionsById index O(1) invece di .find() su tutto db.sections
+                let s = db._idx
+                    ? db._idx.sectionsById.get(String(rel.section_id))
+                    : db.sections.find((sec) => sec.id === rel.section_id);
                 if (!s) continue;
 
                 let len = s.length || 0;
@@ -960,14 +970,16 @@ function updateSidebarStats() {
             if (statsContainer) {
                 let htmlParts = [];
 
-                let stationRels = db.station_lines.filter(
-                    (sl) => sl.line_id === line.id,
-                );
+                // Opt-D: usa stationLinesByLine index O(1) invece di .filter() su tutto db.station_lines
+                let stationRels = db._idx
+                    ? (db._idx.stationLinesByLine.get(String(line.id)) || [])
+                    : db.station_lines.filter((sl) => sl.line_id === line.id);
                 let activeStations = [];
                 for (let rel of stationRels) {
-                    let station = db.stations.find(
-                        (s) => s.id === rel.station_id,
-                    );
+                    // Opt-D: usa stationsById index O(1) invece di .find() su tutto db.stations
+                    let station = db._idx
+                        ? db._idx.stationsById.get(String(rel.station_id))
+                        : db.stations.find((s) => s.id === rel.station_id);
                     if (station) {
                         let b = parseYear(station.buildstart);
                         let o = parseYear(station.opening);

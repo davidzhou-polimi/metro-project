@@ -16,7 +16,10 @@ function disegnaElementiMappa(cityId, cityName) {
 
     // 1. CICLO LINEE
     for (let line of cityLines) {
-        let rels = db.section_lines.filter((sl) => sl.line_id === line.id);
+        // Opt-C: usa sectionLinesByLine index O(1) invece di .filter() su tutto db.section_lines
+        let rels = db._idx
+            ? (db._idx.sectionLinesByLine.get(String(line.id)) || [])
+            : db.section_lines.filter((sl) => sl.line_id === line.id);
 
         if (!lineCoordinatesMap.has(line.id)) lineCoordinatesMap.set(line.id, []);
         let currentLinePoints = lineCoordinatesMap.get(line.id);
@@ -25,7 +28,10 @@ function disegnaElementiMappa(cityId, cityName) {
         let currentLineSections = lineSectionsDataMap.get(line.id);
 
         for (let rel of rels) {
-            let section = db.sections.find((s) => s.id === rel.section_id);
+            // Opt-C: usa sectionsById index O(1) invece di .find() su tutto db.sections
+            let section = db._idx
+                ? db._idx.sectionsById.get(String(rel.section_id))
+                : db.sections.find((s) => s.id === rel.section_id);
 
             if (!section) continue;
 
@@ -122,7 +128,11 @@ function disegnaElementiMappa(cityId, cityName) {
         let coords = parseGeometry(station.geometry);
         if (!coords || isNaN(coords[0]) || isNaN(coords[1])) continue;
 
-        let stationLineRel = db.station_lines.find((sl) => sl.station_id === station.id);
+        // Opt-C: usa stationLinesBySt index per trovare la prima relazione stazione-linea
+        let allStRels = db._idx
+            ? (db._idx.stationLinesBySt.get(String(station.id)) || [])
+            : db.station_lines.filter((sl) => sl.station_id === station.id);
+        let stationLineRel = allStRels.find(sl => lineMap.has(sl.line_id));
         if (!stationLineRel) continue; // Stazione orfana, saltiamo
 
         let boundLine = lineMap.get(stationLineRel.line_id);
@@ -475,22 +485,6 @@ function aggiornaFiltriCombinati() {
     if (!mappa) return;
     let year = appState.currentYear;
 
-    // --- DIAGNOSTICA TEMPORANEA ---
-    if (mappa.getSource("metro-lines")) {
-        let features = mappa.querySourceFeatures("metro-lines");
-        if (features.length > 0 && (year === appState.minYear || year === appState.minYear + 1)) {
-            // console.group(`[filtri] Anno: ${year} | minYear=${appState.minYear} | maxYear=${appState.maxYear} | hasValidHistory=${appState.hasValidHistory}`);
-            features.forEach(f => {
-                let p = f.properties;
-                let passCons = p.buildstart <= year && p.opening > year;
-                let passOp = p.opening <= year && p.closure > year;
-                // console.log(`  Linea "${p.name}" sezione: buildstart=${p.buildstart}, opening=${p.opening}, closure=${p.closure} → cons=${passCons}, op=${passOp}`);
-            });
-            // console.groupEnd();
-        }
-    }
-    // --- FINE DIAGNOSTICA ---
-
     // Recuperiamo la blacklist (assicurandoci che sia un array)
     let hiddenIds = appState.hiddenLineIds || [];
 
@@ -504,14 +498,12 @@ function aggiornaFiltriCombinati() {
     const condNotYetOpen = [">", ["get", "opening"], year];
     
     // --- FILTRO MULTI-SELEZIONE ---
-    // La condizione è: l'ID della linea NON deve essere nell'array hiddenIds
     const condNotHidden = hiddenIds.length > 0 
         ? ["!", ["in", ["get", "lineId"], ["literal", hiddenIds]]] 
         : true;
 
     const filterOp = ["all", condIsOpened, condNotClosed, condNotHidden];
     const filterCons = ["all", condBuildStarted, condNotYetOpen, condNotHidden];
-    // Hitbox deve seguire la visibilità: se è nascosta, non deve essere cliccabile
     const filterHit = ["any", filterOp, filterCons];
 
     try {
@@ -522,7 +514,7 @@ function aggiornaFiltriCombinati() {
         console.error("Errore update filtri linee:", e);
     }
 
-    // --- FILTRO STAZIONI (Semplificato via lineId binding) ---
+    // --- FILTRO STAZIONI ---
     const filterStOp = ["all", condIsOpened, condNotClosed, condNotHidden];
     const filterStCons = ["all", condBuildStarted, condNotYetOpen, condNotHidden];
 
@@ -532,7 +524,12 @@ function aggiornaFiltriCombinati() {
         mappa.setFilter("stations-labels", filterStOp);
     } catch (e) {}
 
-    updateSidebarStats();
+    // Opt-D: debounce 50ms sulla sidebar — i filtri GL sono istantanei (GPU),
+    // la sidebar fa DOM manipulation pesante che non deve bloccare l'animazione.
+    clearTimeout(aggiornaFiltriCombinati._sidebarTimer);
+    aggiornaFiltriCombinati._sidebarTimer = setTimeout(() => {
+        updateSidebarStats();
+    }, 50);
 }
 
 function resetFiltriMappa() {
