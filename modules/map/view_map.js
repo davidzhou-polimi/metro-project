@@ -249,7 +249,7 @@ function creaSidebar(parentWrapper, city) {
         Tooltip.show(
             `<span class="font-bold block">Reset map view</span>`,
             btnReset.elt,
-            { placement: 'bottom', duration: 1500 }
+            { placement: 'bottom', duration: 2000 }
         );
     });
     btnReset.elt.addEventListener("mouseleave", () => Tooltip.hide());
@@ -467,7 +467,7 @@ function costruisciLineaUI(line, container) {
                     elToggle,
                     {
                         placement: 'left',
-                        duration: 1500,
+                        duration: 2000,
                     }
                 );
             }
@@ -520,7 +520,7 @@ function costruisciLineaUI(line, container) {
             `<span class="font-bold block">Hide/Show line</span>
             <span class="text-neutral-400 font-normal">Toggle line visibility</span>`,
             lineToggleBtn.elt,
-            { placement: 'left', duration: 1500 }
+            { placement: 'left', duration: 2000 }
         );
     });
 
@@ -531,7 +531,7 @@ function costruisciLineaUI(line, container) {
             `<span class="font-bold block">Isolate line</span>
             <span class="text-neutral-400 font-normal">Hide all other lines</span>`,
             lineIsolateBtn.elt,
-            { placement: 'left', duration: 1500 }
+            { placement: 'left', duration: 2000 }
         );
     });
 

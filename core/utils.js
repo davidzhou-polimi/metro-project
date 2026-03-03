@@ -337,11 +337,15 @@ const Tooltip = {
     arrow: null,
     targetMode: 'mouse', // 'mouse' | 'element'
     targetElement: null,
+    showArrow: true,
     placement: 'top', 
     align: 'center',      
     arrowAlign: 'center', // 'start' | 'center' | 'end'
     gap: 12, 
     timer: null,
+    isVisible: false,
+    lastMouseX: 0,
+    lastMouseY: 0,
     
     init() {
         if (document.getElementById('global-tooltip')) return;
@@ -378,6 +382,8 @@ const Tooltip = {
         }
         
         document.addEventListener('mousemove', (e) => {
+            this.lastMouseX = e.clientX;
+            this.lastMouseY = e.clientY;
             if (this.targetMode === 'mouse' && !this.element.classList.contains('opacity-0')) {
                 this.updatePositionForMouse(e.clientX, e.clientY);
             }
@@ -399,13 +405,15 @@ const Tooltip = {
         if (target instanceof HTMLElement) {
             this.targetMode = 'element';
             this.targetElement = target;
+            this.showArrow = options.showArrow !== undefined ? options.showArrow : true;
             this.placement = options.placement || 'top';
             this.align = options.align || 'center';
             this.arrowAlign = options.arrowAlign || 'center'; 
             this.updatePositionForElement();
         } else {
             this.targetMode = 'mouse';
-            this.placement = 'top'; 
+            this.placement = options.placement || 'top';
+            this.gap = options.gap !== undefined ? options.gap : 12;
             this.arrow.style.display = 'none'; 
         }
 
@@ -419,6 +427,7 @@ const Tooltip = {
                 this.hide();
             }, options.duration);
         }
+        this.isVisible = true;
     },
 
     hide() {
@@ -441,10 +450,34 @@ const Tooltip = {
                 this.element.classList.add('invisible');
             }
         }, 150);
+        this.isVisible = false;
+    },
+
+    // Aggiorna il contenuto senza ri-attivare animazioni se è già visibile
+    updateContent(html, duration = null) {
+        if (!this.element || !this.isVisible) return;
+        this.element.innerHTML = html;
+        if (this.targetMode === 'element') {
+            this.updatePositionForElement();
+        } else if (this.targetMode === 'mouse') {
+            this.updatePositionForMouse(this.lastMouseX, this.lastMouseY);
+        }
+
+        // Se viene fornita una durata, resettiamo il timer di sparizione
+        if (duration) {
+            if (this.timer) clearTimeout(this.timer);
+            this.timer = setTimeout(() => {
+                this.hide();
+            }, duration);
+        }
     },
 
     // Aggiornato per ricevere i dati di posizione e calcolare il centro reale
     updateArrow(placement, targetRect, tooltipPos, tooltipRect) {
+        if (!this.showArrow) {
+            this.arrow.style.display = 'none';
+            return;
+        }
         this.arrow.style.display = 'block';
         this.arrow.className = 'absolute w-0 h-0 border-[6px] border-transparent';
         
@@ -557,14 +590,56 @@ const Tooltip = {
 
         const rect = this.element.getBoundingClientRect();
         const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const padding = 10;
         
-        let left = mouseX - (rect.width / 2);
-        let top = mouseY - rect.height - 15; 
+        let left = 0;
+        let top = 0;
+
+        switch (this.placement) {
+            case 'top':
+                left = mouseX - (rect.width / 2);
+                top = mouseY - rect.height - (this.gap + 5); 
+                break;
+            case 'bottom':
+                left = mouseX - (rect.width / 2);
+                top = mouseY + (this.gap + 5);
+                break;
+            case 'left':
+                left = mouseX - rect.width - (this.gap + 5);
+                top = mouseY - (rect.height / 2);
+                break;
+            case 'right':
+                left = mouseX + (this.gap + 5);
+                top = mouseY - (rect.height / 2);
+                break;
+            case 'top-left':
+                left = mouseX - rect.width - (this.gap + 5);
+                top = mouseY - rect.height - (this.gap + 5);
+                break;
+            case 'top-right':
+                left = mouseX + (this.gap + 5);
+                top = mouseY - rect.height - (this.gap + 5);
+                break;
+            case 'bottom-left':
+                left = mouseX - rect.width - (this.gap + 5);
+                top = mouseY + (this.gap + 5);
+                break;
+            case 'bottom-right':
+                left = mouseX + (this.gap + 5);
+                top = mouseY + (this.gap + 5);
+                break;
+            default:
+                left = mouseX - (rect.width / 2);
+                top = mouseY - rect.height - (this.gap + 5);
+        }
         
-        if (left < 10) left = 10;
-        else if (left + rect.width > winW - 10) left = winW - rect.width - 10;
+        // Clamping per evitare che esca dallo schermo
+        if (left < padding) left = padding;
+        else if (left + rect.width > winW - padding) left = winW - rect.width - padding;
         
-        if (top < 10) top = mouseY + 25;
+        if (top < padding) top = padding;
+        else if (top + rect.height > winH - padding) top = winH - rect.height - padding;
 
         this.element.style.left = `${left}px`;
         this.element.style.top = `${top}px`;

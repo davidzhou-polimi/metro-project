@@ -12,6 +12,7 @@ const PADDING = 2;
  * Crea l'intera struttura DOM della Home con Flexbox per garantire visibilità
  */
 function createHomeLayout() {
+    Tooltip.init();
     // Il wrapper occupa tutta l'altezza (h-full) e non permette lo scroll (overflow-hidden)
     let wrapper = createDiv().parent(getContentContainer()).class("flex flex-col flex-1 min-h-0 overflow-hidden");
 
@@ -174,9 +175,38 @@ function createHomeLayout() {
     continents.forEach((cont, i) => {
         let btn = createDiv(cont).parent(contFilterContainer);
         btn.class(`px-6 flex-1 flex items-center justify-center h-full text-sm text-white rounded-lg shadow text-center transition-opacity duration-300 hover:opacity-80 opacity-100 whitespace-nowrap ${contColors[i]}`);
+        
         btn.mouseClicked(() => {
-            if (mouseButton === LEFT) setHomeFilter('continent', cont);
+            if (mouseButton === LEFT) {
+                setHomeFilter('continent', cont);
+                
+                // Aggiorna subito il contenuto del tooltip se è ancora visibile
+                const isActive = homeState.filters.continent === cont;
+                const content = isActive 
+                    ? `<span class="font-bold">Click again to deactivate filter</span>`
+                    : `<span class="font-bold">Click to filter by ${cont}</span>`;
+                Tooltip.updateContent(content, 2000);
+            }
         });
+
+        // Tooltip per spiegare il toggle
+        btn.elt.addEventListener('mouseenter', () => {
+            const isActive = homeState.filters.continent === cont;
+            const content = isActive 
+                ? `<span class="font-bold">Click to deactivate filter</span>`
+                : `<span class="font-bold">Click to filter by ${cont}</span>`;
+            
+            Tooltip.show(content, null, { 
+                placement: 'bottom-right', 
+                showArrow: false,
+                duration: 2000 
+            });
+        });
+
+        btn.elt.addEventListener('mouseleave', () => {
+            Tooltip.hide();
+        });
+
         homeState.uiElements.continentBtns[cont] = btn;
     });
 
@@ -286,9 +316,15 @@ function drawHomeCanvas(state) {
 
     if (!state.activeNodes || state.activeNodes.length === 0) {
         push();
-        fill(150); textAlign(CENTER, CENTER); textSize(16); noStroke();
+        fill(150); textAlign(CENTER, CENTER); textSize(18); noStroke();
         textFont(fonts.medium);
-        text("No metro found", width/2, height/2);
+        
+        let msg = `No metro found for ${state.filters.year}`;
+        if (state.filters.continent) {
+            msg = `No metro found in ${state.filters.continent} for ${state.filters.year}`;
+        }
+        
+        text(msg, width/2, height/2);
         pop();
         hideHomeTooltip();
         return;
