@@ -31,7 +31,12 @@ function createHomeLayout() {
     input.attribute('type', 'text').attribute('placeholder', 'Search city or country...');
     input.attribute('name', 'search');
     input.class("flex-1 h-full bg-transparent border-none focus:ring-0 focus:outline-none font-medium placeholder-gray-400 text-neutral-900 invisible md:visible opacity-0 md:opacity-100 transition-opacity duration-300 pt-[1px] w-full min-w-0");
-    input.input((e) => setHomeFilter('search', e.target.value));
+    let searchDebounceTimer = null;
+    input.input((e) => {
+        // Opt-4: debounce 80ms — evita aggiornamenti ad ogni singolo carattere
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => setHomeFilter('search', e.target.value), 80);
+    });
     homeState.uiElements.searchInput = input;
 
     let cancelBtn = createButton('Cancel').parent(searchWrapper);
@@ -308,6 +313,13 @@ function drawHomeNodes(nodes) {
         "ST. PETERSBURG": "ST.\nPETERSBURG", "WASHINGTON": "WASH\nINGTON"
     };
 
+    // Opt-6: color cache — evita di istanziare nuovi oggetti color() P5 ad ogni frame
+    const colorCache = new Map();
+    const getCachedColor = (hex) => {
+        if (!colorCache.has(hex)) colorCache.set(hex, color(hex));
+        return colorCache.get(hex);
+    };
+
     for (let n of nodes) {
         let dx = n.x + PADDING;
         let dy = n.y + PADDING;
@@ -324,8 +336,8 @@ function drawHomeNodes(nodes) {
             n.country.toLowerCase().includes(filterTxt)
         );
 
-        // GESTIONE COLORI
-        let nodeColor = color(n.color);
+        // GESTIONE COLORI (usa cache — NON mutare l'oggetto cachato con setAlpha/etc.)
+        let nodeColor = getCachedColor(n.color);
 
         if (hasSearch) {
             if (isMatch) {
@@ -334,9 +346,8 @@ function drawHomeNodes(nodes) {
                 stroke(0); 
                 strokeWeight(2.5);
             } else {
-                // NO MATCH: Colore sbiadito + Nessun bordo
-                nodeColor.setAlpha(127); // Molto trasparente per far risaltare gli altri
-                fill(nodeColor);
+                // NO MATCH: Colore sbiadito — creiamo un color() temporaneo senza toccare la cache
+                fill(red(nodeColor), green(nodeColor), blue(nodeColor), 127);
                 noStroke();
             }
         } else {

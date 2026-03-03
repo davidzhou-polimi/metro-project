@@ -161,9 +161,12 @@ function setHomeFilter(type, value) {
     }
     else if (type === 'search') {
         homeState.filters.search = value.toLowerCase();
+        // Opt-3: la ricerca NON ricalcola il layout (le posizioni/dimensioni non cambiano).
+        // Il draw loop di p5 rilegge homeState.filters.search ad ogni frame autonomamente.
+        return;
     }
 
-    // Aggiorniamo sempre la treemap per riflettere i cambiamenti (colori o dimensioni)
+    // Anno e Continente richiedono un ricalcolo completo del layout
     aggiornaTreemap();
 }
 

@@ -102,11 +102,21 @@ function filterHomeData(data, filters) {
         return true;
     });
 
+    // Opt-2: Cache dei km per anno — invalida solo quando cambia l'anno.
+    // Ogni città viene calcolata UNA sola volta per anno, non ad ogni cambio filtro.
+    if (!filterHomeData._cache || filterHomeData._cache.year !== year) {
+        filterHomeData._cache = { year, data: new Map() };
+    }
+    const kmCache = filterHomeData._cache.data;
+
     // Imposta la dimensione per la TreeMap calcolando i km reali all'anno selezionato
     filtered.forEach(item => {
-        let currentKM = calculateNetworkLength(item.id, { year: year });
+        if (!kmCache.has(item.id)) {
+            kmCache.set(item.id, calculateNetworkLength(item.id, { year: year }));
+        }
+        let currentKM = kmCache.get(item.id);
         item.length = currentKM;
-        item.size = currentKM; 
+        item.size = currentKM;
     });
 
     // Rimuoviamo le città con 0 km operativi
@@ -123,11 +133,12 @@ function filterHomeData(data, filters) {
  */
 function calculateTreemapLayout(data, containerW, containerH) {
     if (!data || data.length === 0) return [];
-    
-    let nodes = JSON.parse(JSON.stringify(data)); 
+
+    // Opt-5: shallow clone con spread operator (~10x più veloce di JSON.parse/JSON.stringify)
+    let nodes = data.map(d => ({ ...d }));
     let resultNodes = [];
     squarify(nodes, { x: 0, y: 0, w: containerW, h: containerH }, resultNodes);
-    
+
     return resultNodes;
 }
 

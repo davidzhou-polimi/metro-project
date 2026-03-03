@@ -62,6 +62,38 @@ function processaDati() {
         db = filterData(db);
     }
     console.log("Dati elaborati e pronti in 'db'");
+    buildDbIndexes();
+}
+
+/**
+ * Costruisce indici (Map) sulle tabelle del DB per lookup O(1).
+ * Va chiamata una sola volta dopo processaDati().
+ */
+function buildDbIndexes() {
+    db._idx = {
+        sectionsById:       new Map(db.sections.map(s => [String(s.id), s])),
+        linesByCity:        new Map(),
+        sectionLinesBySec:  new Map(),
+        sectionLinesByLine: new Map(),
+    };
+    db.lines.forEach(l => {
+        let key = String(l.city_id);
+        let arr = db._idx.linesByCity.get(key);
+        if (!arr) { arr = []; db._idx.linesByCity.set(key, arr); }
+        arr.push(l);
+    });
+    db.section_lines.forEach(sl => {
+        let keySec = String(sl.section_id);
+        let bySec = db._idx.sectionLinesBySec.get(keySec);
+        if (!bySec) { bySec = []; db._idx.sectionLinesBySec.set(keySec, bySec); }
+        bySec.push(sl);
+
+        let keyLine = String(sl.line_id);
+        let byLine = db._idx.sectionLinesByLine.get(keyLine);
+        if (!byLine) { byLine = []; db._idx.sectionLinesByLine.set(keyLine, byLine); }
+        byLine.push(sl);
+    });
+    console.log("DB indexes built.");
 }
 
 function parseGeometry(wktString) {
@@ -171,30 +203,60 @@ function getInheritedLineOpening(lineId) {
  */
 function calculateNetworkLength(cityId, options = {}) {
     let { lineIds = null, year = null, formatted = false } = options;
+
+    // Usa gli indici se disponibili (molto più veloce di .filter()/.find())
+    const idx = db._idx;
     let targetSectionIds = new Set();
     let relevantRels = [];
-    let endOfTime = CURRENT_YEAR; // Fallback
+    let endOfTime = CURRENT_YEAR;
 
     if (lineIds) {
         let activeLineIds = lineIds;
         if (typeof appState !== 'undefined' && appState.hiddenLineIds && appState.hiddenLineIds.length > 0) {
             activeLineIds = lineIds.filter(id => !appState.hiddenLineIds.includes(id));
         }
-        relevantRels = db.section_lines.filter((sl) => activeLineIds.includes(sl.line_id));
-        relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
+        if (idx) {
+            for (let lid of activeLineIds) {
+                let rels = idx.sectionLinesByLine.get(String(lid));
+                if (rels) for (let r of rels) { relevantRels.push(r); targetSectionIds.add(r.section_id); }
+            }
+        } else {
+            relevantRels = db.section_lines.filter((sl) => activeLineIds.includes(sl.line_id));
+            relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
+        }
     } else {
-        let cityLines = db.lines.filter((l) => l.city_id === cityId);
+        // Usa String() per garantire coerenza con le chiavi della Map (indifferente al tipo Number/String)
+        let cityLines = idx ? (idx.linesByCity.get(String(cityId)) || []) : db.lines.filter((l) => l.city_id === cityId);
         let ids = cityLines.map((l) => l.id);
         if (typeof appState !== 'undefined' && appState.hiddenLineIds && appState.hiddenLineIds.length > 0) {
             ids = ids.filter(id => !appState.hiddenLineIds.includes(id));
         }
-        relevantRels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
-        relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
+        if (idx) {
+            for (let lid of ids) {
+                let rels = idx.sectionLinesByLine.get(String(lid));
+                if (rels) for (let r of rels) { relevantRels.push(r); targetSectionIds.add(r.section_id); }
+            }
+        } else {
+            relevantRels = db.section_lines.filter((sl) => ids.includes(sl.line_id));
+            relevantRels.forEach((r) => targetSectionIds.add(r.section_id));
+        }
+    }
+
+    // Mappa sezione->rel per lookup O(1) all'interno del loop (evita .filter() ripetuto)
+    let relsBySection = null;
+    if (year !== null) {
+        relsBySection = new Map();
+        for (let r of relevantRels) {
+            let arr = relsBySection.get(r.section_id);
+            if (!arr) { arr = []; relsBySection.set(r.section_id, arr); }
+            arr.push(r);
+        }
     }
 
     let totalMeters = 0;
     targetSectionIds.forEach((id) => {
-        let section = db.sections.find((s) => s.id === id);
+        // String() per coerenza con l'indice (le sezioni potrebbero avere ID String o Number)
+        let section = idx ? idx.sectionsById.get(String(id)) : db.sections.find((s) => s.id === id);
         if (section && section.length) {
             let meters = parseFloat(section.length);
 
@@ -203,10 +265,10 @@ function calculateNetworkLength(cityId, options = {}) {
                 let o = parseYear(section.opening);
                 let closure = parseYear(section.closure) || 9999;
 
-                // Estrai le relazioni associate a QUESTA specifica sezione, limitate a quelle passate come filtro
-                let relsForThisSection = relevantRels.filter(r => r.section_id === id);
-                
-                // --- ERDITARIETÀ LINEA DA STAZIONI (Punto Inverso) ---
+                // Relazioni per questa sezione (lookup O(1) con la mappa)
+                let relsForThisSection = relsBySection.get(id) || [];
+
+                // --- EREDITARIETÀ LINEA DA STAZIONI ---
                 if (!o) {
                     let validStationOpenings = [];
                     for (let rel of relsForThisSection) {
@@ -218,7 +280,6 @@ function calculateNetworkLength(cityId, options = {}) {
                     }
                 }
 
-                // Se la tratta ha relazioni temporali, usiamo quelle come limiti d'intersezione minimi/massimi vitali usati dalle linee considerate
                 let minEffectiveOp = Infinity;
                 let maxEffectiveClosure = 0;
 
@@ -226,7 +287,7 @@ function calculateNetworkLength(cityId, options = {}) {
                     for (let rel of relsForThisSection) {
                         let relFrom = parseYear(rel.fromyear);
                         let relTo = parseYear(rel.toyear);
-                        
+
                         let effectiveOp = o;
                         let effectiveClosure = closure;
 
@@ -238,8 +299,6 @@ function calculateNetworkLength(cityId, options = {}) {
                     }
                     if (minEffectiveOp !== Infinity) {
                         o = minEffectiveOp;
-                        // Stessa logica: se una linea adotta una sezione storicamente esistente,
-                        // non la consideriamo in costruzione per il periodo precedente
                         b = minEffectiveOp;
                     }
                     if (maxEffectiveClosure > 0) closure = maxEffectiveClosure;
