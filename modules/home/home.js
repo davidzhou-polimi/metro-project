@@ -133,6 +133,7 @@ function removeHome() {
         homeState.canvas = null; 
     }
     
+    if (typeof cursor === "function") cursor(ARROW);
     hideHomeTooltip();
     homeState.uiElements = {};
     homeState.hoveredNode = null;

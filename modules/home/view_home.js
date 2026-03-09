@@ -458,7 +458,7 @@ function drawHomeNodes(nodes) {
         cursor(HAND);
         updateAndShowHomeTooltip(foundHover);
     } else {
-        cursor(HAND);
+        cursor(ARROW);
         hideHomeTooltip();
     }
 }

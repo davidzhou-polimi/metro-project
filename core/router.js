@@ -10,6 +10,9 @@ function changeState(newState, param = null) {
     const mainDiv = getContentContainer();
     if (mainDiv) mainDiv.innerHTML = "";
     
+    // Reset Globale Cursore
+    if (typeof cursor === "function") cursor(ARROW);
+
     // Pulizia processi
     if (pageState === 'SPLASH' && typeof removeSplash === "function") removeSplash();
     if (pageState === 'HOME' && typeof removeHome === "function") removeHome();
@@ -19,6 +22,21 @@ function changeState(newState, param = null) {
     // --- 2. AGGIORNAMENTO STATO ---
     pageState = newState;
     currentId = param;
+
+    // --- 2b. GESTIONE LAYOUT (Navbar, Footer, Padding) ---
+    if (layout.header && layout.footer && layout.main) {
+        if (newState === 'SPLASH') {
+            layout.header.addClass('hidden');
+            layout.footer.addClass('hidden');
+            // Full-screen per lo splash
+            layout.main.class("flex-grow w-full relative min-h-screen mx-auto p-0 overflow-hidden");
+        } else {
+            layout.header.removeClass('hidden');
+            layout.footer.removeClass('hidden');
+            // Default per le altre pagine
+            layout.main.class("flex-grow w-full relative min-h-[calc(100svh-4.5rem)] mx-auto p-4 md:p-8 overflow-hidden");
+        }
+    }
 
     sincronizzaURL();
 
