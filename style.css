@@ -258,3 +258,19 @@ canvas {
 .accordion-item.is-open > summary .accordion-chevron {
     transform: rotate(0deg) !important;
 }
+
+/* --- SIDEBAR ITEM ANIMATIONS --- */
+@keyframes sidebarFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes sidebarFadeOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-6px); }
+}
+.sidebar-item-enter {
+    animation: sidebarFadeIn 0.25s ease-out forwards;
+}
+.sidebar-item-exit {
+    animation: sidebarFadeOut 0.18s ease-in forwards;
+}

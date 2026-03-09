@@ -361,10 +361,37 @@ function animateDetails(detailsEl, forceOpen = null) {
     }
 }
 
+function setSidebarItemVisibility(el, visible) {
+    // Un elemento in uscita ha ancora display:block ma è "effettivamente nascosto"
+    const isExiting = el.classList.contains("sidebar-item-exit");
+    const isCurrentlyVisible = el.style.display !== "none" && !isExiting;
+    if (visible === isCurrentlyVisible) return;
+
+    if (visible) {
+        el.style.display = "block";
+        el.classList.remove("sidebar-item-exit");
+        el.classList.add("sidebar-item-enter");
+    } else {
+        el.classList.remove("sidebar-item-enter");
+        el.classList.add("sidebar-item-exit");
+        el.addEventListener(
+            "animationend",
+            () => {
+                if (el.classList.contains("sidebar-item-exit")) {
+                    el.style.display = "none";
+                    el.classList.remove("sidebar-item-exit");
+                }
+            },
+            { once: true }
+        );
+    }
+}
+
 function costruisciSistemaUI(system, container) {
     let sysDetail = createElement("details")
         .parent(container)
-        .class("group accordion-item");
+        .class("group accordion-item")
+        .style("display", "none");
     sysDetail.attribute("open", "");
     sysDetail.elt.classList.add("is-open"); // Parte aperto: inizializza subito la classe
 
@@ -424,7 +451,8 @@ function costruisciSistemaUI(system, container) {
 function costruisciLineaUI(line, container) {
     let lineDetail = createElement("details")
         .parent(container)
-        .class("group/line relative accordion-item");
+        .class("group/line relative accordion-item")
+        .style("display", "none");
 
     lineDetail.id("line-wrapper-" + line.id);
 
@@ -956,12 +984,12 @@ function updateSidebarStats() {
 
             // VISIBILITÀ LINEA
             if (isLineActiveInYear) {
-                lineWrapper.style("display", "block");
+                setSidebarItemVisibility(lineWrapper.elt, true);
                 activeLinesCount++;
                 activeCityLinesCount++;
                 systemLineIds.push(line.id);
             } else {
-                lineWrapper.style("display", "none");
+                setSidebarItemVisibility(lineWrapper.elt, false);
                 continue;
             }
 
@@ -1089,7 +1117,7 @@ function updateSidebarStats() {
 
         // VISIBILITÀ SISTEMA
         if (activeLinesCount > 0) {
-            sysDetailNative.style.display = "block";
+            setSidebarItemVisibility(sysDetailNative, true);
             let rightSide = sysDetailNative.querySelector(
                 "summary > div:last-child",
             );
@@ -1106,7 +1134,7 @@ function updateSidebarStats() {
                 `;
             }
         } else {
-            sysDetailNative.style.display = "none";
+            setSidebarItemVisibility(sysDetailNative, false);
         }
     }
 
